@@ -111,7 +111,6 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
     _proposalQuestionController.dispose();
     _autoCloseLimitController.dispose();
     _depositAmountController.dispose();
-    _depositAmountController.dispose();
     _termsAndConditionsController.dispose();
     _maxApplicationsController.dispose();
     _projectLocationController.dispose();
@@ -274,7 +273,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                       _dropdown(
                           ['Full-time', 'Part-time', 'Internship', 'Contract'],
                           _employmentType,
-                          (v) => setState(() => _employmentType = v!)),
+                          (v) => setState(
+                              () => _employmentType = v ?? 'Full-time')),
                     ],
                   ),
                 ),
@@ -285,7 +285,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                     children: [
                       const _Label("Work Mode"),
                       _dropdown(['On-site', 'Remote', 'Hybrid'], _workMode,
-                          (v) => setState(() => _workMode = v!)),
+                          (v) => setState(() => _workMode = v ?? 'On-site')),
                     ],
                   ),
                 ),
@@ -328,7 +328,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                 _companySizeController.text.isEmpty
                     ? '11-50'
                     : _companySizeController.text,
-                (v) => setState(() => _companySizeController.text = v!)),
+                (v) => setState(() => _companySizeController.text = v ?? '')),
           ],
         ),
       ),
@@ -371,7 +371,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             const SizedBox(height: 16),
             const _Label("Salary Cycle"),
             _dropdown(['Monthly', 'Annual', 'Negotiable'], _salaryType,
-                (v) => setState(() => _salaryType = v!)),
+                (v) => setState(() => _salaryType = v ?? 'Monthly')),
             const SizedBox(height: 16),
             _labeledTextField(
                 "Location *", _jobLocationController, "City, State"),
@@ -472,8 +472,11 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const _Label("Project Type"),
-                      _dropdown(['Fixed', 'Hourly'], _projectType,
-                          (v) => setState(() => _projectType = v!)),
+                      _dropdown(
+                          ['Fixed', 'Hourly'],
+                          _projectType,
+                          (v) => setState(
+                              () => _projectType = v ?? 'Fixed-price')),
                     ],
                   ),
                 ),
@@ -486,7 +489,8 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
                       _dropdown(
                           ['Beginner', 'Intermediate', 'Expert'],
                           _experienceLevel,
-                          (v) => setState(() => _experienceLevel = v!)),
+                          (v) => setState(
+                              () => _experienceLevel = v ?? 'Entry Level')),
                     ],
                   ),
                 ),
@@ -533,12 +537,11 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
             ),
             const SizedBox(height: 16),
             const _Label("Project Duration"),
-            _dropdown(['1 Week', '2 Weeks', '1 Month', '3 Months', '6+ Months'],
-                _projectDuration, (v) => setState(() => _projectDuration = v!)),
-            const SizedBox(height: 16),
-            _labeledTextField(
-                "Deposit Amount (INR) *", _depositAmountController, "e.g. 500",
-                keyboard: TextInputType.number),
+            _dropdown(
+                ['1 Week', '2 Weeks', '1 Month', '3 Months', '6+ Months'],
+                _projectDuration,
+                (v) => setState(
+                    () => _projectDuration = v ?? 'Less than 1 month')),
             const SizedBox(height: 16),
             _labeledTextField("Project Location *", _projectLocationController,
                 "City, State"),
@@ -687,7 +690,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
           maxApplications: int.tryParse(_maxApplicationsController.text),
           deadlineDate: _deadlineDate,
           createdAt: DateTime.now(),
-          depositAmount: double.tryParse(_depositAmountController.text),
+          depositAmount: 0, // No deposit needed at post creation
           termsAndConditions: _termsAndConditionsController.text,
         );
         await context.read<JobProvider>().createProjectPost(project);
@@ -778,7 +781,7 @@ class _CreateJobScreenState extends State<CreateJobScreen> {
       'Sales',
       'Other'
     ], _categoryController.text.isEmpty ? 'IT' : _categoryController.text,
-        (v) => setState(() => _categoryController.text = v!));
+        (v) => setState(() => _categoryController.text = v ?? ''));
   }
 
   Widget _listInput(

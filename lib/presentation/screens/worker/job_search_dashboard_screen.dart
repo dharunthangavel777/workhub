@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../core/app_export.dart';
-import '../../widgets/shared/custom_icon_button.dart';
 import '../../widgets/shared/custom_search_view.dart';
 import './widgets/company_recommendation_widget.dart';
 import './widgets/job_card_widget.dart';
@@ -30,10 +28,16 @@ class JobSearchDashboardScreen extends StatelessWidget {
 
     final allPosts = activeMode == 'job'
         ? jobProvider.jobPosts
-            .where((p) => p.status != 'filled' && p.status != 'closed')
+            .where((p) =>
+                p.status != 'filled' &&
+                p.status != 'closed' &&
+                !jobProvider.appliedJobIds.contains(p.id))
             .toList()
         : jobProvider.projectPosts
-            .where((p) => p.status != 'filled' && p.status != 'closed')
+            .where((p) =>
+                p.status != 'filled' &&
+                p.status != 'closed' &&
+                !jobProvider.appliedProjectIds.contains(p.id))
             .toList();
 
     // Split into Recent and Recommended
@@ -58,6 +62,7 @@ class JobSearchDashboardScreen extends StatelessWidget {
               firstLabel: "Job",
               secondLabel: "Freelancer",
               backgroundColor: appTheme.white_A700_01,
+              profileCompletion: (user?.profileCompletion ?? 0).toDouble(),
               onSwitchChanged: (value) async {
                 final newMode = value ? 'freelancer' : 'job';
                 await authProvider.switchWorkerMode(newMode);
@@ -162,9 +167,7 @@ class JobSearchDashboardScreen extends StatelessWidget {
           children: [
             Text(
               "Recently Posted",
-              style: TextStyleHelper.instance.headline24Bold.copyWith(
-                fontSize: 22.fSize,
-              ),
+              style: TextStyleHelper.instance.headline22Bold,
             ),
             GestureDetector(
               onTap: () {
@@ -191,8 +194,7 @@ class JobSearchDashboardScreen extends StatelessWidget {
                     SizedBox(width: 4.w),
                     Text(
                       "Saved Jobs",
-                      style:
-                          TextStyleHelper.instance.body12MediumPoppins.copyWith(
+                      style: TextStyleHelper.instance.body12Medium.copyWith(
                         color: appTheme.indigo_A700,
                         fontWeight: FontWeight.w600,
                       ),
@@ -203,7 +205,7 @@ class JobSearchDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 24.h),
+        SizedBox(height: 16.h),
         ...posts
             .map((post) => Padding(
                   padding: EdgeInsets.only(bottom: 16.h),
@@ -224,12 +226,10 @@ class JobSearchDashboardScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Recommended for you",
-          style: TextStyleHelper.instance.headline24Bold.copyWith(
-            fontSize: 22.fSize,
-          ),
+          "Our Top Companies",
+          style: TextStyleHelper.instance.headline22Bold,
         ),
-        SizedBox(height: 20.h),
+        SizedBox(height: 12.h),
         Container(
           height: 190.h,
           child: ListView.separated(
@@ -263,11 +263,9 @@ class JobSearchDashboardScreen extends StatelessWidget {
       children: [
         Text(
           "Recommended for you",
-          style: TextStyleHelper.instance.headline24Bold.copyWith(
-            fontSize: 22.fSize,
-          ),
+          style: TextStyleHelper.instance.headline22Bold,
         ),
-        SizedBox(height: 24.h),
+        SizedBox(height: 16.h),
         ...posts
             .map((post) => Padding(
                   padding: EdgeInsets.only(bottom: 16.h),

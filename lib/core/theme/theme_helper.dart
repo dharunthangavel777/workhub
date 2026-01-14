@@ -5,8 +5,13 @@ class ThemeHelper {
   // Grays
   Color get gray_50 => const Color(0xFFF9FAFB);
   Color get gray_100 => const Color(0xFFF3F4F6);
+  Color get gray_200 => const Color(0xFFE5E7EB);
+  Color get gray_300 => const Color(0xFFD1D5DB);
   Color get gray_400 => const Color(0xFF9CA3AF);
+  Color get gray_500 => const Color(0xFF6B7280);
   Color get gray_600 => const Color(0xFF4B5563);
+  Color get gray_900 => const Color(0xFF111827);
+  Color get orange_600 => const Color(0xFFEA580C);
 
   // Indigo / Blues
   Color get indigo_A700 => CustomColors.primaryBlue;

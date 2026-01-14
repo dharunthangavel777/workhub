@@ -52,12 +52,13 @@ app.*.map.json
 .vercel
 
 # Non-Flutter folders
-functions/
-server/
-supabase/
+# functions/
+# server/
+# supabase/
 
 # Auxiliary files
 admin_panel.html
 admin_config.js
 *.txt
+!requirements.txt
 *.sha1

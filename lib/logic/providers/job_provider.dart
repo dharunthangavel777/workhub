@@ -22,13 +22,17 @@ class JobProvider extends ChangeNotifier {
   List<JobPostModel> _myJobPosts = [];
   List<ProjectPostModel> _myProjectPosts = [];
   List<dynamic> _appliedPosts = [];
+  Set<String> _appliedJobIds = {};
+  Set<String> _appliedProjectIds = {};
   bool _isLoading = false;
   String _activeMode = 'job';
+  String? _currentUserId;
   StreamSubscription? _jobPostsSubscription;
   StreamSubscription? _projectPostsSubscription;
   StreamSubscription? _myJobPostsSubscription;
   StreamSubscription? _myProjectPostsSubscription;
   StreamSubscription? _projectsSubscription;
+  StreamSubscription? _applicationsSubscription;
   List<ProjectModel> _projects = [];
 
   // Contract and Transaction state
@@ -41,6 +45,8 @@ class JobProvider extends ChangeNotifier {
   List<JobPostModel> get myJobPosts => _myJobPosts;
   List<ProjectPostModel> get myProjectPosts => _myProjectPosts;
   List<dynamic> get appliedJobs => _appliedPosts;
+  Set<String> get appliedJobIds => _appliedJobIds;
+  Set<String> get appliedProjectIds => _appliedProjectIds;
   List<ProjectModel> get projects => _projects;
   List<ProjectModel> get ongoingProjects => _projects
       .where((p) =>
@@ -68,6 +74,7 @@ class JobProvider extends ChangeNotifier {
     _myJobPostsSubscription?.cancel();
     _myProjectPostsSubscription?.cancel();
     _projectsSubscription?.cancel();
+    _applicationsSubscription?.cancel();
     _milestoneSubscription?.cancel();
     _withdrawalSubscription?.cancel();
     super.dispose();
@@ -118,9 +125,13 @@ class JobProvider extends ChangeNotifier {
     if (_activeMode == mode) return;
     _activeMode = mode;
     _initJobs();
+    if (_currentUserId != null) {
+      listenToWorkerApplications(_currentUserId!);
+    }
   }
 
   void listenToProjects(String userId, bool isOwner) {
+    _currentUserId = userId;
     _projectsSubscription?.cancel();
     final stream = isOwner
         ? _repository.getOwnerProjectsStream(userId)
@@ -181,6 +192,28 @@ class JobProvider extends ChangeNotifier {
     );
   }
 
+  void listenToWorkerApplications(String userId) {
+    _currentUserId = userId;
+    _applicationsSubscription?.cancel();
+    _isLoading = true;
+    notifyListeners();
+
+    _applicationsSubscription = _repository
+        .getWorkerApplicationsStream(userId, modeFilter: _activeMode)
+        .listen((list) {
+      _appliedPosts = list;
+      _appliedJobIds = list.whereType<JobPostModel>().map((p) => p.id).toSet();
+      _appliedProjectIds =
+          list.whereType<ProjectPostModel>().map((p) => p.id).toSet();
+      _isLoading = false;
+      notifyListeners();
+    }, onError: (e) {
+      debugPrint("Worker Applications Stream Error: $e");
+      _isLoading = false;
+      notifyListeners();
+    });
+  }
+
   Future<void> fetchWorkerApplications(String userId) async {
     _isLoading = true;
     notifyListeners();
@@ -231,6 +264,7 @@ class JobProvider extends ChangeNotifier {
     double? depositAmount,
     String? termsAndConditions,
     List<dynamic>? suggestedMilestones,
+    String? deliveryTime,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -247,6 +281,7 @@ class JobProvider extends ChangeNotifier {
         'depositAmount': depositAmount,
         'termsAndConditions': termsAndConditions,
         'suggestedMilestones': suggestedMilestones,
+        'deliveryTime': deliveryTime,
       });
     } finally {
       _isLoading = false;

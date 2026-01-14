@@ -46,6 +46,7 @@ class JobPostModel {
   final DateTime createdAt;
   final Map<String, dynamic>? applicants;
   final int applicationsCount;
+  final bool isVerified;
 
   JobPostModel({
     required this.id,
@@ -81,6 +82,7 @@ class JobPostModel {
     required this.createdAt,
     this.applicants,
     this.applicationsCount = 0,
+    this.isVerified = false,
     this.ownerName,
     this.ownerPhoto,
   });
@@ -133,6 +135,7 @@ class JobPostModel {
             : DateTime.now(),
         applicants: map['applicants'],
         applicationsCount: map['applicationsCount'] ?? 0,
+        isVerified: map['isVerified'] ?? false,
         ownerName: map['ownerName'],
         ownerPhoto: map['ownerPhoto'],
       );
@@ -199,6 +202,7 @@ class JobPostModel {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'applicants': applicants,
       'applicationsCount': applicationsCount,
+      'isVerified': isVerified,
       'ownerName': ownerName,
       'ownerPhoto': ownerPhoto,
     };

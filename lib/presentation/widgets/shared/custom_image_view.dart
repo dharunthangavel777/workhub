@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -103,6 +104,21 @@ class CustomImageView extends StatelessWidget {
           fit: fit,
         ),
       );
+    } else if (imagePath.startsWith('/') || imagePath.contains(':\\')) {
+      return Image.file(
+        File(imagePath),
+        height: height,
+        width: width,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            placeHolder,
+            height: height,
+            width: width,
+            fit: fit,
+          );
+        },
+      );
     } else if (imagePath.endsWith('.svg')) {
       return SvgPicture.asset(
         imagePath,
@@ -112,13 +128,37 @@ class CustomImageView extends StatelessWidget {
         colorFilter:
             color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null,
       );
-    } else {
+    } else if (imagePath.startsWith('assets/')) {
       return Image.asset(
         imagePath,
         height: height,
         width: width,
         fit: fit,
         color: color,
+        errorBuilder: (context, error, stackTrace) => Image.asset(
+          placeHolder,
+          height: height,
+          width: width,
+          fit: fit,
+        ),
+      );
+    } else {
+      // Fallback for unknown/garbage strings (e.g. "hush", "jsjs")
+      // Do NOT try Image.file here as it might crash or be invalid.
+      // Just show the placeholder.
+      return Image.asset(
+        placeHolder,
+        height: height,
+        width: width,
+        fit: fit,
+        color: color,
+        errorBuilder: (context, error, stackTrace) {
+          return SizedBox(
+            height: height,
+            width: width,
+            child: Icon(Icons.image_not_supported, color: Colors.grey),
+          );
+        },
       );
     }
   }

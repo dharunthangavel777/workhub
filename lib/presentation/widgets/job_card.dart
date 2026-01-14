@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/custom_colors.dart';
 import '../../data/models/job_post_model.dart';
 import '../../../../data/models/project_post_model.dart';
+import '../../../core/utils/image_constant.dart';
+import '../widgets/shared/custom_image_view.dart';
 
 class JobCard extends StatelessWidget {
   final String title;
@@ -19,6 +21,10 @@ class JobCard extends StatelessWidget {
   final bool isPromoted;
   final bool isBookmarked;
   final bool isClosed;
+  final bool isVerified;
+  final int? openings;
+  final int? applicationsCount;
+  final int? maxApplications;
   final VoidCallback? onBookmarkToggle;
 
   const JobCard({
@@ -38,6 +44,10 @@ class JobCard extends StatelessWidget {
     this.isPromoted = false,
     this.isBookmarked = false,
     this.isClosed = false,
+    this.isVerified = false,
+    this.openings,
+    this.applicationsCount,
+    this.maxApplications,
     this.onBookmarkToggle,
   });
 
@@ -57,10 +67,14 @@ class JobCard extends StatelessWidget {
       companyLogo: job.companyLogo,
       ownerName: job.ownerName,
       ownerPhoto: job.ownerPhoto,
+      isVerified: job.isVerified,
+      openings: job.openings,
       isClosed: (job.deadlineDate != null &&
               DateTime.now().isAfter(job.deadlineDate!)) ||
           (job.maxApplications != null &&
-              (job.applicants?.length ?? 0) >= job.maxApplications!),
+              job.applicationsCount >= job.maxApplications!),
+      applicationsCount: job.applicationsCount,
+      maxApplications: job.maxApplications,
     );
   }
 
@@ -78,10 +92,13 @@ class JobCard extends StatelessWidget {
       companyLogo: project.companyLogo,
       ownerName: project.ownerName,
       ownerPhoto: project.ownerPhoto,
+      isVerified: project.isVerified,
       isClosed: (project.deadlineDate != null &&
               DateTime.now().isAfter(project.deadlineDate!)) ||
           (project.maxApplications != null &&
-              (project.applicants?.length ?? 0) >= project.maxApplications!),
+              project.applicationsCount >= project.maxApplications!),
+      applicationsCount: project.applicationsCount,
+      maxApplications: project.maxApplications,
     );
   }
 
@@ -105,6 +122,10 @@ class JobCard extends StatelessWidget {
       isPromoted: isPromoted,
       isBookmarked: isBookmarked ?? this.isBookmarked,
       isClosed: isClosed,
+      isVerified: isVerified,
+      openings: openings,
+      applicationsCount: applicationsCount,
+      maxApplications: maxApplications,
       onBookmarkToggle: onBookmarkToggle ?? this.onBookmarkToggle,
     );
   }
@@ -116,15 +137,29 @@ class JobCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.grey.shade100, Colors.grey.shade50],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.08),
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: -5,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+                spreadRadius: 0,
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,6 +271,15 @@ class JobCard extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            if (isVerified) ...[
+                              SizedBox(width: 4),
+                              CustomImageView(
+                                imagePath: ImageConstant.imgMdiTickDecagram,
+                                height: 14,
+                                width: 14,
+                                color: CustomColors.primaryBlue,
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -268,10 +312,33 @@ class JobCard extends StatelessWidget {
                 children: [
                   _infoItem(
                     Icons.location_on_outlined,
-                    "$location ${workMode != null ? " • $workMode" : ""}",
+                    location,
+                    workMode: workMode,
                   ),
                   const SizedBox(width: 16),
                   _infoItem(Icons.category_outlined, category),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (type == 'job' && openings != null) ...[
+                    _infoItem(Icons.person_outline, "$openings Vacancies",
+                        iconColor: CustomColors.primaryBlue),
+                    const SizedBox(width: 16),
+                  ],
+                  if (type == 'project' && maxApplications != null) ...[
+                    _infoItem(Icons.person_outline, "$maxApplications Limit",
+                        iconColor: CustomColors.primaryBlue),
+                    const SizedBox(width: 16),
+                  ],
+                  if (applicationsCount != null)
+                    _infoItem(
+                        Icons.groups_outlined,
+                        type == 'job'
+                            ? "$applicationsCount Applications"
+                            : "$applicationsCount Proposals",
+                        iconColor: CustomColors.primaryBlue),
                 ],
               ),
               const SizedBox(height: 16),
@@ -351,7 +418,7 @@ class JobCard extends StatelessWidget {
                 style: TextStyle(
                   color: type == 'project'
                       ? Colors.purpleAccent
-                      : CustomColors.primaryBlue,
+                      : CustomColors.successGreen,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
@@ -362,15 +429,27 @@ class JobCard extends StatelessWidget {
     );
   }
 
-  Widget _infoItem(IconData icon, String text) {
+  Widget _infoItem(IconData icon, String text,
+      {String? workMode, Color? iconColor}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: CustomColors.textMuted),
+        Icon(icon, size: 14, color: iconColor ?? CustomColors.textMuted),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(color: CustomColors.textMuted, fontSize: 12),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(color: CustomColors.textMuted, fontSize: 12),
+            children: [
+              TextSpan(text: text),
+              if (workMode != null) ...[
+                const TextSpan(text: " • "),
+                TextSpan(
+                  text: workMode,
+                  style: const TextStyle(color: CustomColors.successGreen),
+                ),
+              ],
+            ],
+          ),
         ),
       ],
     );

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
+
+import '../../../core/app_export.dart';
 import '../../../logic/providers/job_provider.dart';
 import '../../../logic/providers/auth_provider.dart';
 import '../../../data/models/job_post_model.dart';
 import '../shared/project_dashboard_screen.dart';
-import '../../widgets/subscription_banner.dart';
 import '../shared/job_details_screen.dart';
+import '../../widgets/become_hirer_banner.dart';
 
 class WorkerProjectsScreen extends StatefulWidget {
   const WorkerProjectsScreen({super.key});
@@ -18,14 +19,13 @@ class WorkerProjectsScreen extends StatefulWidget {
 class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isInit = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
   }
-
-  bool _isInit = true;
 
   @override
   void didChangeDependencies() {
@@ -35,19 +35,19 @@ class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
       if (user?.uid != null) {
         final jobProvider = context.read<JobProvider>();
         jobProvider.updateMode(user!.activeMode);
-        jobProvider.fetchWorkerApplications(user.uid);
+        jobProvider.listenToWorkerApplications(user.uid);
         jobProvider.listenToProjects(user.uid, false);
       }
       _isInit = false;
     } else {
-      // Handle mode switch updates
       final user = context.watch<AuthProvider>().userModel;
       if (user?.uid != null) {
         final jobProvider = context.read<JobProvider>();
         if (jobProvider.activeMode != user!.activeMode) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             jobProvider.updateMode(user.activeMode);
-            jobProvider.fetchWorkerApplications(user.uid);
+            jobProvider.listenToWorkerApplications(user.uid);
+            jobProvider.listenToProjects(user.uid, false);
           });
         }
       }
@@ -67,33 +67,44 @@ class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
     final isFreelancer = userMode == 'freelancer';
 
     return Scaffold(
-      backgroundColor: CustomColors.lightBg,
+      backgroundColor: appTheme.white_A700_01,
       appBar: AppBar(
-        title: Text(isFreelancer ? 'My Projects' : 'Job Applications'),
-        backgroundColor: Colors.transparent,
+        title: Text(
+          isFreelancer ? 'My Projects' : 'Job Applications',
+          style: TextStyleHelper.instance.headline22Bold.copyWith(
+            color: appTheme.gray_900,
+          ),
+        ),
+        backgroundColor: appTheme.white_A700_01,
         elevation: 0,
+        centerTitle: true,
         automaticallyImplyLeading: false,
-        bottom: isFreelancer
-            ? TabBar(
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+            child: const BecomeHirerBanner(),
+          ),
+          if (isFreelancer)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: TabBar(
                 controller: _tabController,
-                indicatorColor: CustomColors.primaryBlue,
+                indicatorColor: appTheme.indigo_A700,
+                labelColor: appTheme.indigo_A700,
+                unselectedLabelColor: appTheme.gray_500,
+                indicatorWeight: 3,
+                labelStyle: TextStyleHelper.instance.body14Bold,
+                unselectedLabelStyle: TextStyleHelper.instance.body14Medium,
                 tabs: const [
                   Tab(text: 'Bids'),
                   Tab(text: 'Ongoing'),
                   Tab(text: 'Archive'),
                 ],
-              )
-            : null,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: SubscriptionBanner(
-              tier: context.watch<AuthProvider>().userModel?.subscriptionTier ??
-                  "Basic",
+              ),
             ),
-          ),
+          SizedBox(height: 16.h),
           Expanded(
             child: isFreelancer
                 ? TabBarView(
@@ -126,18 +137,30 @@ class _ApplicationsSection extends StatelessWidget {
       final userMode =
           context.read<AuthProvider>().userModel?.activeMode ?? 'job';
       return Center(
-        child: Text(
-          userMode == 'freelancer'
-              ? "No active bids.\nStart bidding on projects!"
-              : "No job applications yet.\nStart looking for gigs!",
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: CustomColors.textMuted),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomImageView(
+              imagePath: ImageConstant.imgSearch, // Fallback to search icon
+              height: 80.h,
+              color: appTheme.gray_300,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              userMode == 'freelancer'
+                  ? "No active bids.\nStart bidding on projects!"
+                  : "No job applications yet.\nStart looking for gigs!",
+              textAlign: TextAlign.center,
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_500),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       itemCount: applications.length,
       itemBuilder: (context, index) {
         final job = applications[index];
@@ -153,7 +176,6 @@ class _ApplicationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine status from job metadata (assuming it's stored in applicants field for now)
     final userId = context.read<AuthProvider>().userModel?.uid;
     final applicationData = job.applicants?[userId];
     final status = applicationData?['status'] ?? 'Pending';
@@ -167,16 +189,17 @@ class _ApplicationCard extends StatelessWidget {
         statusColor = Colors.red;
         break;
       default:
-        statusColor = Colors.orange;
+        statusColor = appTheme.orange_600;
     }
 
     final post = job;
     final title = post is JobPostModel ? post.jobTitle : post.projectTitle;
-    final subtitle = post is JobPostModel ? post.companyName : "Client";
+    final subtitle = post is JobPostModel ? post.companyName : "Client Project";
     final location = post is JobPostModel ? post.jobLocation : "Remote";
     final budget = post is JobPostModel
-        ? "${post.salaryMin}-${post.salaryMax} ${post.salaryType}"
+        ? "${post.salaryMin}-${post.salaryMax}"
         : "₹${post.budgetMin} - ₹${post.budgetMax}";
+    final logo = post is JobPostModel ? post.companyLogo : post.companyLogo;
 
     return GestureDetector(
       onTap: () {
@@ -191,8 +214,8 @@ class _ApplicationCard extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProjectDashboardScreen(project: project),
-              ),
+                  builder: (context) =>
+                      ProjectDashboardScreen(project: project)),
             );
             return;
           }
@@ -203,84 +226,100 @@ class _ApplicationCard extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey.shade100, Colors.grey.shade50],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+          color: appTheme.white_A700_01,
+          borderRadius: BorderRadius.circular(20.h),
+          border: Border.all(color: appTheme.gray_200),
+          boxShadow: [
+            BoxShadow(
+              color: appTheme.gray_900.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: CustomColors.darkText,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                Container(
+                  height: 48.h,
+                  width: 48.h,
+                  decoration: BoxDecoration(
+                    color: appTheme.gray_50,
+                    borderRadius: BorderRadius.circular(12.h),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.h),
+                    child: CustomImageView(
+                      imagePath: (logo != null && logo.isNotEmpty)
+                          ? logo
+                          : ImageConstant.imgImage4,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyleHelper.instance.body16Bold,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyleHelper.instance.body12Medium
+                            .copyWith(color: appTheme.indigo_A700),
+                      ),
+                    ],
                   ),
+                ),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.h),
                   ),
                   child: Text(
                     status.toString().toUpperCase(),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyleHelper.instance.body12Bold
+                        .copyWith(color: statusColor),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: CustomColors.primaryBlue,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 12),
+            SizedBox(height: 16.h),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 16,
-                  color: CustomColors.textMuted,
+                Row(
+                  children: [
+                    CustomImageView(
+                      imagePath: ImageConstant
+                          .imgSearch, // Replace with location icon if available
+                      height: 14.h,
+                      color: appTheme.gray_400,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      location,
+                      style: TextStyleHelper.instance.body12Medium
+                          .copyWith(color: appTheme.gray_500),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: const TextStyle(
-                    color: CustomColors.textMuted,
-                    fontSize: 12,
-                  ),
-                ),
-                const Spacer(),
                 Text(
                   budget,
-                  style: const TextStyle(
-                    color: CustomColors.darkText,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyleHelper.instance.body14Bold
+                      .copyWith(color: appTheme.gray_900),
                 ),
               ],
             ),
@@ -308,13 +347,14 @@ class _OngoingProjectsSection extends StatelessWidget {
               ? "No archived projects yet."
               : "No ongoing projects yet.\nOnce hired, your projects will appear here.",
           textAlign: TextAlign.center,
-          style: const TextStyle(color: CustomColors.textMuted),
+          style: TextStyleHelper.instance.body14Medium
+              .copyWith(color: appTheme.gray_500),
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       itemCount: projects.length,
       itemBuilder: (context, index) {
         final project = projects[index];
@@ -334,20 +374,15 @@ class _ProjectCard extends StatelessWidget {
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProjectDashboardScreen(project: project),
-        ),
+            builder: (context) => ProjectDashboardScreen(project: project)),
       ),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.grey.shade100, Colors.grey.shade50],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+          color: appTheme.white_A700_01,
+          borderRadius: BorderRadius.circular(20.h),
+          border: Border.all(color: appTheme.gray_200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,40 +393,35 @@ class _ProjectCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     project.title,
-                    style: const TextStyle(
-                      color: CustomColors.darkText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyleHelper.instance.body16Bold,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(
                   "${(project.progress * 100).toInt()}%",
-                  style: const TextStyle(
-                    color: CustomColors.primaryBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyleHelper.instance.body14Bold
+                      .copyWith(color: appTheme.indigo_A700),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               project.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: CustomColors.textMuted,
-                fontSize: 13,
-              ),
+              style: TextStyleHelper.instance.body12Medium
+                  .copyWith(color: appTheme.gray_500),
             ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: project.progress,
-              backgroundColor: Colors.black.withValues(alpha: 0.05),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                CustomColors.primaryBlue,
+            SizedBox(height: 16.h),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4.h),
+              child: LinearProgressIndicator(
+                value: project.progress,
+                minHeight: 8.h,
+                backgroundColor: appTheme.gray_100,
+                valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
               ),
-              borderRadius: BorderRadius.circular(4),
             ),
           ],
         ),

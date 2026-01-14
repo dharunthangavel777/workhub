@@ -308,7 +308,7 @@ class _ApplicantCard extends StatelessWidget {
             workerName: data['workerName'] ?? "Worker",
             title: title,
             description: description,
-            ownerId: auth.userModel!.uid,
+            ownerId: auth.userModel?.uid ?? '',
             mode: mode,
             bidAmount: (data['bidAmount'] as num?)?.toDouble(),
             depositAmount: job is ProjectPostModel
@@ -319,6 +319,7 @@ class _ApplicantCard extends StatelessWidget {
                 : null,
             suggestedMilestones:
                 data['suggestedMilestones'], // Pass suggested milestones
+            deliveryTime: data['deliveryTime'],
           );
         } else {
           // Standard job hiring

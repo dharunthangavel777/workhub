@@ -18,16 +18,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingData> _pages = [
     OnboardingData(
-      title: "Connect Agents\nwith Talent",
+      title: "Direct Connect\nwith Work",
       description:
-          "A unified platform where agents upload job orders and professional contractors discover their next opportunity.",
-      image: 'assets/icons/app.png',
+          "The fastest way to connect with high-quality work orders and top-tier talent in one place.",
+      image: 'assets/images/1.gif',
     ),
     OnboardingData(
-      title: "Smart Work Order\nManagement",
+      title: "Effortless Order\nManagement",
       description:
-          "Seamlessly submit work plans, track job assignments, and manage project approvals in a single, streamlined workflow.",
-      image: 'assets/icons/app.png',
+          "Manage project assignments, track progress, and handle approvals with a simple tap.",
+      image: 'assets/images/2.gif',
+    ),
+    OnboardingData(
+      title: "Real-time AI\nMatching",
+      description:
+          "Our advanced AI matches the right candidates with the right projects automatically.",
+      image: 'assets/images/3.gif',
     ),
   ];
 
@@ -38,9 +44,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const Spacer(),
+            const SizedBox(height: 20),
             Expanded(
-              flex: 3,
+              flex: 4,
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: _pages.length,
@@ -75,38 +81,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 48),
                   // Buttons
-                  if (_currentPage == _pages.length - 1)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: () => _navigateToLogin(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomColors.primaryBlue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back Button
+                      if (_currentPage > 0)
+                        ElevatedButton(
+                          onPressed: () {
+                            _pageController.previousPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: CustomColors.primaryBlue,
+                            shape: const CircleBorder(),
+                            padding: const EdgeInsets.all(20),
+                            elevation: 0,
                           ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          "Get Started",
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
+                          child:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                        )
+                      else
+                        const SizedBox(width: 60), // Balanced spacing
+
+                      // Next / Get Started Button
+                      ElevatedButton(
                         onPressed: () {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
+                          if (_currentPage == _pages.length - 1) {
+                            _navigateToLogin(context);
+                          } else {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: CustomColors.primaryBlue,
@@ -114,10 +123,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           padding: const EdgeInsets.all(20),
                           elevation: 0,
                         ),
-                        child: const Icon(Icons.arrow_forward,
-                            color: Colors.white),
+                        child: Icon(
+                          _currentPage == _pages.length - 1
+                              ? Icons.check
+                              : Icons.arrow_forward,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -160,18 +174,12 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Placeholder for the main illustration/logo
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: CustomColors.primaryBlue.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
+          // Main illustration
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.35,
             child: Image.asset(
               data.image,
-              width: 120,
-              height: 120,
-              color: CustomColors.primaryBlue, // Tinting it blue as requested
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 48),

@@ -27,15 +27,26 @@ class CompanyRecommendationWidget extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: MediaQuery.of(context).size.width / 2.5,
-        padding: EdgeInsets.all(12.h),
+        padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
-          color: appTheme.gray_100,
-          borderRadius: BorderRadius.circular(14.h),
+          color: appTheme.white_A700,
+          borderRadius: BorderRadius.circular(16.h),
+          border: Border.all(
+            color: appTheme.black_900.withValues(alpha: 0.05),
+            width: 1.h,
+          ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.color3F0000.withOpacity(0.05),
-              blurRadius: 4.h,
-              offset: Offset(0, 2.h),
+              color: appTheme.black_900.withValues(alpha: 0.08),
+              blurRadius: 20.h,
+              offset: Offset(0, 10.h),
+              spreadRadius: -5.h,
+            ),
+            BoxShadow(
+              color: appTheme.black_900.withValues(alpha: 0.03),
+              blurRadius: 10.h,
+              offset: Offset(0, 4.h),
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -58,14 +69,14 @@ class CompanyRecommendationWidget extends StatelessWidget {
                   : Center(
                       child: Text(
                         companyName?.substring(0, 1).toUpperCase() ?? "",
-                        style: TextStyleHelper.instance.title22BoldDMSans,
+                        style: TextStyleHelper.instance.headline22Bold,
                       ),
                     ),
             ),
             SizedBox(height: 12.h),
             Text(
               companyName ?? "",
-              style: TextStyleHelper.instance.body14MediumPoppins.copyWith(
+              style: TextStyleHelper.instance.body14Medium.copyWith(
                 fontWeight: FontWeight.w700,
               ),
               maxLines: 1,
@@ -75,9 +86,9 @@ class CompanyRecommendationWidget extends StatelessWidget {
             SizedBox(height: 4.h),
             Text(
               location ?? "Remote",
-              style: TextStyleHelper.instance.body12MediumPoppins.copyWith(
+              style: TextStyleHelper.instance.body12Medium.copyWith(
                 color: CustomColors.textMuted,
-                fontSize: 11.fSize,
+                fontSize: 11,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -92,9 +103,9 @@ class CompanyRecommendationWidget extends StatelessWidget {
               ),
               child: Text(
                 "${openJobsCount ?? 1} Open Jobs",
-                style: TextStyleHelper.instance.body12MediumPoppins.copyWith(
+                style: TextStyleHelper.instance.body12Medium.copyWith(
                   color: appTheme.indigo_A700,
-                  fontSize: 10.fSize,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
               ),

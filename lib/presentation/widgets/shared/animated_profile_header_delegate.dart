@@ -13,6 +13,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Function(bool)? onSwitchChanged;
   final VoidCallback? onProfileTap;
   final Color? backgroundColor;
+  final double profileCompletion;
 
   AnimatedProfileHeaderDelegate({
     required this.userName,
@@ -24,6 +25,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.onSwitchChanged,
     this.onProfileTap,
     this.backgroundColor,
+    this.profileCompletion = 0,
   });
 
   @override
@@ -99,11 +101,39 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       children: [
                         GestureDetector(
                           onTap: onProfileTap,
-                          child: CustomImageView(
-                            imagePath: profileImage ?? ImageConstant.imgImage4,
-                            height: avatarSize,
-                            width: avatarSize,
-                            radius: BorderRadius.circular(avatarRadius),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              TweenAnimationBuilder<double>(
+                                tween: Tween<double>(
+                                    begin: 0, end: profileCompletion / 100),
+                                duration: const Duration(milliseconds: 1500),
+                                curve: Curves.easeInOutCubic,
+                                builder: (context, value, child) {
+                                  return SizedBox(
+                                    width: avatarSize + 8.h,
+                                    height: avatarSize + 8.h,
+                                    child: CircularProgressIndicator(
+                                      value: value,
+                                      strokeWidth: 3,
+                                      backgroundColor: CustomColors.primaryBlue
+                                          .withOpacity(0.1),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                        CustomColors.primaryBlue,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              CustomImageView(
+                                imagePath:
+                                    profileImage ?? ImageConstant.imgImage4,
+                                height: avatarSize,
+                                width: avatarSize,
+                                radius: BorderRadius.circular(avatarRadius),
+                              ),
+                            ],
                           ),
                         ),
                         SizedBox(width: 12.w),
@@ -192,7 +222,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
           borderRadius: BorderRadius.circular(16.h),
           border: isSelected
               ? Border.all(
-                  color: appTheme.indigo_A700.withOpacity(0.3),
+                  color: appTheme.indigo_A700.withValues(alpha: 0.3),
                   width: 1.5,
                 )
               : null,

@@ -23,10 +23,16 @@ class JobFeedScreen extends StatelessWidget {
 
     final posts = activeMode == 'job'
         ? jobProvider.jobPosts
-            .where((p) => p.status != 'filled' && p.status != 'closed')
+            .where((p) =>
+                p.status != 'filled' &&
+                p.status != 'closed' &&
+                !jobProvider.appliedJobIds.contains(p.id))
             .toList()
         : jobProvider.projectPosts
-            .where((p) => p.status != 'filled' && p.status != 'closed')
+            .where((p) =>
+                p.status != 'filled' &&
+                p.status != 'closed' &&
+                !jobProvider.appliedProjectIds.contains(p.id))
             .toList();
 
     return SafeArea(

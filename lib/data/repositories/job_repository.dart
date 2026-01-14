@@ -15,6 +15,7 @@ import '../models/withdrawal_request_model.dart';
 import '../models/rating_model.dart';
 import '../models/time_entry_model.dart';
 import '../services/storage_service.dart';
+import '../../logic/services/notification_service.dart';
 
 class JobRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -88,7 +89,7 @@ class JobRepository {
       transaction.update(docRef, {
         'applicants.$userId': {...applicationData, 'mode': mode},
         'applicationsCount': FieldValue.increment(1),
-        if (currentApps + 1 >= openings) 'status': 'filled',
+        if (currentApps + 1 >= maxApps) 'status': 'filled',
       });
 
       transaction.set(
@@ -104,6 +105,17 @@ class JobRepository {
         },
       );
     }).timeout(const Duration(seconds: 10));
+
+    // Trigger Notification
+    if (mode == 'worker') {
+      NotificationService().sendNotification(
+        recipientId: (applicationData['ownerId'] ?? ''),
+        title: 'New Application',
+        body: 'Someone has applied for your job post.',
+        category: 'job_application',
+        data: {'jobId': jobId},
+      );
+    }
   }
 
   Future<void> updateApplicationStatus(
@@ -129,6 +141,54 @@ class JobRepository {
     );
 
     await batch.commit().timeout(const Duration(seconds: 5));
+
+    // Trigger Notification
+    NotificationService().sendNotification(
+      recipientId: userId,
+      title: 'Application Update',
+      body: 'Your application status has been updated to $status.',
+      category: 'application_status',
+      data: {'jobId': jobId},
+    );
+  }
+
+  Stream<List<dynamic>> getWorkerApplicationsStream(String userId,
+      {String? modeFilter}) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('applications')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final List<dynamic> appliedPosts = [];
+
+      for (var doc in snapshot.docs) {
+        final jobId = doc.id;
+        final mode = doc.data()['mode'] ?? 'job';
+
+        // Filter by mode if provided
+        if (modeFilter != null && mode != modeFilter) {
+          continue;
+        }
+
+        final collection = mode == 'freelancer' ? 'project_posts' : 'job_posts';
+
+        final jobDoc = await _firestore
+            .collection(collection)
+            .doc(jobId)
+            .get()
+            .timeout(const Duration(seconds: 5));
+        if (jobDoc.exists) {
+          if (mode == 'freelancer') {
+            appliedPosts.add(ProjectPostModel.fromMap(jobId, jobDoc.data()!));
+          } else {
+            appliedPosts.add(JobPostModel.fromMap(jobId, jobDoc.data()!));
+          }
+        }
+      }
+      // Sort by some criteria if needed, e.g. status or title
+      return appliedPosts;
+    });
   }
 
   Future<List<dynamic>> getWorkerApplications(String userId,
@@ -226,35 +286,62 @@ class JobRepository {
     String userId,
     Map<String, dynamic> bidData,
   ) async {
-    final batch = _firestore.batch();
+    final docRef = _firestore.collection('project_posts').doc(projectId);
 
-    // Update the project post with the bid
-    batch.update(_firestore.collection('project_posts').doc(projectId), {
-      'applicants.$userId': {
-        ...bidData,
-        'mode': 'freelancer',
-        'status': 'pending',
-      },
-    });
+    await _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
+      if (!doc.exists) throw Exception("Project not found");
 
-    // Record the bid in the user's applications subcollection
-    batch.set(
-      _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('applications')
-          .doc(projectId),
-      {
-        'status': 'pending',
-        'appliedAt': DateTime.now().millisecondsSinceEpoch,
-        'mode': 'freelancer',
-        'bidAmount': bidData['bidAmount'],
-        'suggestedMilestones':
-            bidData['suggestedMilestones'], // Pass milestones here
-      },
+      final data = doc.data()!;
+      final status = data['status'] ?? 'pending';
+      final maxApps =
+          data['maxApplications'] ?? 1000; // Default high if not set
+      final currentApps = data['applicationsCount'] ?? 0;
+
+      if (status != 'approved' && status != 'open') {
+        throw Exception("This project is no longer accepting proposals.");
+      }
+
+      if (currentApps >= maxApps) {
+        throw Exception("Application limit reached for this project.");
+      }
+
+      // Update the project post with the bid and increment count
+      transaction.update(docRef, {
+        'applicants.$userId': {
+          ...bidData,
+          'mode': 'freelancer',
+          'status': 'pending',
+        },
+        'applicationsCount': FieldValue.increment(1),
+        if (currentApps + 1 >= maxApps) 'status': 'filled',
+      });
+
+      // Record the bid in the user's applications subcollection
+      transaction.set(
+        _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('applications')
+            .doc(projectId),
+        {
+          'status': 'pending',
+          'appliedAt': DateTime.now().millisecondsSinceEpoch,
+          'mode': 'freelancer',
+          'bidAmount': bidData['bidAmount'],
+          'suggestedMilestones': bidData['suggestedMilestones'],
+        },
+      );
+    }).timeout(const Duration(seconds: 10));
+
+    // Trigger Notification
+    NotificationService().sendNotification(
+      recipientId: (bidData['ownerId'] ?? ''),
+      title: 'New Proposal',
+      body: 'A new proposal has been submitted for your project.',
+      category: 'project_bid',
+      data: {'projectId': projectId},
     );
-
-    await batch.commit().timeout(const Duration(seconds: 5));
   }
 
   Future<void> approveBid(
@@ -285,14 +372,19 @@ class JobRepository {
       // Create a new project document
       final projectRef = _firestore.collection('projects').doc();
 
+      final String deliveryTime = projectData['deliveryTime'] ?? '30 days';
+      final int durationDays = _parseDurationInDays(deliveryTime);
+      final DateTime expectedCompletion =
+          DateTime.now().add(Duration(days: durationDays));
+
       // Create contract for the project
       final contractRef = _firestore.collection('contracts').doc();
       final contractTerms = ContractTerms(
         id: contractRef.id,
         projectId: projectRef.id,
-        agreedBudget: projectData['budget'] ?? 0.0,
+        agreedBudget: (projectData['budget'] ?? 0.0).toDouble(),
         startDate: DateTime.now(),
-        expectedCompletion: DateTime.now().add(const Duration(days: 30)),
+        expectedCompletion: expectedCompletion,
         paymentType: projectData['mode'] == 'hourly' ? 'hourly' : 'fixed',
         platformFee: 10.0,
         ownerAccepted: false,
@@ -324,6 +416,11 @@ class JobRepository {
         }
       }
 
+      final double budget = (projectData['budget'] ?? 0.0).toDouble();
+      const double platformFeePercent = 10.0;
+      final double feeAmount = budget * platformFeePercent / 100;
+      final double totalRequired = budget + feeAmount;
+
       batch.set(projectRef, {
         'id': projectRef.id,
         'jobId': postId,
@@ -332,18 +429,29 @@ class JobRepository {
         'title': projectData['title'],
         'description': projectData['description'],
         'workerName': projectData['workerName'],
-        'budget': projectData['budget'],
-        'status': 'setup', // Changed from 'active'
+        'budget': budget,
+        'platformFee': platformFeePercent, // Store percent here
+        'status': 'setup',
         'createdAt': FieldValue.serverTimestamp(),
-        'milestoneIds': milestoneIds, // Reference created milestones
+        'milestoneIds': milestoneIds,
         'escrowBalance': 0,
         'contractId': contractRef.id,
         'termsAndConditions': projectData['termsAndConditions'],
-        'requiredDeposit': projectData['depositAmount'],
+        'requiredDeposit': totalRequired, // Budget + Fee
         'depositPaid': false,
+        'deadline': expectedCompletion.millisecondsSinceEpoch,
       });
 
       await batch.commit().timeout(const Duration(seconds: 10));
+
+      // Trigger Notification
+      NotificationService().sendNotification(
+        recipientId: workerId,
+        title: 'Proposal Approved',
+        body: 'Your proposal has been accepted! You can now start the setup.',
+        category: 'bid_approved',
+        data: {'projectId': postId},
+      );
 
       debugPrint(
           "Bid approved, project, contract and milestones created successfully");
@@ -415,6 +523,21 @@ class JobRepository {
 
       if (response.statusCode != 200 || result['success'] != true) {
         throw Exception(result['message'] ?? 'Unknown error');
+      }
+
+      // Trigger Notification
+      final projectDoc =
+          await _firestore.collection('projects').doc(projectId).get();
+      final workerId = projectDoc.data()?['workerId'];
+      if (workerId != null) {
+        NotificationService().sendNotification(
+          recipientId: workerId,
+          title: 'Payment Released',
+          body:
+              'A payment of $amount has been released from escrow to your wallet.',
+          category: 'payment_released',
+          data: {'projectId': projectId},
+        );
       }
     } catch (e) {
       // Re-throw to be handled by the provider/UI
@@ -491,6 +614,34 @@ class JobRepository {
           .update(updates)
           .timeout(const Duration(seconds: 5));
 
+      // Trigger Notification
+      final contractDoc =
+          await _firestore.collection('contracts').doc(contractId).get();
+      final Map<String, dynamic>? contractData = contractDoc.data();
+      final projectId = contractData?['projectId'];
+
+      if (projectId != null) {
+        final projectDoc =
+            await _firestore.collection('projects').doc(projectId).get();
+        final Map<String, dynamic>? projectData = projectDoc.data();
+        final String? projectWorkerId = projectData?['workerId'];
+        final String? projectOwnerId = projectData?['ownerId'];
+
+        final recipientId =
+            (role == 'owner') ? projectWorkerId : projectOwnerId;
+
+        if (recipientId != null) {
+          NotificationService().sendNotification(
+            recipientId: recipientId,
+            title: 'Contract Update',
+            body:
+                'The contract for your project has been accepted by the ${role}.',
+            category: 'contract_accepted',
+            data: {'projectId': projectId, 'contractId': contractId},
+          );
+        }
+      }
+
       debugPrint("Contract accepted by $role: $contractId");
     } catch (e) {
       debugPrint("Accept Contract Error: $e");
@@ -556,36 +707,14 @@ class JobRepository {
           throw Exception("Project not found");
         }
 
-        final projectData = projectDoc.data()!;
-        final workerId = projectData['workerId'] as String?;
-
-        // 1. Update project escrow balance and deposit flag
+        // Update deposit flag (Redundant but safe for local UI state)
         transaction.update(projectRef, {
-          'escrowBalance': FieldValue.increment(amount),
           'depositPaid': true,
         });
 
-        // 2. Update worker pendingClearance if worker exists
-        if (workerId != null && workerId.isNotEmpty) {
-          final workerRef = _firestore.collection('users').doc(workerId);
-          transaction.update(workerRef, {
-            'pendingClearance': FieldValue.increment(amount),
-          });
-        }
-
-        // 3. Create transaction record
-        final transactionRef = _firestore.collection('transactions').doc();
-        final transactionObj = transaction_model.Transaction(
-          id: transactionRef.id,
-          projectId: projectId,
-          userId: userId,
-          type: transaction_model.TransactionType.escrowDeposit,
-          amount: amount,
-          description: 'Escrow deposit via payment gateway',
-          metadata: {'paymentSessionId': paymentSessionId},
-        );
-
-        transaction.set(transactionRef, transactionObj.toMap());
+        // NOTE: escrowBalance and pendingClearance are now updated by the backend
+        // during verifyPaymentStatus to ensure a single source of truth and prevent doubling.
+        // Transaction record is also created by the backend.
       }).timeout(const Duration(seconds: 10));
 
       debugPrint("Escrow deposit successful: \$$amount for project $projectId");
@@ -714,6 +843,20 @@ class JobRepository {
         'attachments': links,
         'submittedAt': Timestamp.now(),
       });
+
+      // Trigger Notification
+      final projectDoc =
+          await _firestore.collection('projects').doc(projectId).get();
+      final ownerId = projectDoc.data()?['ownerId'];
+      if (ownerId != null) {
+        NotificationService().sendNotification(
+          recipientId: ownerId,
+          title: 'Milestone Submitted',
+          body: 'A milestone has been submitted for your review.',
+          category: 'milestone_submitted',
+          data: {'projectId': projectId, 'milestoneId': milestoneId},
+        );
+      }
     } catch (e) {
       throw Exception('Failed to submit work: $e');
     }
@@ -750,24 +893,27 @@ class JobRepository {
           throw Exception('Insufficient escrow balance');
         }
 
-        // Calculate platform fee and net payout
+        // Calculate platform fee
         final feeAmount = milestone.amount * (platformFeePercent / 100);
-        final netPayout = milestone.amount - feeAmount;
+        final totalMilestoneCost = milestone.amount + feeAmount;
 
-        // 1. Update project escrow and net earnings
+        // 1. Update project escrow and statistics
         transaction.update(projectRef, {
-          'escrowBalance': escrowBalance - milestone.amount,
-          'netEarnings': FieldValue.increment(netPayout),
+          'escrowBalance': escrowBalance - totalMilestoneCost,
+          'netEarnings': FieldValue.increment(
+              milestone.amount), // Amount worker actually gets
+          'platformFeeAccumulated':
+              FieldValue.increment(feeAmount), // Track platform revenue
         });
 
         // 2. Update worker wallet
         final workerRef = _firestore.collection('users').doc(workerId);
         transaction.update(workerRef, {
           'pendingClearance': FieldValue.increment(-milestone.amount),
-          'walletBalance': FieldValue.increment(netPayout),
-          'totalEarnings': FieldValue.increment(netPayout),
-          'completedProjects': FieldValue.increment(
-              0), // Placeholder if we want to count milestones
+          'walletBalance':
+              FieldValue.increment(milestone.amount), // Gets full amount
+          'totalEarnings': FieldValue.increment(milestone.amount),
+          'completedProjects': FieldValue.increment(0),
         });
 
         // 3. Update milestone status
@@ -780,9 +926,9 @@ class JobRepository {
         final transactionRef = _firestore.collection('transactions').doc();
         final transactionData = {
           'projectId': projectId,
-          'amount': netPayout,
+          'amount': milestone.amount, // Changed from netPayout
           'feeAmount': feeAmount,
-          'totalAmount': milestone.amount,
+          'totalAmount': totalMilestoneCost, // Changed from milestone.amount
           'type': 'payout',
           'description': 'Milestone Payout: ${milestone.title}',
           'timestamp': Timestamp.now(),
@@ -799,20 +945,33 @@ class JobRepository {
       });
 
       // 6. Call Backend API for actual fund movement
-      final projectDoc =
+      final projectDataDoc =
           await _firestore.collection('projects').doc(projectId).get();
-      final milestoneDoc = await _firestore
+      final milestoneDataDoc = await _firestore
           .collection('projects')
           .doc(projectId)
           .collection('milestones')
           .doc(milestoneId)
           .get();
 
-      if (projectDoc.exists && milestoneDoc.exists) {
-        final amount = (milestoneDoc.data()?['amount'] ?? 0.0).toDouble();
+      if (projectDataDoc.exists && milestoneDataDoc.exists) {
+        final Map<String, dynamic> projData = projectDataDoc.data()!;
+        final Map<String, dynamic> mileData = milestoneDataDoc.data()!;
+        final double mileAmount = (mileData['amount'] ?? 0.0).toDouble();
+        final String wId = projData['workerId'] as String;
+        final String title = mileData['title'] as String;
+
+        // Trigger Notification
+        NotificationService().sendNotification(
+          recipientId: wId,
+          title: 'Milestone Approved',
+          body: 'Your milestone "$title" has been approved!',
+          category: 'milestone_approved',
+          data: {'projectId': projectId, 'milestoneId': milestoneId},
+        );
 
         // This method calls the Vercel backend to release the escrow funds to the worker
-        await releasePayment(projectId, amount);
+        await releasePayment(projectId, mileAmount);
         debugPrint(
             "Backend payment release triggered for milestone $milestoneId");
       }
@@ -891,6 +1050,20 @@ class JobRepository {
         'status': MilestoneStatus.revisionRequested.name,
         'revisionNote': reason,
       });
+
+      // Trigger Notification
+      final projectDoc =
+          await _firestore.collection('projects').doc(projectId).get();
+      final workerId = projectDoc.data()?['workerId'];
+      if (workerId != null) {
+        NotificationService().sendNotification(
+          recipientId: workerId,
+          title: 'Milestone Rejected',
+          body: 'A milestone requires revisions. Reason: $reason',
+          category: 'milestone_rejected',
+          data: {'projectId': projectId, 'milestoneId': milestoneId},
+        );
+      }
     } catch (e) {
       throw Exception('Failed to reject milestone: $e');
     }
@@ -962,6 +1135,21 @@ class JobRepository {
           .collection('withdrawals')
           .doc(withdrawalId)
           .update(updates);
+
+      // Trigger Notification
+      final withdrawalDoc =
+          await _firestore.collection('withdrawals').doc(withdrawalId).get();
+      final recipientId = withdrawalDoc.data()?['userId'];
+      if (recipientId != null) {
+        NotificationService().sendNotification(
+          recipientId: recipientId,
+          title: 'Withdrawal Update',
+          body:
+              'Your withdrawal request status has been updated to ${status.name}.',
+          category: 'withdrawal_status',
+          data: {'withdrawalId': withdrawalId},
+        );
+      }
       debugPrint("Withdrawal $withdrawalId updated to $status");
     } catch (e) {
       debugPrint("Update Withdrawal Status Error: $e");
@@ -991,6 +1179,23 @@ class JobRepository {
         .collection('disputes')
         .doc(dispute.id)
         .set(dispute.toMap());
+
+    // Trigger Notification
+    final projectDoc =
+        await _firestore.collection('projects').doc(dispute.projectId).get();
+    final workerId = projectDoc.data()?['workerId'];
+    final ownerId = projectDoc.data()?['ownerId'];
+    final recipientId = (dispute.raisedBy == ownerId) ? workerId : ownerId;
+
+    if (recipientId != null) {
+      NotificationService().sendNotification(
+        recipientId: recipientId,
+        title: 'Dispute Raised',
+        body: 'A dispute has been opened for your project: ${dispute.reason}',
+        category: 'dispute_raised',
+        data: {'projectId': dispute.projectId, 'disputeId': dispute.id},
+      );
+    }
   }
 
   Stream<List<DisputeInfo>> getDisputesStream(String projectId) {
@@ -1122,6 +1327,28 @@ class JobRepository {
         // 3. Update the rated user's average rating (Optional/Future)
         // This could be move to Cloud Functions for better consistency
       });
+
+      // Trigger Notification
+      final projectDoc =
+          await _firestore.collection('projects').doc(rating.projectId).get();
+      final isOwnerRating = rating.raterRole == 'owner';
+      final Map<String, dynamic>? projectData = projectDoc.data();
+      String? recipientId;
+      if (isOwnerRating) {
+        recipientId = projectData?['workerId'];
+      } else {
+        recipientId = projectData?['ownerId'];
+      }
+
+      if (recipientId != null) {
+        NotificationService().sendNotification(
+          recipientId: recipientId,
+          title: 'New Rating',
+          body: 'You have received a new rating for your project.',
+          category: 'new_rating',
+          data: {'projectId': rating.projectId},
+        );
+      }
 
       debugPrint("Rating submitted successfully: ${docRef.id}");
     } catch (e) {
@@ -1266,5 +1493,28 @@ class JobRepository {
       debugPrint("Upload Dispute File Error: $e");
       throw Exception("Failed to upload evidence: $e");
     }
+  }
+
+  int _parseDurationInDays(String? timeline) {
+    if (timeline == null || timeline.isEmpty) return 30; // Default
+
+    // Try to find the first number in the string
+    final regExp = RegExp(r'(\d+)');
+    final match = regExp.firstMatch(timeline);
+    if (match != null) {
+      int value = int.parse(match.group(1)!);
+
+      // If the string contains 'month', multiply by 30
+      if (timeline.toLowerCase().contains('month')) {
+        return value * 30;
+      }
+      // If the string contains 'week', multiply by 7
+      if (timeline.toLowerCase().contains('week')) {
+        return value * 7;
+      }
+      return value;
+    }
+
+    return 30; // Fallback
   }
 }

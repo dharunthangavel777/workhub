@@ -38,6 +38,8 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
     return Scaffold(
       body: NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
+          if (_selectedIndex != 0) return true; // Only apply to Home screen
+
           if (notification.direction == ScrollDirection.reverse) {
             if (_isBottomBarVisible)
               setState(() => _isBottomBarVisible = false);
@@ -65,7 +67,11 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
                 _showGuestLoginPrompt(context);
                 return;
               }
-              setState(() => _selectedIndex = index);
+              setState(() {
+                _selectedIndex = index;
+                _isBottomBarVisible =
+                    true; // Always show bar when switching tabs
+              });
             },
             bottomBarItemList: [
               CustomBottomBarItem(

@@ -75,14 +75,24 @@ class _CreateMilestoneScreenState extends State<CreateMilestoneScreen> {
                 prefix: "₹ ",
                 validator: (v) {
                   if (v?.isEmpty ?? true) return "Amount is required";
-                  final amount = double.tryParse(v!);
+                  final amount = double.tryParse(v ?? '0');
                   if (amount == null || amount <= 0) return "Invalid amount";
-                  if (amount > widget.projectBudget) {
-                    return "Exceeds project budget";
+
+                  // Cumulative budget check
+                  final milestones = context.read<JobProvider>().milestones;
+                  final totalAllocated =
+                      milestones.fold(0.0, (sum, m) => sum + (m.amount));
+                  final remainingBudget = widget.projectBudget - totalAllocated;
+
+                  if (amount > remainingBudget + 0.01) {
+                    // Small epsilon for float precision
+                    return "Exceeds remaining budget (₹${remainingBudget.toStringAsFixed(2)})";
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 8),
+              _buildRemainingBudgetInfo(),
               const SizedBox(height: 24),
               const Text(
                 "Deadline",
@@ -144,6 +154,43 @@ class _CreateMilestoneScreenState extends State<CreateMilestoneScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRemainingBudgetInfo() {
+    final milestones = context.watch<JobProvider>().milestones;
+    final totalAllocated = milestones.fold(0.0, (sum, m) => sum + m.amount);
+    final remainingBudget = widget.projectBudget - totalAllocated;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: remainingBudget > 0
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Remaining Budget:",
+            style: TextStyle(
+              fontSize: 13,
+              color: remainingBudget > 0 ? Colors.green.shade700 : Colors.red,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            "₹${remainingBudget.toStringAsFixed(2)}",
+            style: TextStyle(
+              fontSize: 13,
+              color: remainingBudget > 0 ? Colors.green.shade900 : Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

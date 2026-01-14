@@ -14,6 +14,8 @@ class JobCardWidget extends StatelessWidget {
   final String? companyLogo;
   final int? totalVacancies;
   final int? totalApplications;
+  final bool isVerified;
+  final String? type;
   final VoidCallback? onTap;
 
   JobCardWidget({
@@ -27,6 +29,8 @@ class JobCardWidget extends StatelessWidget {
     this.companyLogo,
     this.totalVacancies,
     this.totalApplications,
+    this.isVerified = false,
+    this.type,
     this.onTap,
   }) : super(key: key);
 
@@ -41,6 +45,8 @@ class JobCardWidget extends StatelessWidget {
       companyLogo: job.companyLogo,
       totalVacancies: job.openings,
       totalApplications: job.applicationsCount,
+      isVerified: job.isVerified,
+      type: 'job',
       onTap: onTap,
     );
   }
@@ -57,6 +63,8 @@ class JobCardWidget extends StatelessWidget {
       companyLogo: project.companyLogo,
       totalVacancies: project.maxApplications ?? 1,
       totalApplications: project.applicationsCount,
+      isVerified: project.isVerified,
+      type: 'project',
       onTap: onTap,
     );
   }
@@ -76,13 +84,24 @@ class JobCardWidget extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(22.h),
         decoration: BoxDecoration(
-          color: appTheme.gray_100,
-          borderRadius: BorderRadius.circular(14.h),
+          color: appTheme.white_A700,
+          borderRadius: BorderRadius.circular(16.h),
+          border: Border.all(
+            color: appTheme.black_900.withValues(alpha: 0.05),
+            width: 1.h,
+          ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.color3F0000.withOpacity(0.05),
-              blurRadius: 4.h,
-              offset: Offset(0, 2.h),
+              color: appTheme.black_900.withValues(alpha: 0.08),
+              blurRadius: 20.h,
+              offset: Offset(0, 10.h),
+              spreadRadius: -5.h,
+            ),
+            BoxShadow(
+              color: appTheme.black_900.withValues(alpha: 0.03),
+              blurRadius: 10.h,
+              offset: Offset(0, 4.h),
+              spreadRadius: 0,
             ),
           ],
         ),
@@ -97,7 +116,7 @@ class JobCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         title ?? "",
-                        style: TextStyleHelper.instance.title20BlackDMSans,
+                        style: TextStyleHelper.instance.title20SemiBold,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -107,13 +126,21 @@ class JobCardWidget extends StatelessWidget {
                           Flexible(
                             child: Text(
                               company ?? "",
-                              style: TextStyleHelper
-                                  .instance.body14MediumPoppins
+                              style: TextStyleHelper.instance.body14Medium
                                   .copyWith(color: appTheme.indigo_A700),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (isVerified) ...[
+                            SizedBox(width: 4.h),
+                            CustomImageView(
+                              imagePath: ImageConstant.imgMdiTickDecagram,
+                              height: 14.h,
+                              width: 14.h,
+                              color: appTheme.indigo_A700,
+                            ),
+                          ],
                           Container(
                             width: 1.h,
                             height: 14.h,
@@ -122,8 +149,7 @@ class JobCardWidget extends StatelessWidget {
                           ),
                           Text(
                             rating ?? "4.3",
-                            style:
-                                TextStyleHelper.instance.body12SemiBoldPoppins,
+                            style: TextStyleHelper.instance.body12SemiBold,
                           ),
                           SizedBox(width: 4.h),
                           CustomImageView(
@@ -145,11 +171,16 @@ class JobCardWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.h),
+                    border: Border.all(
+                      color: appTheme.black_900.withValues(alpha: 0.08),
+                      width: 1.h,
+                    ),
                   ),
                   child: CustomImageView(
                     imagePath: companyLogo ?? "",
                     width: 40.h,
                     height: 40.h,
+                    radius: BorderRadius.circular(8.h),
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -159,37 +190,37 @@ class JobCardWidget extends StatelessWidget {
             Row(
               children: [
                 if (totalVacancies != null) ...[
-                  CustomImageView(
-                    imagePath: ImageConstant.imgMaterialSymbolsPersonRounded,
-                    width: 16.h,
-                    height: 16.h,
+                  Icon(
+                    Icons.person_outline,
+                    size: 16,
                     color: appTheme.indigo_A700,
                   ),
                   SizedBox(width: 4.h),
                   Text(
-                    "$totalVacancies Vacancies",
-                    style:
-                        TextStyleHelper.instance.body12SemiBoldPoppins.copyWith(
-                      color: appTheme.black_900.withOpacity(0.6),
-                      fontSize: 13.fSize,
+                    type == 'project'
+                        ? "$totalVacancies Limit"
+                        : "$totalVacancies Vacancies",
+                    style: TextStyleHelper.instance.body12SemiBold.copyWith(
+                      color: appTheme.black_900.withValues(alpha: 0.6),
+                      fontSize: 13,
                     ),
                   ),
                   SizedBox(width: 16.h),
                 ],
                 if (totalApplications != null) ...[
-                  CustomImageView(
-                    imagePath: ImageConstant.imgMaterialSymbolsGroupRounded,
-                    width: 16.h,
-                    height: 16.h,
+                  Icon(
+                    Icons.groups_outlined,
+                    size: 16,
                     color: appTheme.indigo_A700,
                   ),
                   SizedBox(width: 4.h),
                   Text(
-                    "$totalApplications Applications",
-                    style:
-                        TextStyleHelper.instance.body12SemiBoldPoppins.copyWith(
-                      color: appTheme.black_900.withOpacity(0.6),
-                      fontSize: 13.fSize,
+                    type == 'project'
+                        ? "$totalApplications Proposals"
+                        : "$totalApplications Applications",
+                    style: TextStyleHelper.instance.body12SemiBold.copyWith(
+                      color: appTheme.black_900.withValues(alpha: 0.6),
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -209,9 +240,29 @@ class JobCardWidget extends StatelessWidget {
                       ),
                       SizedBox(width: 4.h),
                       Expanded(
-                        child: Text(
-                          "${location ?? ""} ${workMode != null ? " • $workMode" : ""}",
-                          style: TextStyleHelper.instance.body14MediumPoppins,
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyleHelper.instance.body14Medium,
+                            children: [
+                              TextSpan(
+                                text: location ?? "",
+                                style: TextStyleHelper.instance.body14Medium,
+                              ),
+                              if (workMode != null) ...[
+                                TextSpan(
+                                  text: " • ",
+                                  style: TextStyleHelper.instance.body14Medium,
+                                ),
+                                TextSpan(
+                                  text: workMode,
+                                  style: TextStyleHelper.instance.body14Medium
+                                      .copyWith(
+                                          color: const Color.fromARGB(
+                                              255, 2, 147, 99)),
+                                ),
+                              ],
+                            ],
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -221,9 +272,9 @@ class JobCardWidget extends StatelessWidget {
                 ),
                 Text(
                   timeAgo ?? "",
-                  style: TextStyleHelper.instance.body12MediumPoppins.copyWith(
+                  style: TextStyleHelper.instance.body12Medium.copyWith(
                     color: appTheme.gray_400,
-                    fontSize: 13.fSize,
+                    fontSize: 13,
                   ),
                 ),
               ],

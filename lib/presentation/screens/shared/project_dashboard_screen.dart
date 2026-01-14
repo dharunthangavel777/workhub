@@ -287,6 +287,10 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   Widget _buildProjectOverview() {
     final startDate = DateTime.fromMillisecondsSinceEpoch(project.createdAt);
+    final deadline = project.deadline != null
+        ? DateTime.fromMillisecondsSinceEpoch(project.deadline!)
+        : null;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -303,11 +307,13 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         children: [
           _buildInfoItem("Started", "${startDate.day}/${startDate.month}"),
           _buildVerticalDivider(),
-          _buildInfoItem("Project ID", "#${project.id.substring(0, 5)}"),
-          _buildVerticalDivider(),
+          if (deadline != null) ...[
+            _buildInfoItem("Deadline", "${deadline.day}/${deadline.month}"),
+            _buildVerticalDivider(),
+          ],
           _buildInfoItem(
             "Budget",
-            "₹${(project.budget ?? 2500)}",
+            "₹${(project.budget ?? 0).toStringAsFixed(0)}",
           ),
         ],
       ),
@@ -606,16 +612,15 @@ class _PaymentSection extends StatelessWidget {
             isHighlight: project.escrowBalance > 0,
           ),
           _buildLedgerRow(
-            "Platform Fees (10%)",
-            "-₹${project.platformFee.toStringAsFixed(2)}",
-            isNegative: true,
+            "Platform Fees (Paid by Owner)",
+            "₹${project.platformFee.toStringAsFixed(2)}",
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(color: Colors.black12),
           ),
           _buildLedgerRow(
-            "Net Distributed",
+            "Net Distributed to Worker",
             "₹${project.netEarnings.toStringAsFixed(2)}",
             isHighlight: true,
           ),

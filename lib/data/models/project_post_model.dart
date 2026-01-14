@@ -44,6 +44,7 @@ class ProjectPostModel {
   final DateTime createdAt;
   final Map<String, dynamic>? applicants;
   final int applicationsCount;
+  final bool isVerified;
 
   ProjectPostModel({
     required this.id,
@@ -71,6 +72,7 @@ class ProjectPostModel {
     required this.createdAt,
     this.applicants,
     this.applicationsCount = 0,
+    this.isVerified = false,
     this.depositAmount,
     this.termsAndConditions,
     this.companyName,
@@ -123,6 +125,7 @@ class ProjectPostModel {
             : DateTime.now(),
         applicants: map['applicants'],
         applicationsCount: map['applicationsCount'] ?? 0,
+        isVerified: map['isVerified'] ?? false,
         depositAmount: (map['depositAmount'] as num?)?.toDouble(),
         termsAndConditions: map['termsAndConditions'],
         companyName: map['companyName'],
@@ -180,6 +183,7 @@ class ProjectPostModel {
       'createdAt': createdAt.millisecondsSinceEpoch,
       'applicants': applicants,
       'applicationsCount': applicationsCount,
+      'isVerified': isVerified,
       'depositAmount': depositAmount,
       'termsAndConditions': termsAndConditions,
       'companyName': companyName,

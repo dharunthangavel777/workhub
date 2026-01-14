@@ -61,7 +61,7 @@ class SubscriptionSelectionScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "You have full access to Pro features until ${DateTime.fromMillisecondsSinceEpoch(user.trialStartDate!.millisecondsSinceEpoch + (14 * 24 * 60 * 60 * 1000)).toString().split(' ')[0]}.",
+                          "You have full access to Pro features until ${user.trialStartDate != null ? DateTime.fromMillisecondsSinceEpoch(user.trialStartDate!.millisecondsSinceEpoch + (14 * 24 * 60 * 60 * 1000)).toString().split(' ')[0] : 'the end of your trial'}.",
                           textAlign: TextAlign.center,
                           style: TextStyle(color: CustomColors.textMuted),
                         ),

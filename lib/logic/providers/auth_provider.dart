@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/experience_model.dart';
 import '../../data/services/storage_service.dart';
+import '../services/notification_service.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -45,6 +46,7 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.authenticated;
       notifyListeners();
       await _fetchUserModel(user.uid);
+      NotificationService().saveTokenToFirestore();
     } else {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
@@ -118,6 +120,28 @@ class AuthProvider extends ChangeNotifier {
         }
         _userModel = UserModel.fromMap(data);
       }
+
+      // Ensure FCM token is saved before sending any notifications
+      await NotificationService().saveTokenToFirestore();
+
+      // Send Welcome Notification
+      if (!doc.exists) {
+        // New User
+        await NotificationService().sendNotification(
+          recipientId: user.uid,
+          title: "Welcome to Work Hub! 🚀",
+          body:
+              "We're excited to have you on board. Start exploring jobs or projects now!",
+        );
+      } else {
+        // Existing User
+        await NotificationService().sendNotification(
+          recipientId: user.uid,
+          title: "Welcome Back! 👋",
+          body: "Great to see you again. Check out what's new!",
+        );
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint("Firestore Error (Fetch/Create): $e");
@@ -287,6 +311,7 @@ class AuthProvider extends ChangeNotifier {
         location: location,
         companyWebsite: companyWebsite,
         managerName: managerName,
+        displayName: companyName, // Update locally as well
         isFirstLogin: false,
       );
 
@@ -296,6 +321,8 @@ class AuthProvider extends ChangeNotifier {
         'location': location,
         'companyWebsite': companyWebsite,
         'managerName': managerName,
+        'displayName':
+            companyName, // Sync for backwards compatibility or simple display
         'isFirstLogin': false,
       });
 
@@ -315,15 +342,119 @@ class AuthProvider extends ChangeNotifier {
     if (_userModel == null) return;
     _setLoading(true);
     try {
-      /* Role updates should be handled via admin approval or subscription flow (Cloud Functions) */
-      // _userModel = _userModel!.copyWith(role: role);
-      // await _firestore.collection('users').doc(_userModel!.uid).update({
-      //   'role': role.name,
-      // });
+      if (role == UserRole.businessOwner) {
+        await convertToOwner();
+      } else {
+        await _firestore.collection('users').doc(_userModel!.uid).update({
+          'role': role.name,
+        });
+        await _fetchUserModel(_userModel!.uid);
+      }
     } catch (e) {
       debugPrint("Update Role Error: $e");
     } finally {
       _setLoading(false);
+    }
+  }
+
+  /// Implementation of clean role switch from Worker to Owner
+  Future<void> convertToOwner() async {
+    if (_userModel == null) return;
+    final uid = _userModel!.uid;
+
+    try {
+      // 1. Purge all worker-specific data from Firestore
+      final updates = {
+        'role': 'businessOwner',
+        'isFirstLogin': true,
+        'isVerified': false,
+        'displayName': 'Company Owner', // Default for new owners
+        'bannerImage': FieldValue.delete(),
+        'username': FieldValue.delete(),
+        'bio': FieldValue.delete(),
+        'skills': FieldValue.delete(),
+        'badges': FieldValue.delete(),
+        'portfolio': FieldValue.delete(),
+        'experiences': FieldValue.delete(),
+        'resumeUrl': FieldValue.delete(),
+        'jobCategory': FieldValue.delete(),
+        'location': FieldValue.delete(), // Owner info will be set in onboarding
+        'fullName': FieldValue.delete(),
+        'totalExperience': FieldValue.delete(),
+        'currentCompany': FieldValue.delete(),
+        'expectedSalary': FieldValue.delete(),
+        'jobPreference': FieldValue.delete(),
+        'hourlyRate': FieldValue.delete(),
+        'availability': FieldValue.delete(),
+        'completedProjects': 0,
+        'rating': 0.0,
+        'totalEarnings': 0.0,
+        'pendingClearance': 0.0,
+        'ratingsCount': 0,
+        'bankAccounts': FieldValue.delete(),
+        'phoneNumber':
+            FieldValue.delete(), // Often personal, owners use business contact
+        'walletAddress': FieldValue.delete(),
+        'savedJobIds': [],
+        'savedProjectIds': [],
+        'ownerRequestStatus': 'approved',
+        'activeMode': 'job', // Owners typically stay in job mode or manage mode
+      };
+
+      await _firestore.collection('users').doc(uid).update(updates);
+
+      // 2. Clear subcollections
+      final appSub = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('applications')
+          .get();
+      for (var doc in appSub.docs) {
+        await doc.reference.delete();
+      }
+
+      // 3. Remove application entries from job/project posts
+      final jobPosts = await _firestore
+          .collection('job_posts')
+          .where('applicants.$uid', isNotEqualTo: null)
+          .get();
+      for (var doc in jobPosts.docs) {
+        await doc.reference.update({'applicants.$uid': FieldValue.delete()});
+      }
+
+      final projectPosts = await _firestore
+          .collection('project_posts')
+          .where('applicants.$uid', isNotEqualTo: null)
+          .get();
+      for (var doc in projectPosts.docs) {
+        await doc.reference.update({'applicants.$uid': FieldValue.delete()});
+      }
+
+      // Cleanup Reels
+      final reels = await _firestore
+          .collection('reels')
+          .where('userId', isEqualTo: uid)
+          .get();
+      for (var doc in reels.docs) {
+        await doc.reference.delete();
+      }
+
+      // Cleanup Bids subcollection
+      final bidsSub = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('bids')
+          .get();
+      for (var doc in bidsSub.docs) {
+        await doc.reference.delete();
+      }
+
+      // 4. Refresh local user model
+      await _fetchUserModel(uid);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Convert to Owner Error: $e");
+      rethrow;
     }
   }
 

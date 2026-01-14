@@ -16,7 +16,7 @@ import 'web_payment_stub.dart'
 
 /// PaymentService - Secure Payment Processing
 class PaymentService {
-  static const String _baseUrl = 'https://work-hub-lake.vercel.app';
+  static const String _baseUrl = 'https://functions-kappa-gold.vercel.app';
 
   /// Helper to get authenticated headers
   Future<Map<String, String>> _getHeaders() async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../../core/app_export.dart';
 import '../../../../logic/providers/reel_provider.dart';
 import '../../../../logic/providers/auth_provider.dart';
 import '../../../../core/utils/image_utils.dart';
@@ -31,14 +32,28 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     final reels = reelProvider.reels;
 
     if (reelProvider.isLoading) {
-      return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+      return Center(
+        child: CircularProgressIndicator(color: appTheme.indigo_A700),
+      );
     }
 
     if (reels.isEmpty) {
-      return const Center(
-        child: Text("No reels yet. Be the first to upload!",
-            style: TextStyle(color: Colors.white)),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomImageView(
+              imagePath: ImageConstant.imgSearch,
+              height: 64.h,
+              color: appTheme.gray_300,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              "No reels yet. Be the first to upload!",
+              style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_500),
+            ),
+          ],
+        ),
       );
     }
 
@@ -59,80 +74,97 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
               isActive: widget.isActive,
             ),
 
+            // Gradient Overlay for readability
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.1),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.4),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             // Interactions & Info Overlay
             Positioned(
-              bottom: 20,
-              left: 15,
-              right: 15,
+              bottom: 30.h,
+              left: 16.w,
+              right: 16.w,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Caption & User Info
+                  // Caption & User Info inside a glass-style card
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 18,
-                              backgroundImage: ImageUtils.getImageProvider(
-                                  reel.userPhotoUrl),
-                              backgroundColor: Colors.white24,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              "@${reel.username ?? 'user'}",
-                              style: const TextStyle(
+                    child: Container(
+                      padding: EdgeInsets.all(12.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20.h),
+                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 16.h,
+                                backgroundImage: ImageUtils.getImageProvider(reel.userPhotoUrl),
+                                backgroundColor: appTheme.white_A700_01,
+                              ),
+                              SizedBox(width: 10.w),
+                              Text(
+                                "@${reel.username ?? 'user'}",
+                                style: TextStyleHelper.instance.body14Bold.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          reel.caption,
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            reel.caption,
+                            style: TextStyleHelper.instance.body12Medium.copyWith(color: Colors.white),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-
+                  SizedBox(width: 12.w),
                   // Actions Column
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Like
                       _buildActionItem(
-                        icon: isLiked
-                            ? FontAwesomeIcons.solidHeart
-                            : FontAwesomeIcons.heart,
-                        color: isLiked ? Colors.red : Colors.white,
+                        icon: isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
+                        color: isLiked ? Colors.red : appTheme.gray_900,
                         label: "${reel.likesCount}",
                         onTap: () {
                           if (authProvider.userModel != null) {
-                            reelProvider.toggleLike(
-                                reel.id, authProvider.userModel!);
+                            reelProvider.toggleLike(reel.id, authProvider.userModel!);
                           }
                         },
                       ),
-                      const SizedBox(height: 20),
-                      // Comment
+                      SizedBox(height: 16.h),
                       _buildActionItem(
                         icon: FontAwesomeIcons.comment,
-                        color: Colors.white,
-                        label: "Comments",
+                        color: appTheme.gray_900,
+                        label: "Chat",
                         onTap: () => _showCommentsBottomSheet(context, reel.id),
                       ),
-                      const SizedBox(height: 20),
-                      // More Options
+                      SizedBox(height: 16.h),
                       _buildActionItem(
                         icon: FontAwesomeIcons.ellipsisVertical,
-                        color: Colors.white,
-                        label: "Options",
+                        color: appTheme.gray_900,
+                        label: "More",
                         onTap: () => _showReelOptions(context, reel),
                       ),
                     ],
@@ -146,48 +178,79 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     );
   }
 
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            height: 44.h,
+            width: 44.h,
+            decoration: BoxDecoration(
+              color: appTheme.white_A700_01.withOpacity(0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Icon(icon, color: color, size: 20.h),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            style: TextStyleHelper.instance.body14Medium.copyWith(
+              color: Colors.white,
+              shadows: [const Shadow(blurRadius: 4, color: Colors.black45)],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showReelOptions(BuildContext context, dynamic reel) {
     final authProvider = context.read<AuthProvider>();
     final isOwner = reel.userId == authProvider.userModel?.uid;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: appTheme.white_A700_01,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.h)),
       ),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: EdgeInsets.symmetric(vertical: 20.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (isOwner)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: Colors.red),
-                  title: const Text("Delete Reel",
-                      style: TextStyle(color: Colors.red)),
+                  leading: Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text("Delete Reel", style: TextStyle(color: Colors.red)),
                   onTap: () {
                     Navigator.pop(context);
                     _confirmDelete(context, reel.id);
                   },
                 ),
               ListTile(
-                leading: const Icon(Icons.share_outlined, color: Colors.white),
-                title:
-                    const Text("Share", style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  // Implement share
-                },
+                leading: Icon(Icons.share_outlined, color: appTheme.gray_900),
+                title: Text("Share", style: TextStyleHelper.instance.body14Medium),
+                onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: const Icon(Icons.info_outline, color: Colors.white),
-                title:
-                    const Text("Info", style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                leading: Icon(Icons.info_outline, color: appTheme.gray_900),
+                title: Text("Info", style: TextStyleHelper.instance.body14Medium),
+                onTap: () => Navigator.pop(context),
               ),
             ],
           ),
@@ -200,45 +263,22 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title:
-            const Text("Delete Reel?", style: TextStyle(color: Colors.white)),
-        content: const Text("Are you sure you want to delete this reel?",
-            style: TextStyle(color: Colors.white70)),
+        backgroundColor: appTheme.white_A700_01,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.h)),
+        title: Text("Delete Reel?", style: TextStyleHelper.instance.body16Bold),
+        content: Text("Are you sure you want to delete this reel?", style: TextStyleHelper.instance.body14Medium),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: Text("Cancel", style: TextStyle(color: appTheme.gray_500)),
           ),
           TextButton(
             onPressed: () {
               context.read<ReelProvider>().deleteReel(reelId);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Reel deleted")),
-              );
             },
-            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            child: Text("Delete", style: TextStyle(color: Colors.red)),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionItem({
-    required IconData icon,
-    required Color color,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 5),
-          Text(label,
-              style: const TextStyle(color: Colors.white, fontSize: 12)),
         ],
       ),
     );
@@ -251,56 +291,43 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Color(0xFF121212),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: appTheme.white_A700_01,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.h)),
         ),
         child: Column(
           children: [
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              height: 4,
-              width: 40,
+              margin: EdgeInsets.symmetric(vertical: 12.h),
+              height: 4.h,
+              width: 40.w,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: appTheme.gray_200,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Text("Comments",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white)),
-            const Divider(color: Colors.white12),
+            Text("Comments", style: TextStyleHelper.instance.body16Bold),
+            Divider(color: appTheme.gray_100),
             Expanded(
               child: StreamBuilder(
                 stream: context.read<ReelProvider>().getComments(reelId),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
                   final comments = snapshot.data!;
                   if (comments.isEmpty) {
-                    return const Center(
-                        child: Text("No comments yet.",
-                            style: TextStyle(color: Colors.white54)));
+                    return Center(child: Text("No comments yet.", style: TextStyle(color: appTheme.gray_400)));
                   }
                   return ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     itemCount: comments.length,
                     itemBuilder: (context, index) {
                       final comment = comments[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage:
-                              ImageUtils.getImageProvider(comment.userPhotoUrl),
-                          backgroundColor: Colors.white12,
+                          backgroundImage: ImageUtils.getImageProvider(comment.userPhotoUrl),
                         ),
-                        title: Text(comment.username ?? 'user',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                        subtitle: Text(comment.text,
-                            style: const TextStyle(color: Colors.white70)),
+                        title: Text(comment.username ?? 'user', style: TextStyleHelper.instance.body14Bold),
+                        subtitle: Text(comment.text, style: TextStyleHelper.instance.body12Medium.copyWith(color: appTheme.gray_600)),
                       );
                     },
                   );
@@ -318,37 +345,41 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     final controller = TextEditingController();
     return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 10,
-        left: 15,
-        right: 15,
-        top: 10,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16.h,
+        left: 20.w,
+        right: 20.w,
+        top: 12.h,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        border: Border(top: BorderSide(color: Colors.white12)),
+        color: appTheme.white_A700_01,
+        border: Border(top: BorderSide(color: appTheme.gray_100)),
       ),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: controller,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: "Add a comment...",
-                hintStyle: TextStyle(color: Colors.white54),
-                border: InputBorder.none,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              decoration: BoxDecoration(
+                color: appTheme.gray_50,
+                borderRadius: BorderRadius.circular(24.h),
+              ),
+              child: TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: "Add a comment...",
+                  border: InputBorder.none,
+                ),
               ),
             ),
           ),
+          SizedBox(width: 8.w),
           IconButton(
-            icon: const Icon(Icons.send, color: Colors.white),
+            icon: Icon(Icons.send, color: appTheme.indigo_A700),
             onPressed: () {
               if (controller.text.isNotEmpty) {
                 final auth = context.read<AuthProvider>();
                 if (auth.userModel != null) {
-                  context
-                      .read<ReelProvider>()
-                      .addComment(reelId, controller.text, auth.userModel!);
+                  context.read<ReelProvider>().addComment(reelId, controller.text, auth.userModel!);
                   controller.clear();
                 }
               }

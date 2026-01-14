@@ -56,13 +56,11 @@ class _OwnerHomeState extends State<OwnerHome> {
 
     double totalSpent = 0;
     for (var project in jobProvider.projects) {
-      if (project.payments != null) {
-        project.payments!.forEach((key, value) {
-          if (value['status'] == 'released') {
-            totalSpent += (value['amount'] ?? 0);
-          }
-        });
-      }
+      project.payments?.forEach((key, value) {
+        if (value['status'] == 'released') {
+          totalSpent += (value['amount'] ?? 0);
+        }
+      });
     }
 
     return Scaffold(

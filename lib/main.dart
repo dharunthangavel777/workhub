@@ -15,13 +15,22 @@ import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/navigation/worker_navigation.dart';
 import 'presentation/navigation/business_owner_navigation.dart';
 import 'presentation/screens/auth/worker_profile_completion_screen.dart';
+import 'presentation/screens/auth/client_profile_completion_screen.dart';
 import 'presentation/screens/settings/settings_screen.dart';
 
 import 'presentation/screens/owner/subscription_selection_screen.dart';
 import 'presentation/screens/worker/withdrawal_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'logic/services/notification_service.dart';
 
 import 'firebase_options.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint("Handling a background message: ${message.messageId}");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +39,7 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint("🔴 Flutter Error: ${details.exception}");
-    // TODO: Integrate Crashlytics here
+    
   };
 
   // Global Error Handler for asynchronous errors (Zone)
@@ -51,6 +60,10 @@ void main() async {
       url: dotenv.env['SUPABASE_URL'] ?? '',
       anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
     );
+
+    // Initialize Push Notifications
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    await NotificationService().initialize();
   } on FirebaseException catch (e) {
     // Ignore duplicate app error, but log it
     if (e.code == 'duplicate-app') {
@@ -129,6 +142,7 @@ class WorkHubApp extends StatelessWidget {
         '/main': (context) => const RootWrapper(),
         '/settings': (context) => const SettingsScreen(),
         '/withdrawal': (context) => const WithdrawalScreen(),
+        '/become_hirer': (context) => const ClientProfileCompletionScreen(),
       },
     );
   }

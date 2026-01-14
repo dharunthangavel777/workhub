@@ -22,6 +22,16 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
   bool _isProcessing = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill with required deposit if not already paid
+    if (!widget.project.depositPaid) {
+      _amountController.text =
+          (widget.project.requiredDeposit ?? 0).toStringAsFixed(0);
+    }
+  }
+
+  @override
   void dispose() {
     _amountController.dispose();
     super.dispose();
@@ -186,6 +196,8 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _amountController,
+            enabled: widget.project
+                .depositPaid, // Disable editing for initial full deposit
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(
               fontSize: 24,
@@ -200,6 +212,9 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
                         TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               ),
               hintText: '0.00',
+              helperText: !widget.project.depositPaid
+                  ? "Full project amount required for initial deposit"
+                  : null,
               hintStyle: TextStyle(color: Colors.grey.shade400),
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -210,15 +225,16 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildQuickAmountChip(100),
-              const SizedBox(width: 8),
-              _buildQuickAmountChip(250),
-              const SizedBox(width: 8),
-              _buildQuickAmountChip(500),
-            ],
-          ),
+          if (widget.project.depositPaid)
+            Row(
+              children: [
+                _buildQuickAmountChip(100),
+                const SizedBox(width: 8),
+                _buildQuickAmountChip(250),
+                const SizedBox(width: 8),
+                _buildQuickAmountChip(500),
+              ],
+            ),
         ],
       ),
     );

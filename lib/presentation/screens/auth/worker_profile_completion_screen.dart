@@ -6,10 +6,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../../logic/providers/auth_provider.dart';
-import '../../../data/services/gemini_service.dart';
+import '../../../data/services/local_parser_service.dart';
+import '../../../data/services/resume_parse_cache.dart';
 import '../../../data/models/experience_model.dart';
 import '../../../data/models/resume_data_model.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+import '../../../core/app_export.dart';
 
 class WorkerProfileCompletionScreen extends StatefulWidget {
   const WorkerProfileCompletionScreen({super.key});
@@ -20,20 +21,29 @@ class WorkerProfileCompletionScreen extends StatefulWidget {
 }
 
 class _WorkerProfileCompletionScreenState
-    extends State<WorkerProfileCompletionScreen> {
-  final _geminiService = GeminiService();
+    extends State<WorkerProfileCompletionScreen>
+    with SingleTickerProviderStateMixin {
+  final PageController _pageController = PageController();
+  final _localParserService = LocalParserService();
   final _formKey = GlobalKey<FormState>();
+
+  // Controllers
   final _usernameController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _locationController = TextEditingController();
   final _bioController = TextEditingController();
+
+  int _currentPage = 0;
   String? _selectedCategory;
   final List<String> _skills = [];
   final List<ExperienceModel> _experiences = [];
   final Map<String, dynamic> _portfolio = {'projects': []};
   File? _resumeFile;
+
   bool _isParsing = false;
   bool _isFetchingLocation = false;
+  String? _parsingError;
+  String? _providerUsed;
 
   final List<String> _categories = [
     'Software Development',
@@ -46,6 +56,28 @@ class _WorkerProfileCompletionScreenState
     'Customer Service',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with Google name if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().userModel;
+      if (user?.displayName != null && user!.displayName.isNotEmpty) {
+        _fullNameController.text = user.displayName;
+        _generateUsername(user.displayName);
+      }
+    });
+  }
+
+  void _generateUsername(String name) {
+    if (_usernameController.text.isNotEmpty) return;
+    final sanitized = name.toLowerCase().replaceAll(' ', '');
+    final random = Random().nextInt(9000) + 1000;
+    setState(() {
+      _usernameController.text = '$sanitized$random';
+    });
+  }
+
   Future<void> _pickResume() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -56,425 +88,533 @@ class _WorkerProfileCompletionScreenState
       setState(() {
         _resumeFile = File(result.files.single.path!);
       });
+      // Don't auto-trigger - let user confirm with button
     }
   }
 
-  Future<String?> _fetchDeviceLocation() async {
+  Future<void> _autoFillWithAI() async {
+    if (_resumeFile == null) return;
+
+    // Check cache first
+    final cached = ResumeParseCache.get(_resumeFile!);
+    if (cached != null) {
+      debugPrint('✨ Using cached resume data');
+      _applyResumeData(cached, 'Cache');
+      return;
+    }
+
+    setState(() {
+      _isParsing = true;
+      _parsingError = null;
+      _providerUsed = null;
+    });
+
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) return null;
+      final result = await _localParserService.parseResume(_resumeFile!);
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return null;
-      }
+      if (result != null && mounted) {
+        // Cache the result
+        ResumeParseCache.set(_resumeFile!, result);
+        debugPrint('💾 Cached resume data');
 
-      if (permission == LocationPermission.deniedForever) return null;
-
-      final position = await Geolocator.getCurrentPosition();
-      final placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final p = placemarks.first;
-        return "${p.locality}, ${p.administrativeArea}, ${p.country}";
+        _applyResumeData(result, 'Local Parser');
       }
     } catch (e) {
-      debugPrint("Error fetching device location: $e");
+      debugPrint('Unexpected error: $e');
+      if (mounted) {
+        setState(() {
+          _parsingError =
+              'A connection error occurred. Make sure the parser service is running.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isParsing = false);
+      }
     }
-    return null;
+  }
+
+  void _applyResumeData(ResumeData data, String provider) {
+    setState(() {
+      _providerUsed = provider;
+      if (data.name != null) {
+        _fullNameController.text = data.name!;
+        _generateUsername(data.name!);
+      }
+      if (data.location != null) _locationController.text = data.location!;
+      if (data.bio != null) _bioController.text = data.bio!;
+      if (data.skills.isNotEmpty) {
+        _skills.clear();
+        _skills.addAll(data.skills);
+      }
+      // Mapping experiences
+      _experiences.clear();
+      _experiences.addAll(data.workExperience.map((e) => ExperienceModel(
+            title: e.title ?? 'Role',
+            company: e.company ?? 'Company',
+            duration: e.duration ?? '',
+            description: e.description ?? '',
+          )));
+    });
+    _nextPage();
+  }
+
+  void _nextPage() {
+    if (_currentPage < 2) {
+      _pageController.nextPage(
+          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    } else {
+      _submit();
+    }
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    await context.read<AuthProvider>().completeWorkerProfile(
+          username: _usernameController.text.trim(),
+          fullName: _fullNameController.text.trim(),
+          location: _locationController.text.trim(),
+          jobCategory: _selectedCategory ?? 'General',
+          skills: _skills,
+          bio: _bioController.text.trim(),
+          experiences: _experiences,
+          portfolio: _portfolio,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: appTheme.white_A700_01,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildProgressIndicator(),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildStep1AI(),
+                    _buildStep2Identity(),
+                    _buildStep3Categories(),
+                  ],
+                ),
+              ),
+            ),
+            _buildFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+      child: Row(
+        children: List.generate(3, (index) {
+          return Expanded(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: index <= _currentPage
+                    ? appTheme.indigo_A700
+                    : appTheme.gray_100,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Slide 1: AI Magic
+  Widget _buildStep1AI() {
+    return Padding(
+      padding: EdgeInsets.all(24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(16.h),
+            decoration: BoxDecoration(
+                color: appTheme.indigo_A700.withOpacity(0.1),
+                shape: BoxShape.circle),
+            child: Icon(Icons.auto_awesome,
+                color: appTheme.indigo_A700, size: 40.h),
+          ),
+          SizedBox(height: 24.h),
+          Text("Magic Profile Fill",
+              style: TextStyleHelper.instance.headline22Bold),
+          SizedBox(height: 12.h),
+          Text(
+            "Upload your resume and our AI will build your professional profile in seconds.",
+            textAlign: TextAlign.center,
+            style: TextStyleHelper.instance.body14Medium
+                .copyWith(color: appTheme.gray_500),
+          ),
+          SizedBox(height: 48.h),
+          _buildGlowingFilePicker(),
+          SizedBox(height: 24.h),
+          TextButton(
+            onPressed: _nextPage,
+            child: Text("Skip, I'll enter manually",
+                style: TextStyleHelper.instance.body14Bold
+                    .copyWith(color: appTheme.gray_400)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlowingFilePicker() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 2),
+      curve: Curves.easeInOutSine,
+      builder: (context, value, child) {
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: _isParsing ? null : _pickResume,
+              child: Container(
+                height: 180.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: appTheme.white_A700_01,
+                  borderRadius: BorderRadius.circular(24.h),
+                  border: Border.all(
+                      color: _resumeFile != null
+                          ? appTheme.indigo_A700
+                          : appTheme.indigo_A700
+                              .withOpacity(0.2 + (value * 0.3)),
+                      width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: appTheme.indigo_A700.withOpacity(
+                          _resumeFile != null ? 0.15 : 0.1 * value),
+                      blurRadius: _resumeFile != null ? 20 : 15 * value,
+                      spreadRadius: _resumeFile != null ? 3 : 2 * value,
+                    )
+                  ],
+                ),
+                child: _isParsing
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                              color: appTheme.indigo_A700),
+                          SizedBox(height: 16.h),
+                          Text("Analyzing Resume...",
+                              style: TextStyleHelper.instance.body14Bold),
+                        ],
+                      )
+                    : _resumeFile != null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: appTheme.indigo_A700, size: 48.h),
+                              SizedBox(height: 12.h),
+                              Text("File Selected",
+                                  style: TextStyleHelper.instance.body16Bold),
+                              SizedBox(height: 4.h),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                child: Text(
+                                  _resumeFile!.path
+                                      .split('/')
+                                      .last
+                                      .split('\\')
+                                      .last,
+                                  style: TextStyleHelper.instance.body12Medium
+                                      .copyWith(color: appTheme.gray_600),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                "Tap to change file",
+                                style: TextStyleHelper.instance.body12Medium
+                                    .copyWith(color: appTheme.gray_400),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cloud_upload_outlined,
+                                  color: appTheme.indigo_A700, size: 48.h),
+                              SizedBox(height: 12.h),
+                              Text("Drop your resume here",
+                                  style: TextStyleHelper.instance.body16Bold),
+                              Text("PDF, DOCX or Image",
+                                  style: TextStyleHelper.instance.body12Medium
+                                      .copyWith(color: appTheme.gray_400)),
+                            ],
+                          ),
+              ),
+            ),
+            if (_resumeFile != null && !_isParsing) ...[
+              SizedBox(height: 16.h),
+              if (_parsingError != null)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Text(
+                    _parsingError!,
+                    style: TextStyleHelper.instance.body12Medium
+                        .copyWith(color: Colors.red[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (_providerUsed != null && _parsingError == null)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Text(
+                    "✨ Parsed by $_providerUsed",
+                    style: TextStyleHelper.instance.body12Medium
+                        .copyWith(color: Colors.green[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              SizedBox(
+                width: double.infinity,
+                height: 56.h,
+                child: ElevatedButton.icon(
+                  onPressed: _autoFillWithAI,
+                  icon: Icon(Icons.auto_awesome, size: 20.h),
+                  label: Text(
+                    "Process with AI",
+                    style: TextStyleHelper.instance.body16Bold
+                        .copyWith(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: appTheme.indigo_A700,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.h)),
+                    elevation: 4,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  // Slide 2: Identity
+  Widget _buildStep2Identity() {
+    return Padding(
+      padding: EdgeInsets.all(24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Personal Details",
+              style: TextStyleHelper.instance.headline22Bold),
+          SizedBox(height: 8.h),
+          Text("This is how you'll appear to employers.",
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_500)),
+          SizedBox(height: 32.h),
+          _buildTextField(
+            label: "Full Name",
+            controller: _fullNameController,
+            icon: Icons.person_outline,
+            onChanged: (v) => _generateUsername(v),
+            validator: (v) => v!.isEmpty ? "Enter your name" : null,
+          ),
+          SizedBox(height: 20.h),
+          _buildTextField(
+            label: "Username",
+            controller: _usernameController,
+            icon: Icons.alternate_email,
+            validator: (v) => v!.isEmpty ? "Username required" : null,
+          ),
+          SizedBox(height: 20.h),
+          _buildTextField(
+            label: "Location",
+            controller: _locationController,
+            icon: Icons.location_on_outlined,
+            suffixIcon: IconButton(
+              icon: Icon(Icons.my_location,
+                  color: appTheme.indigo_A700, size: 20.h),
+              onPressed: _handleLocationDetection,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Slide 3: Categories
+  Widget _buildStep3Categories() {
+    return Padding(
+      padding: EdgeInsets.all(24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Your Expertise",
+              style: TextStyleHelper.instance.headline22Bold),
+          SizedBox(height: 8.h),
+          Text("Select the category that best describes your skills.",
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_500)),
+          SizedBox(height: 32.h),
+          Wrap(
+            spacing: 12.w,
+            runSpacing: 12.h,
+            children: _categories.map((category) {
+              final isSelected = _selectedCategory == category;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedCategory = category),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? appTheme.indigo_A700
+                        : appTheme.white_A700_01,
+                    borderRadius: BorderRadius.circular(16.h),
+                    border: Border.all(
+                        color: isSelected
+                            ? appTheme.indigo_A700
+                            : appTheme.gray_200),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                                color: appTheme.indigo_A700.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4))
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    category,
+                    style: TextStyleHelper.instance.body14Bold.copyWith(
+                        color: isSelected ? Colors.white : appTheme.gray_900),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    Widget? suffixIcon,
+    Function(String)? onChanged,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyleHelper.instance.body12Bold
+                .copyWith(color: appTheme.gray_500)),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: controller,
+          onChanged: onChanged,
+          validator: validator,
+          style: TextStyleHelper.instance.body14Medium,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: appTheme.indigo_A700, size: 20.h),
+            suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: appTheme.gray_50,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.h),
+                borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.h),
+                borderSide:
+                    BorderSide(color: appTheme.indigo_A700, width: 1.5)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (_currentPage > 0)
+            IconButton(
+              onPressed: () => _pageController.previousPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.ease),
+              icon: Icon(Icons.arrow_back, color: appTheme.gray_400),
+            )
+          else
+            const SizedBox.shrink(),
+          SizedBox(
+            width: 180.w,
+            height: 56.h,
+            child: ElevatedButton(
+              onPressed: _currentPage == 0 && _resumeFile == null
+                  ? _nextPage
+                  : _nextPage,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: appTheme.indigo_A700,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.h)),
+                elevation: 4,
+              ),
+              child: Text(
+                _currentPage == 2 ? "Get Started" : "Continue",
+                style: TextStyleHelper.instance.body16Bold
+                    .copyWith(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleLocationDetection() async {
     setState(() => _isFetchingLocation = true);
     try {
       final location = await _fetchDeviceLocation();
-      if (location != null && mounted) {
-        setState(() {
-          _locationController.text = location;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location detected successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not detect location. Please enter manually.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
+      if (location != null) _locationController.text = location;
     } finally {
-      if (mounted) setState(() => _isFetchingLocation = false);
+      setState(() => _isFetchingLocation = false);
     }
   }
 
-  Future<void> _autoFillWithAI() async {
-    if (_resumeFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload a resume first')),
-      );
-      return;
-    }
-
-    setState(() => _isParsing = true);
-
+  Future<String?> _fetchDeviceLocation() async {
     try {
-      final extension = _resumeFile!.path.split('.').last.toLowerCase();
-      ResumeData? data;
-
-      if (extension == 'pdf') {
-        // Extract text from PDF
-        final PdfDocument document =
-            PdfDocument(inputBytes: await _resumeFile!.readAsBytes());
-        final String text = PdfTextExtractor(document).extractText();
-        document.dispose();
-
-        if (text.trim().isEmpty) {
-          throw Exception("Could not extract text from PDF");
-        }
-        data = await _geminiService.parseResume(text);
-      } else if (['jpg', 'jpeg', 'png'].contains(extension)) {
-        // Parse from Image directly using Gemini Vision
-        final bytes = await _resumeFile!.readAsBytes();
-        final mimeType = extension == 'png' ? 'image/png' : 'image/jpeg';
-        data = await _geminiService.parseResumeFromImage(bytes, mimeType);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Unsupported file format for AI parsing')),
-        );
+      LocationPermission p = await Geolocator.checkPermission();
+      if (p == LocationPermission.denied)
+        p = await Geolocator.requestPermission();
+      if (p == LocationPermission.deniedForever) return null;
+      final pos = await Geolocator.getCurrentPosition();
+      final placemarks =
+          await placemarkFromCoordinates(pos.latitude, pos.longitude);
+      if (placemarks.isNotEmpty) {
+        final pm = placemarks.first;
+        return "${pm.locality}, ${pm.administrativeArea}";
       }
-
-      if (data != null && mounted) {
-        final random = Random();
-        final List<String> fallbackLocations = [
-          'New York, NY',
-          'San Francisco, CA',
-          'London, UK',
-          'Bangalore, India',
-          'Berlin, Germany',
-          'Sydney, Australia',
-          'Tokyo, Japan'
-        ];
-
-        // Location: Resume -> Device -> Random Fallback
-        String location;
-        if (data.location != null && data.location!.isNotEmpty) {
-          location = data.location!;
-        } else {
-          final deviceLocation = await _fetchDeviceLocation();
-          location = deviceLocation ??
-              fallbackLocations[random.nextInt(fallbackLocations.length)];
-        }
-
-        // Category: AI -> Random Fallback
-        String category = _categories[random.nextInt(_categories.length)];
-        if (data.category != null) {
-          final matchedCategory = _categories.firstWhere(
-            (c) =>
-                c.toLowerCase().contains(data!.category!.toLowerCase()) ||
-                data.category!.toLowerCase().contains(c.toLowerCase()),
-            orElse: () => '',
-          );
-          if (matchedCategory.isNotEmpty) category = matchedCategory;
-        }
-
-        final ResumeData finalData = data;
-        setState(() {
-          // Name and Username
-          if (finalData.name != null) {
-            _fullNameController.text = finalData.name!;
-            final randomNum = random.nextInt(9000) + 1000;
-            final sanitizedName =
-                finalData.name!.toLowerCase().replaceAll(' ', '');
-            _usernameController.text = '$sanitizedName$randomNum';
-          }
-
-          _locationController.text = location;
-          _selectedCategory = category;
-
-          // Bio
-          if (finalData.bio != null && finalData.bio!.isNotEmpty) {
-            _bioController.text = finalData.bio!;
-          }
-
-          // Experiences
-          if (finalData.workExperience.isNotEmpty) {
-            _experiences.clear();
-            _experiences
-                .addAll(finalData.workExperience.map((e) => ExperienceModel(
-                      title: e.title ?? 'Professional Experience',
-                      company: e.company ?? 'Company',
-                      duration: e.duration ?? 'Not specified',
-                      description: e.description ?? '',
-                    )));
-          }
-
-          // Portfolio (Projects)
-          if (finalData.projects.isNotEmpty) {
-            _portfolio.clear();
-            final List<Map<String, dynamic>> projectsList = [];
-            for (var i = 0; i < finalData.projects.length; i++) {
-              final p = finalData.projects[i];
-              projectsList.add({
-                'title': p.title ?? 'Project',
-                'description': p.description ?? '',
-                'techStack': p.techStack,
-                'imageUrl': null,
-              });
-            }
-            _portfolio['projects'] = projectsList;
-          }
-
-          // Skills
-          if (finalData.skills.isNotEmpty) {
-            _skills.clear();
-            _skills.addAll(finalData.skills);
-          }
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile auto-filled successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (mounted) {
-        throw Exception("Failed to parse resume data");
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error parsing resume: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isParsing = false);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a job category')),
-      );
-      return;
-    }
-
-    final success = await context.read<AuthProvider>().completeWorkerProfile(
-          username: _usernameController.text.trim(),
-          fullName: _fullNameController.text.trim(),
-          location: _locationController.text.trim(),
-          jobCategory: _selectedCategory!,
-          skills: _skills,
-          bio: _bioController.text.trim(),
-          experiences: _experiences,
-          portfolio: _portfolio,
-          // resumeFile: _resumeFile, // Removed resume upload as per request
-        );
-
-    if (success && mounted) {
-      // Navigation will be handled by RootWrapper in main.dart
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Complete Your Profile'), elevation: 0),
-      body: authProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Tell us more about yourself to get started.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 32),
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon: Icon(Icons.alternate_email),
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _locationController,
-                      decoration: InputDecoration(
-                        labelText: 'Location',
-                        prefixIcon: const Icon(Icons.location_on),
-                        suffixIcon: IconButton(
-                          icon: _isFetchingLocation
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.blue,
-                                  ),
-                                )
-                              : const Icon(Icons.my_location,
-                                  color: Colors.blue),
-                          onPressed: _isFetchingLocation
-                              ? null
-                              : _handleLocationDetection,
-                          tooltip: 'Detect Current Location',
-                        ),
-                      ),
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _bioController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(
-                        labelText: 'Professional Bio',
-                        prefixIcon: Icon(Icons.description),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _selectedCategory,
-                      decoration: const InputDecoration(
-                        labelText: 'Job Category',
-                        prefixIcon: Icon(Icons.category),
-                      ),
-                      items: _categories
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => _selectedCategory = v),
-                      validator: (v) => v == null ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    if (_skills.isNotEmpty) ...[
-                      const Text(
-                        'Skills detected:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: _skills
-                            .map((s) => Chip(
-                                  label: Text(s),
-                                  onDeleted: () =>
-                                      setState(() => _skills.remove(s)),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    const Text(
-                      'Resume (Optional)',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: _pickResume,
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: _resumeFile == null
-                            ? const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.upload_file, size: 32),
-                                  Text('Upload Resume (PDF/DOC)'),
-                                ],
-                              )
-                            : Center(
-                                child: Text(
-                                  _resumeFile!.path.split('/').last,
-                                  style: const TextStyle(color: Colors.blue),
-                                ),
-                              ),
-                      ),
-                    ),
-                    if (_resumeFile != null) ...[
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _isParsing ? null : _autoFillWithAI,
-                        icon: _isParsing
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome),
-                        label: Text(_isParsing
-                            ? 'Analyzing Resume...'
-                            : 'Magic Auto-Fill with AI'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade700,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Complete Profile',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-    );
+    } catch (_) {}
+    return null;
   }
 }

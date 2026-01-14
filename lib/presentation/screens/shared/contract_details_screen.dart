@@ -275,23 +275,23 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
   Widget _buildFinancialDetails(ContractTerms contract) {
     final platformFeeAmount =
         contract.agreedBudget * contract.platformFee / 100;
-    final netAmount = contract.agreedBudget - platformFeeAmount;
+    final totalAmount = contract.agreedBudget + platformFeeAmount;
 
     return _buildCard(
       title: 'Financial Details',
       child: Column(
         children: [
           _buildFinancialRow(
-              'Gross Budget', '₹${contract.agreedBudget.toStringAsFixed(2)}'),
+              'Worker Budget', '₹${contract.agreedBudget.toStringAsFixed(2)}'),
           _buildFinancialRow(
             'Platform Fee (${contract.platformFee.toStringAsFixed(1)}%)',
-            '-₹${platformFeeAmount.toStringAsFixed(2)}',
-            isNegative: true,
+            '+₹${platformFeeAmount.toStringAsFixed(2)}',
+            isNegative: false, // Changed from negative
           ),
           const Divider(height: 24),
           _buildFinancialRow(
-            'Net Payment',
-            '₹${netAmount.toStringAsFixed(2)}',
+            'Total Project Cost',
+            '₹${totalAmount.toStringAsFixed(2)}',
             isHighlight: true,
           ),
         ],

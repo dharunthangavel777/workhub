@@ -65,7 +65,7 @@ class _AIModeButtonState extends State<AIModeButton>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadiusValue),
             // Layer 1: Outer Soft Container (Background Shell)
-            color: const Color(0xFFF6F7FA), 
+            color: const Color(0xFFF6F7FA),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -75,7 +75,8 @@ class _AIModeButtonState extends State<AIModeButton>
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(3.0), // Reduced outer padding to allow more space for border
+            padding: const EdgeInsets.all(
+                3.0), // Reduced outer padding to allow more space for border
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(borderRadiusValue - 2),
@@ -154,9 +155,9 @@ class GradientBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Inset the rect by half the stroke width to ensure it paints within bounds
-    final rect = Offset(strokeWidth / 2, strokeWidth / 2) & 
-                 Size(size.width - strokeWidth, size.height - strokeWidth);
-                 
+    final rect = Offset(strokeWidth / 2, strokeWidth / 2) &
+        Size(size.width - strokeWidth, size.height - strokeWidth);
+
     final RRect rrect = RRect.fromRectAndRadius(
       rect,
       Radius.circular(radius - strokeWidth / 2),
@@ -190,8 +191,8 @@ class GradientBorderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant GradientBorderPainter oldDelegate) {
-    return oldDelegate.isActive != isActive || 
-           oldDelegate.radius != radius || 
-           oldDelegate.strokeWidth != strokeWidth;
+    return oldDelegate.isActive != isActive ||
+        oldDelegate.radius != radius ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }
