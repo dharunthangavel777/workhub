@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/app_export.dart';
-import '../../../data/models/job_post_model.dart';
-import '../../../data/models/project_post_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../core/utils/skill_icon_utils.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:work_hub/utils/image_constant.dart';
+import '../../../config/app_export.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/utils/skill_icon_utils.dart';
 import 'project_dashboard_screen.dart';
 
 class JobDetailsScreen extends StatelessWidget {
@@ -101,7 +109,10 @@ class JobDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(context, user, isFreelancer),
+      bottomNavigationBar:
+          (user.uid == (isJob ? jobPost.ownerId : projectPost.ownerId))
+              ? null
+              : _buildBottomBar(context, user, isFreelancer),
     );
   }
 
@@ -656,9 +667,14 @@ class JobDetailsScreen extends StatelessWidget {
       BuildContext context, dynamic post, String userId, String userName) {
     final amountController = TextEditingController();
     final proposalController = TextEditingController();
-    final timelineController = TextEditingController();
+    final durationValueController = TextEditingController();
     final projectPost = post as ProjectPostModel;
-    List<Map<String, dynamic>> suggestedMilestones = [];
+    String durationUnit = 'Days';
+    PlatformFile? proposalDocument;
+    bool isUploadingDocument = false;
+    bool isBold = false;
+    bool isItalic = false;
+    bool isUnderline = false;
 
     showModalBottomSheet(
       context: context,
@@ -666,10 +682,43 @@ class JobDetailsScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          void calculateTotal() {
-            double total = suggestedMilestones.fold(
-                0, (sum, m) => sum + (m['amount'] as num).toDouble());
-            amountController.text = total.toStringAsFixed(0);
+          Future<void> pickDocument() async {
+            try {
+              FilePickerResult? result = await FilePicker.platform.pickFiles(
+                type: FileType.custom,
+                allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
+              );
+              if (result != null) {
+                setModalState(() {
+                  proposalDocument = result.files.first;
+                });
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error picking file: $e')),
+              );
+            }
+          }
+
+          Future<String?> uploadDocument() async {
+            if (proposalDocument == null) return null;
+            try {
+              setModalState(() => isUploadingDocument = true);
+              final file = File(proposalDocument!.path!);
+              final fileName =
+                  'proposals/${userId}_${DateTime.now().millisecondsSinceEpoch}_${proposalDocument!.name}';
+              final ref = FirebaseStorage.instance.ref().child(fileName);
+              await ref.putFile(file);
+              final url = await ref.getDownloadURL();
+              setModalState(() => isUploadingDocument = false);
+              return url;
+            } catch (e) {
+              setModalState(() => isUploadingDocument = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error uploading document: $e')),
+              );
+              return null;
+            }
           }
 
           return Container(
@@ -701,113 +750,295 @@ class JobDetailsScreen extends StatelessWidget {
                   SizedBox(height: 32.h),
                   _buildBidField(amountController, "Contract Amount (₹)",
                       "Total project budget", Icons.payments_outlined,
-                      isReadOnly: suggestedMilestones.isNotEmpty),
+                      keyboardType: TextInputType.number),
                   SizedBox(height: 20.h),
-                  _buildBidField(timelineController, "Delivery Timeline",
-                      "e.g. 14 Business Days", Icons.timer_outlined),
-                  SizedBox(height: 20.h),
-                  _buildBidField(
-                      proposalController,
-                      "Executive Summary",
-                      "Briefly explain your relevant experience...",
-                      Icons.description_outlined,
-                      maxLines: 5),
-                  SizedBox(height: 32.h),
+                  // Duration field with dropdown
+                  Text("Delivery Timeline",
+                      style: TextStyleHelper.instance.body12Bold
+                          .copyWith(color: appTheme.gray_900)),
+                  SizedBox(height: 10.h),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Project Milestones",
-                          style: TextStyleHelper.instance.body16Bold),
-                      TextButton.icon(
-                        onPressed: () => _showAddMilestoneDialog(context, (m) {
-                          setModalState(() {
-                            suggestedMilestones.add(m);
-                            calculateTotal();
-                          });
-                        }),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: Text("Add Phase",
-                            style: TextStyleHelper.instance.body14Bold
-                                .copyWith(color: appTheme.indigo_A700)),
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: durationValueController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          style: TextStyleHelper.instance.body14Medium,
+                          decoration: InputDecoration(
+                            hintText: "e.g. 14",
+                            hintStyle: TextStyleHelper.instance.body14Medium
+                                .copyWith(color: appTheme.gray_400),
+                            prefixIcon: Icon(Icons.timer_outlined,
+                                color: appTheme.indigo_A700, size: 20.h),
+                            fillColor: appTheme.white_A700_01,
+                            filled: true,
+                            enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14.h),
+                                borderSide:
+                                    BorderSide(color: appTheme.gray_200)),
+                            focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14.h),
+                                borderSide: BorderSide(
+                                    color: appTheme.indigo_A700, width: 1.5)),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        flex: 1,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          decoration: BoxDecoration(
+                            color: appTheme.white_A700_01,
+                            borderRadius: BorderRadius.circular(14.h),
+                            border: Border.all(color: appTheme.gray_200),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: durationUnit,
+                              isExpanded: true,
+                              items: ['Days', 'Weeks', 'Months']
+                                  .map((unit) => DropdownMenuItem(
+                                        value: unit,
+                                        child: Text(unit,
+                                            style: TextStyleHelper
+                                                .instance.body14Medium),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) {
+                                setModalState(() {
+                                  durationUnit = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  if (suggestedMilestones.isEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(top: 12.h),
-                      child: Text("Defining phases helps build client trust.",
-                          style: TextStyleHelper.instance.body12Medium.copyWith(
-                              color: appTheme.gray_400,
-                              fontStyle: FontStyle.italic)),
-                    ),
-                  ...suggestedMilestones.asMap().entries.map((entry) =>
-                      Container(
-                        margin: EdgeInsets.only(top: 12.h),
-                        padding: EdgeInsets.all(16.h),
-                        decoration: BoxDecoration(
-                            color: appTheme.gray_50,
-                            borderRadius: BorderRadius.circular(16.h),
-                            border: Border.all(color: appTheme.gray_100)),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(entry.value['title'],
-                                      style:
-                                          TextStyleHelper.instance.body14Bold),
-                                  Text("Allocated: ₹${entry.value['amount']}",
-                                      style: TextStyleHelper.instance.body12Bold
-                                          .copyWith(
-                                              color: appTheme.indigo_A700)),
-                                ],
-                              ),
+                  SizedBox(height: 20.h),
+                  // Proposal document upload
+                  Text("Proposal Document (Optional)",
+                      style: TextStyleHelper.instance.body12Bold
+                          .copyWith(color: appTheme.gray_900)),
+                  SizedBox(height: 10.h),
+                  InkWell(
+                    onTap: pickDocument,
+                    child: Container(
+                      padding: EdgeInsets.all(16.h),
+                      decoration: BoxDecoration(
+                        color: appTheme.gray_50,
+                        borderRadius: BorderRadius.circular(14.h),
+                        border: Border.all(color: appTheme.gray_200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.upload_file,
+                              color: appTheme.indigo_A700, size: 24.h),
+                          SizedBox(width: 12.w),
+                          Expanded(
+                            child: Text(
+                              proposalDocument != null
+                                  ? proposalDocument!.name
+                                  : "Upload PDF, DOC, or TXT file",
+                              style: TextStyleHelper.instance.body14Medium
+                                  .copyWith(
+                                      color: proposalDocument != null
+                                          ? appTheme.gray_900
+                                          : appTheme.gray_400),
+                              overflow: TextOverflow.ellipsis,
                             ),
+                          ),
+                          if (proposalDocument != null)
                             IconButton(
-                                onPressed: () => setModalState(() {
-                                      suggestedMilestones.removeAt(entry.key);
-                                      calculateTotal();
-                                    }),
-                                icon: Icon(Icons.remove_circle_outline,
-                                    color: Colors.red.shade400)),
-                          ],
+                              icon: Icon(Icons.close, size: 20.h),
+                              onPressed: () {
+                                setModalState(() {
+                                  proposalDocument = null;
+                                });
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  // Proposal description with formatting toolbar
+                  Text("Proposal Description",
+                      style: TextStyleHelper.instance.body12Bold
+                          .copyWith(color: appTheme.gray_900)),
+                  SizedBox(height: 10.h),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14.h),
+                      border: Border.all(color: appTheme.gray_200),
+                    ),
+                    child: Column(
+                      children: [
+                        // Formatting toolbar
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            color: appTheme.gray_50,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(14.h),
+                              topRight: Radius.circular(14.h),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Text("WRITE",
+                                  style: TextStyleHelper.instance.body12Bold
+                                      .copyWith(color: appTheme.gray_600)),
+                              SizedBox(width: 16.w),
+                              IconButton(
+                                icon: Icon(Icons.format_bold,
+                                    size: 20.h,
+                                    color: isBold
+                                        ? appTheme.indigo_A700
+                                        : appTheme.gray_600),
+                                onPressed: () {
+                                  setModalState(() => isBold = !isBold);
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                              ),
+                              SizedBox(width: 8.w),
+                              IconButton(
+                                icon: Icon(Icons.format_italic,
+                                    size: 20.h,
+                                    color: isItalic
+                                        ? appTheme.indigo_A700
+                                        : appTheme.gray_600),
+                                onPressed: () {
+                                  setModalState(() => isItalic = !isItalic);
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                              ),
+                              SizedBox(width: 8.w),
+                              IconButton(
+                                icon: Icon(Icons.format_list_bulleted,
+                                    size: 20.h, color: appTheme.gray_600),
+                                onPressed: () {
+                                  // Insert bullet point
+                                  final text = proposalController.text;
+                                  final selection =
+                                      proposalController.selection;
+                                  final newText =
+                                      text.substring(0, selection.start) +
+                                          '\n- ' +
+                                          text.substring(selection.end);
+                                  proposalController.text = newText;
+                                  proposalController.selection =
+                                      TextSelection.collapsed(
+                                          offset: selection.start + 3);
+                                },
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                              ),
+                            ],
+                          ),
                         ),
-                      )),
+                        // Text editor
+                        TextField(
+                          controller: proposalController,
+                          maxLines: 8,
+                          style: TextStyleHelper.instance.body14Medium.copyWith(
+                            fontWeight:
+                                isBold ? FontWeight.bold : FontWeight.normal,
+                            fontStyle:
+                                isItalic ? FontStyle.italic : FontStyle.normal,
+                            decoration: isUnderline
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                "Describe your relevant experience and approach...",
+                            hintStyle: TextStyleHelper.instance.body14Medium
+                                .copyWith(color: appTheme.gray_400),
+                            fillColor: appTheme.white_A700_01,
+                            filled: true,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.all(16.h),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   SizedBox(height: 40.h),
                   SizedBox(
                     width: double.infinity,
                     height: 56.h,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        if (amountController.text.isNotEmpty) {
-                          await context.read<JobProvider>().submitBid(
+                      onPressed: isUploadingDocument
+                          ? null
+                          : () async {
+                              // Validate amount
+                              final amount =
+                                  double.tryParse(amountController.text);
+                              if (amount == null || amount <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text("Please enter a valid amount")),
+                                );
+                                return;
+                              }
+
+                              // Validate duration
+                              final durationValue =
+                                  int.tryParse(durationValueController.text);
+                              if (durationValue == null || durationValue <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          "Please enter a valid duration")),
+                                );
+                                return;
+                              }
+
+                              // Upload document if selected
+                              if (proposalDocument != null) {
+                                await uploadDocument();
+                              }
+
+                              final deliveryTime =
+                                  "$durationValue $durationUnit";
+
+                              await context.read<JobProvider>().submitBid(
                                 jobId: projectPost.id,
                                 userId: userId,
                                 workerName: userName,
-                                bidAmount:
-                                    double.tryParse(amountController.text) ?? 0,
+                                bidAmount: amount,
                                 proposal: proposalController.text,
-                                deliveryTime: timelineController.text,
-                                suggestedMilestones: suggestedMilestones,
+                                deliveryTime: deliveryTime,
+                                suggestedMilestones: [],
                               );
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                        Text("Proposal sent successfully!")));
-                          }
-                        }
-                      },
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            "Proposal sent successfully!")));
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: appTheme.indigo_A700,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.h)),
                           elevation: 2),
-                      child: Text("Send Proposal",
-                          style: TextStyleHelper.instance.body16Bold
-                              .copyWith(color: Colors.white)),
+                      child: isUploadingDocument
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Send Proposal",
+                              style: TextStyleHelper.instance.body16Bold
+                                  .copyWith(color: Colors.white)),
                     ),
                   ),
                 ],
@@ -821,7 +1052,9 @@ class JobDetailsScreen extends StatelessWidget {
 
   Widget _buildBidField(TextEditingController controller, String label,
       String hint, IconData icon,
-      {int maxLines = 1, bool isReadOnly = false}) {
+      {int maxLines = 1,
+      bool isReadOnly = false,
+      TextInputType? keyboardType}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -833,6 +1066,10 @@ class JobDetailsScreen extends StatelessWidget {
           controller: controller,
           maxLines: maxLines,
           readOnly: isReadOnly,
+          keyboardType: keyboardType,
+          inputFormatters: keyboardType == TextInputType.number
+              ? [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))]
+              : null,
           style: TextStyleHelper.instance.body14Medium,
           decoration: InputDecoration(
             hintText: hint,
@@ -851,65 +1088,6 @@ class JobDetailsScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  void _showAddMilestoneDialog(
-      BuildContext context, Function(Map<String, dynamic>) onAdd) {
-    final titleController = TextEditingController();
-    final amountController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: appTheme.white_A700_01,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.h)),
-        title: Text("Define Project Phase",
-            style: TextStyleHelper.instance.body16Bold),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-                controller: titleController,
-                style: TextStyleHelper.instance.body14Medium,
-                decoration: const InputDecoration(
-                    labelText: "Phase Title",
-                    hintText: "e.g. Prototype Design")),
-            SizedBox(height: 20.h),
-            TextField(
-                controller: amountController,
-                style: TextStyleHelper.instance.body14Medium,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                    labelText: "Milestone Value (₹)", hintText: "5000")),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child:
-                  Text("Cancel", style: TextStyle(color: appTheme.gray_500))),
-          ElevatedButton(
-            onPressed: () {
-              if (titleController.text.isNotEmpty &&
-                  amountController.text.isNotEmpty) {
-                onAdd({
-                  'title': titleController.text,
-                  'amount': double.tryParse(amountController.text) ?? 0.0,
-                  'description': 'Project Milestone',
-                  'deadline': DateTime.now()
-                      .add(const Duration(days: 7))
-                      .millisecondsSinceEpoch
-                });
-                Navigator.pop(context);
-              }
-            },
-            style:
-                ElevatedButton.styleFrom(backgroundColor: appTheme.indigo_A700),
-            child: const Text("Add Phase"),
-          ),
-        ],
-      ),
     );
   }
 }

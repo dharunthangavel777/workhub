@@ -3,11 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
+import 'theme/app_theme.dart';
 import 'logic/providers/auth_provider.dart';
 import 'logic/providers/job_provider.dart';
 import 'logic/providers/chat_provider.dart';
 import 'logic/providers/reel_provider.dart';
+import 'logic/providers/ad_provider.dart';
 import 'data/models/user_model.dart';
 
 import 'presentation/screens/splash/splash_screen.dart';
@@ -22,7 +23,7 @@ import 'presentation/screens/owner/subscription_selection_screen.dart';
 import 'presentation/screens/worker/withdrawal_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'logic/services/notification_service.dart';
+import 'data/services/notification_service.dart';
 
 import 'firebase_options.dart';
 
@@ -39,7 +40,6 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint("🔴 Flutter Error: ${details.exception}");
-    
   };
 
   // Global Error Handler for asynchronous errors (Zone)
@@ -120,6 +120,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => JobProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => ReelProvider()),
+        ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
       child: const WorkHubApp(),
     ),

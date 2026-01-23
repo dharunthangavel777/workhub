@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/app_export.dart';
+import '../../../config/app_export.dart';
 
 class CustomImageView extends StatelessWidget {
   final String imagePath;
@@ -89,6 +89,8 @@ class CustomImageView extends StatelessWidget {
         fit: fit,
         imageUrl: imagePath,
         color: color,
+        memCacheHeight: 400,
+        memCacheWidth: 400,
         placeholder: (context, url) => Container(
           height: 30,
           width: 30,

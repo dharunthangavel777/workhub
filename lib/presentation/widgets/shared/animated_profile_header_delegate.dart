@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../core/app_export.dart';
+import '../../../config/app_export.dart';
 import 'custom_image_view.dart';
 
 class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -35,8 +35,14 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 120.h; // Increased back to 120.h as requested
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      true;
+  bool shouldRebuild(covariant AnimatedProfileHeaderDelegate oldDelegate) {
+    return oldDelegate.userName != userName ||
+        oldDelegate.welcomeMessage != welcomeMessage ||
+        oldDelegate.profileImage != profileImage ||
+        oldDelegate.switchValue != switchValue ||
+        oldDelegate.profileCompletion != profileCompletion ||
+        oldDelegate.backgroundColor != backgroundColor;
+  }
 
   @override
   Widget build(
@@ -58,8 +64,6 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     // Smoother elevation appearance
     final double elevationProgress =
         (clampedProgress - 0.5).clamp(0.0, 0.5) / 0.5;
-    final double elevation =
-        lerpDouble(0.0, 4.h, elevationProgress)!; // Reduced elevation
 
     final Color bgColor = Color.lerp(
       Colors.transparent,
@@ -67,113 +71,100 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       clampedProgress,
     )!;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        boxShadow: elevation > 0.1
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05 * elevationProgress),
-                  blurRadius: elevation * 2.5,
-                  offset: Offset(0, elevation),
-                )
-              ]
-            : null,
-      ),
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: clampedProgress * 10,
-            sigmaY: clampedProgress * 10,
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: horizontalPadding,
-                right: horizontalPadding,
-                top: topPadding,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: onProfileTap,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              TweenAnimationBuilder<double>(
-                                tween: Tween<double>(
-                                    begin: 0, end: profileCompletion / 100),
-                                duration: const Duration(milliseconds: 1500),
-                                curve: Curves.easeInOutCubic,
-                                builder: (context, value, child) {
-                                  return SizedBox(
-                                    width: avatarSize + 8.h,
-                                    height: avatarSize + 8.h,
-                                    child: CircularProgressIndicator(
-                                      value: value,
-                                      strokeWidth: 3,
-                                      backgroundColor: CustomColors.primaryBlue
-                                          .withOpacity(0.1),
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                        CustomColors.primaryBlue,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              CustomImageView(
-                                imagePath:
-                                    profileImage ?? ImageConstant.imgImage4,
-                                height: avatarSize,
-                                width: avatarSize,
-                                radius: BorderRadius.circular(avatarRadius),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (welcomeOpacity > 0)
-                                Opacity(
-                                  opacity: welcomeOpacity,
-                                  child: Text(
-                                    welcomeMessage,
-                                    style: TextStyleHelper
-                                        .instance.body14RegularPoppins
-                                        .copyWith(
-                                      fontSize: 14.fSize,
-                                    ),
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          boxShadow: elevationProgress > 0.1
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05 * elevationProgress),
+                    blurRadius: 4.0, // Constant blur for performance
+                    offset: const Offset(0, 2), // Constant offset
+                  )
+                ]
+              : null,
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: horizontalPadding,
+              right: horizontalPadding,
+              top: topPadding,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: onProfileTap,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            if (profileCompletion > 0)
+                              SizedBox(
+                                width: avatarSize + 8.h,
+                                height: avatarSize + 8.h,
+                                child: CircularProgressIndicator(
+                                  value: profileCompletion / 100,
+                                  strokeWidth: 3,
+                                  backgroundColor:
+                                      CustomColors.primaryBlue.withOpacity(0.1),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                    CustomColors.primaryBlue,
                                   ),
                                 ),
-                              Text(
-                                userName,
-                                style: TextStyleHelper
-                                    .instance.title20SemiBoldPoppins
-                                    .copyWith(
-                                  fontSize: userNameSize,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
+                            CustomImageView(
+                              imagePath:
+                                  profileImage ?? ImageConstant.imgImage4,
+                              height: avatarSize,
+                              width: avatarSize,
+                              radius: BorderRadius.circular(avatarRadius),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (welcomeOpacity > 0)
+                              Opacity(
+                                opacity: welcomeOpacity,
+                                child: Text(
+                                  welcomeMessage,
+                                  style: TextStyleHelper
+                                      .instance.body14RegularPoppins
+                                      .copyWith(
+                                    fontSize: 14.fSize,
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              userName,
+                              style: TextStyleHelper
+                                  .instance.title20SemiBoldPoppins
+                                  .copyWith(
+                                fontSize: userNameSize,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 16.w),
-                  _buildSwitch(clampedProgress),
-                ],
-              ),
+                ),
+                SizedBox(width: 16.w),
+                _buildSwitch(clampedProgress),
+              ],
             ),
           ),
         ),
@@ -189,7 +180,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         padding: EdgeInsets.all(4.h),
         decoration: BoxDecoration(
           color: appTheme.gray_50,
-          borderRadius: BorderRadius.circular(20.h),
+          borderRadius: BorderRadius.circular(30.h),
           border: Border.all(color: appTheme.gray_100),
         ),
         child: Row(
@@ -204,8 +195,8 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   Widget _buildSwitchItem(String label, bool isSelected, double progress) {
-    final double horizontalPadding = lerpDouble(12.w, 11.w, progress)!;
-    final double verticalPadding = lerpDouble(6.h, 5.h, progress)!;
+    final double horizontalPadding = lerpDouble(16.w, 14.w, progress)!;
+    final double verticalPadding = lerpDouble(10.h, 8.h, progress)!;
     final double fontSize = lerpDouble(12.fSize, 11.5.fSize, progress)!;
 
     return GestureDetector(
@@ -219,7 +210,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
             horizontal: horizontalPadding, vertical: verticalPadding),
         decoration: BoxDecoration(
           color: isSelected ? appTheme.indigo_A700 : Colors.transparent,
-          borderRadius: BorderRadius.circular(16.h),
+          borderRadius: BorderRadius.circular(24.h),
           border: isSelected
               ? Border.all(
                   color: appTheme.indigo_A700.withValues(alpha: 0.3),

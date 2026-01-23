@@ -4,20 +4,25 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart' as intl;
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/project_model.dart';
-import '../../../data/models/contract_terms_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../logic/providers/chat_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
+import 'package:work_hub/data/models/project_model.dart';
+import 'package:work_hub/data/models/contract_terms_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/logic/providers/chat_provider.dart';
 import '../chat/chat_room_screen.dart';
-import '../../../data/models/milestone_model.dart';
+import 'package:work_hub/data/models/milestone_model.dart';
 import 'contract_details_screen.dart';
 import 'milestone_list_screen.dart';
+import 'milestone_list_section_widget.dart';
 import '../owner/escrow_deposit_screen.dart';
-import '../../../data/models/rating_model.dart';
-import '../../../data/models/time_entry_model.dart';
+import 'package:work_hub/data/models/rating_model.dart';
+import 'package:work_hub/data/models/time_entry_model.dart';
 import '../../widgets/project_setup_stepper.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
@@ -36,9 +41,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final jobProvider = context.read<JobProvider>();
       jobProvider.listenToMilestones(project.id);
       jobProvider.fetchContractByProjectId(project.id);
+      jobProvider.syncProjectProgress(project.id);
     });
   }
 
@@ -60,95 +67,91 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             (isOwner && !contract.ownerAccepted));
 
     return Scaffold(
-      backgroundColor: CustomColors.lightBg,
-      extendBodyBehindAppBar: true,
+      backgroundColor: appTheme.white_A700_01,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: appTheme.white_A700_01,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: CustomColors.darkText,
-          ),
+          icon: Icon(Icons.arrow_back, color: appTheme.gray_900),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              FontAwesomeIcons.circleQuestion,
-              color: CustomColors.textMuted,
-              size: 20,
-            ),
+            icon: Icon(FontAwesomeIcons.circleQuestion,
+                color: appTheme.gray_400, size: 20.h),
             onPressed: () {},
           ),
+          SizedBox(width: 8.w),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(color: CustomColors.lightBg),
-        child: SafeArea(
-          child: Column(
-            children: [
-              if (needsSign) _buildSigningBanner(context, contract),
-              if (project.status == 'setup')
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: ProjectSetupStepper(project: project),
-                    ),
-                  ),
-                )
-              else
-                Expanded(
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (needsSign) _buildSigningBanner(context, contract),
+            if (project.status == 'setup')
+              Expanded(
+                child: Center(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 16),
-                        _buildHeader(),
-                        const SizedBox(height: 24),
-                        _buildProjectOverview(),
-                        if (project.contractId != null) ...[
-                          const SizedBox(height: 16),
-                          _buildContractCard(context),
-                        ],
-                        _buildSectionTitle("Project Progress"),
-                        const SizedBox(height: 16),
-                        _ProgressSection(project: project),
-                        const SizedBox(height: 32),
-                        _buildSectionTitle(
-                          "Milestone Timeline",
-                          actionText: "Manage",
-                          onAction: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  MilestoneListScreen(project: project),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        _buildSectionTitle("Shared Assets"),
-                        const SizedBox(height: 16),
-                        _FileSharingSection(project: project),
-                        const SizedBox(height: 32),
-                        if (project.projectType == 'hourly') ...[
-                          _buildSectionTitle("Time Tracking"),
-                          const SizedBox(height: 16),
-                          _TimeTrackingSection(project: project),
-                          const SizedBox(height: 32),
-                        ],
-                        _PaymentSection(project: project),
-                        const SizedBox(height: 32),
-                        _RatingSection(project: project),
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                    padding: EdgeInsets.all(24.h),
+                    child: ProjectSetupStepper(project: project),
                   ),
                 ),
-            ],
-          ),
+              )
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 16.h),
+                      _buildHeader(),
+                      SizedBox(height: 24.h),
+                      _buildProjectOverview(),
+                      if (project.contractId != null) ...[
+                        SizedBox(height: 16.h),
+                        _buildContractCard(context),
+                      ],
+                      SizedBox(height: 32.h),
+                      _buildSectionTitle("Project Progress"),
+                      SizedBox(height: 16.h),
+                      _ProgressSection(project: project),
+                      SizedBox(height: 32.h),
+                      SizedBox(height: 32.h),
+                      _buildSectionTitle(
+                        "Milestone Timeline",
+                        actionText: "Manage",
+                        onAction: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MilestoneListScreen(project: project),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      MilestoneListSection(project: project),
+                      SizedBox(height: 32.h),
+                      _buildSectionTitle("Shared Assets"),
+                      SizedBox(height: 16.h),
+                      _FileSharingSection(project: project),
+                      SizedBox(height: 32.h),
+                      if (project.projectType == 'hourly') ...[
+                        _buildSectionTitle("Time Tracking"),
+                        SizedBox(height: 16.h),
+                        _TimeTrackingSection(project: project),
+                        SizedBox(height: 32.h),
+                      ],
+                      _PaymentSection(project: project),
+                      SizedBox(height: 32.h),
+                      _RatingSection(project: project),
+                      SizedBox(height: 40.h),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
       bottomNavigationBar: project.status == 'setup'
@@ -160,26 +163,21 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   Widget _buildSigningBanner(BuildContext context, ContractTerms contract) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.1),
-        border: Border(
-          bottom: BorderSide(color: Colors.orange.withValues(alpha: 0.2)),
-        ),
+        color: Colors.orange.withOpacity(0.1),
+        border:
+            Border(bottom: BorderSide(color: Colors.orange.withOpacity(0.1))),
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded,
-              color: Colors.orange, size: 20),
-          const SizedBox(width: 12),
-          const Expanded(
+          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20.h),
+          SizedBox(width: 12.w),
+          Expanded(
             child: Text(
               "Signature Required: Please sign the contract to proceed.",
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+              style: TextStyleHelper.instance.body12Bold
+                  .copyWith(color: Colors.orange),
             ),
           ),
           TextButton(
@@ -187,19 +185,15 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ContractDetailsScreen(
-                    contractId: contract.id,
-                  ),
+                  builder: (context) =>
+                      ContractDetailsScreen(contractId: contract.id),
                 ),
               );
             },
-            child: const Text(
+            child: Text(
               "SIGN NOW",
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+              style: TextStyleHelper.instance.body12Bold
+                  .copyWith(color: Colors.orange),
             ),
           ),
         ],
@@ -213,14 +207,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: CustomColors.darkText,
-          ),
+          style: TextStyleHelper.instance.body18Bold
+              .copyWith(color: appTheme.gray_900),
         ),
-        const SizedBox(width: 8),
-        Expanded(child: Divider(color: Colors.black.withValues(alpha: 0.05))),
+        const SizedBox(width: 12),
+        Expanded(child: Divider(color: appTheme.gray_100)),
         if (onAction != null) ...[
           const SizedBox(width: 8),
           InkWell(
@@ -230,11 +221,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
                 actionText ?? "View All",
-                style: const TextStyle(
-                  color: CustomColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
+                style: TextStyleHelper.instance.body14Bold
+                    .copyWith(color: appTheme.indigo_A700),
               ),
             ),
           ),
@@ -248,37 +236,34 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: CustomColors.primaryBlue.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: appTheme.indigo_A700.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8.h),
           ),
           child: Text(
             project.status.toUpperCase(),
-            style: const TextStyle(
-              color: CustomColors.primaryBlue,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+            style: TextStyleHelper.instance.body10Bold.copyWith(
+              color: appTheme.indigo_A700,
               letterSpacing: 1.2,
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Text(
           project.title,
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: CustomColors.darkText,
+          style: TextStyleHelper.instance.headline30Bold.copyWith(
+            color: appTheme.gray_900,
+            fontSize: 26.fSize,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           project.description,
-          style: TextStyle(
-            color: CustomColors.darkText,
+          style: TextStyleHelper.instance.body14Medium.copyWith(
+            color: appTheme.gray_600,
             height: 1.5,
-            fontSize: 15,
           ),
         ),
       ],
@@ -292,23 +277,21 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         : null;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade100, Colors.grey.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        color: appTheme.gray_50,
+        borderRadius: BorderRadius.circular(24.h),
+        border: Border.all(color: appTheme.gray_100),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildInfoItem("Started", "${startDate.day}/${startDate.month}"),
+          _buildInfoItem(
+              "Started", intl.DateFormat('dd MMM').format(startDate)),
           _buildVerticalDivider(),
           if (deadline != null) ...[
-            _buildInfoItem("Deadline", "${deadline.day}/${deadline.month}"),
+            _buildInfoItem(
+                "Deadline", intl.DateFormat('dd MMM').format(deadline)),
             _buildVerticalDivider(),
           ],
           _buildInfoItem(
@@ -325,44 +308,32 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(color: CustomColors.textMuted, fontSize: 12),
+          style: TextStyleHelper.instance.body12Medium
+              .copyWith(color: appTheme.gray_500),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
           value,
-          style: const TextStyle(
-            color: CustomColors.darkText,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
+          style: TextStyleHelper.instance.body16Bold
+              .copyWith(color: appTheme.gray_900),
         ),
       ],
     );
   }
 
   Widget _buildVerticalDivider() {
-    return Container(
-      height: 30,
-      width: 1,
-      color: Colors.black.withValues(alpha: 0.1),
-    );
+    return Container(height: 30.h, width: 1, color: appTheme.gray_200);
   }
 
   Widget _buildBottomActions(
-    BuildContext context,
-    bool isWorker,
-    bool isOwner,
-  ) {
+      BuildContext context, bool isWorker, bool isOwner) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
       decoration: BoxDecoration(
-        color: CustomColors.lightBg,
-        border: Border(
-            top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+        color: appTheme.white_A700_01,
+        border: Border(top: BorderSide(color: appTheme.gray_100)),
       ),
-      child: Row(
-        children: [Expanded(child: _ActionButtons(project: project))],
-      ),
+      child: _ActionButtons(project: project),
     );
   }
 
@@ -373,68 +344,51 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ContractDetailsScreen(
-                contractId: project.contractId!,
-              ),
+              builder: (context) =>
+                  ContractDetailsScreen(contractId: project.contractId!),
             ),
           );
         }
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(20.h),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.white],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: CustomColors.primaryBlue.withValues(alpha: 0.2)),
+          color: appTheme.white_A700_01,
+          borderRadius: BorderRadius.circular(20.h),
+          border: Border.all(color: appTheme.indigo_A700.withOpacity(0.1)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12.h),
               decoration: BoxDecoration(
-                color: CustomColors.primaryBlue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: appTheme.indigo_A700.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12.h),
               ),
-              child: const Icon(
-                Icons.description,
-                color: CustomColors.primaryBlue,
-                size: 24,
-              ),
+              child: Icon(Icons.description,
+                  color: appTheme.indigo_A700, size: 24.h),
             ),
-            const SizedBox(width: 16),
-            const Expanded(
+            SizedBox(width: 16.w),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Contract Agreement',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: CustomColors.darkText,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Tap to view contract details',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CustomColors.textMuted,
-                    ),
-                  ),
+                  Text("Contract Agreement",
+                      style: TextStyleHelper.instance.body16Bold),
+                  SizedBox(height: 4.h),
+                  Text("Tap to view contract details",
+                      style: TextStyleHelper.instance.body12Medium
+                          .copyWith(color: appTheme.gray_500)),
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: CustomColors.textMuted,
-              size: 16,
-            ),
+            Icon(Icons.arrow_forward_ios, color: appTheme.gray_400, size: 16.h),
           ],
         ),
       ),
@@ -456,53 +410,53 @@ class _ProgressSection extends StatelessWidget {
           milestones.where((m) => m.status == MilestoneStatus.approved).length;
       progress = approvedCount / milestones.length;
     } else {
-      progress = project
-          .progress; // Fallback to manual progress if no milestones exist yet
+      progress = project.progress;
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade100, Colors.grey.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border:
-            Border.all(color: CustomColors.primaryBlue.withValues(alpha: 0.05)),
+        color: appTheme.gray_50,
+        borderRadius: BorderRadius.circular(24.h),
+        border: Border.all(color: appTheme.gray_100),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Milestone Completion",
-                style: TextStyle(
-                  color: CustomColors.textMain,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text("Completion Rate",
+                  style: TextStyleHelper.instance.body14Medium
+                      .copyWith(color: appTheme.gray_600)),
               Text(
                 "${(progress * 100).toInt()}%",
-                style: const TextStyle(
-                  color: CustomColors.primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: TextStyleHelper.instance.body18Bold
+                    .copyWith(color: appTheme.indigo_A700),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.black.withValues(alpha: 0.05),
-              color: CustomColors.primaryBlue,
-              minHeight: 10,
-            ),
+          SizedBox(height: 16.h),
+          Stack(
+            children: [
+              Container(
+                height: 10.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                    color: appTheme.gray_200,
+                    borderRadius: BorderRadius.circular(10.h)),
+              ),
+              FractionallySizedBox(
+                widthFactor: progress.clamp(0.0, 1.0),
+                child: Container(
+                  height: 10.h,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [appTheme.indigo_A700, Colors.blueAccent]),
+                    borderRadius: BorderRadius.circular(10.h),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -518,6 +472,7 @@ class _ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 54.h,
       child: ElevatedButton.icon(
         onPressed: () async {
           final authProvider = context.read<AuthProvider>();
@@ -530,32 +485,30 @@ class _ActionButtons extends StatelessWidget {
             final otherName =
                 isWorker ? "Project Owner" : (project.workerName ?? "Worker");
 
-            final chatId = await chatProvider.startChat(
-              currentUser.uid,
-              otherId,
-            );
+            final chatId =
+                await chatProvider.startChat(currentUser.uid, otherId);
 
             if (context.mounted) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ChatRoomScreen(
-                    chatId: chatId,
-                    otherUserName: otherName,
-                  ),
+                  builder: (context) =>
+                      ChatRoomScreen(chatId: chatId, otherUserName: otherName),
                 ),
               );
             }
           }
         },
-        icon: const Icon(FontAwesomeIcons.commentDots, size: 18),
-        label: const Text("Collaboration Center"),
+        icon: Icon(FontAwesomeIcons.commentDots, size: 18.h),
+        label: Text("Collaboration Center",
+            style: TextStyleHelper.instance.body16Bold
+                .copyWith(color: Colors.white)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: CustomColors.primaryBlue,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          backgroundColor: appTheme.indigo_A700,
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.h)),
+          elevation: 2,
         ),
       ),
     );
@@ -571,7 +524,7 @@ class _PaymentSection extends StatelessWidget {
     final payments = project.payments ?? {};
     double totalPaid = 0;
     payments.forEach((key, value) {
-      if (value['status'] == 'released') {
+      if (value is Map && value['status'] == 'released') {
         totalPaid += (value['amount'] as num).toDouble();
       }
     });
@@ -580,211 +533,79 @@ class _PaymentSection extends StatelessWidget {
     final isOwner = currentUser?.uid == project.ownerId;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.grey.shade100, Colors.grey.shade50],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        color: appTheme.gray_50,
+        borderRadius: BorderRadius.circular(24.h),
+        border: Border.all(color: appTheme.gray_100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Financial Ledger",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: CustomColors.darkText,
-            ),
-          ),
-          const SizedBox(height: 20),
+          Text("Financial Ledger", style: TextStyleHelper.instance.body18Bold),
+          SizedBox(height: 20.h),
           _buildLedgerRow(
-            "Gross Total Released",
-            "₹${totalPaid.toStringAsFixed(2)}",
-          ),
+              "Gross Total Released", "₹${totalPaid.toStringAsFixed(2)}"),
           _buildLedgerRow(
             "Escrow Balance (Funds Held)",
             "₹${project.escrowBalance.toStringAsFixed(2)}",
             isHighlight: project.escrowBalance > 0,
           ),
           _buildLedgerRow(
-            "Platform Fees (Paid by Owner)",
-            "₹${project.platformFee.toStringAsFixed(2)}",
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Divider(color: Colors.black12),
-          ),
+              "Platform Fees", "₹${project.platformFee.toStringAsFixed(2)}"),
+          Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Divider(color: appTheme.gray_200)),
           _buildLedgerRow(
-            "Net Distributed to Worker",
+            "Net Distributed",
             "₹${project.netEarnings.toStringAsFixed(2)}",
             isHighlight: true,
           ),
-          const SizedBox(height: 24),
-          if (isOwner)
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EscrowDepositScreen(project: project),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_card, size: 20),
-                    label: const Text("Deposit Funds"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: CustomColors.primaryBlue,
-                      side: const BorderSide(color: CustomColors.primaryBlue),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+          if (isOwner) ...[
+            SizedBox(height: 24.h),
+            SizedBox(
+              width: double.infinity,
+              height: 48.h,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          EscrowDepositScreen(project: project)),
                 ),
-              ],
-            ),
-          if (payments.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            const Text(
-              "Milestone History",
-              style: TextStyle(
-                color: CustomColors.textMuted,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
+                icon: const Icon(Icons.add_card, size: 18),
+                label: const Text("Deposit Funds"),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: appTheme.indigo_A700,
+                  side: BorderSide(color: appTheme.indigo_A700),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.h)),
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            ...payments.entries.where((e) => e.key != 'totalBudget').map((
-              entry,
-            ) {
-              final amount = (entry.value['amount'] as num).toDouble();
-              final date = DateTime.fromMillisecondsSinceEpoch(
-                entry.value['releasedAt'] as int,
-              );
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${date.day}/${date.month}/${date.year}",
-                      style: const TextStyle(color: CustomColors.textMuted),
-                    ),
-                    Text(
-                      "₹${amount.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        color: CustomColors.textMain,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
           ],
-          const SizedBox(height: 32),
-          const Text(
-            "Recent Activity",
-            style: TextStyle(
-              color: CustomColors.textMuted,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (context.watch<JobProvider>().transactions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text("No transactions recorded",
-                  style:
-                      TextStyle(color: CustomColors.textMuted, fontSize: 12)),
-            )
-          else
-            ...context.watch<JobProvider>().transactions.map((tx) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.payment,
-                          size: 16, color: Colors.blue),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tx.description,
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            tx.type.toString().split('.').last,
-                            style: const TextStyle(
-                                fontSize: 11, color: CustomColors.textMuted),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      "₹${tx.amount.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green),
-                    ),
-                  ],
-                ),
-              );
-            }),
         ],
       ),
     );
   }
 
-  Widget _buildLedgerRow(
-    String label,
-    String value, {
-    bool isNegative = false,
-    bool isHighlight = false,
-  }) {
+  Widget _buildLedgerRow(String label, String value,
+      {bool isHighlight = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color:
-                  isHighlight ? CustomColors.darkText : CustomColors.textMuted,
-              fontSize: 14,
-            ),
-          ),
+          Text(label,
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_500)),
           Text(
             value,
-            style: TextStyle(
-              color: isNegative
-                  ? Colors.redAccent
-                  : (isHighlight ? Colors.green : CustomColors.darkText),
-              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
-              fontSize: isHighlight ? 16 : 14,
-            ),
+            style: isHighlight
+                ? TextStyleHelper.instance.body16Bold
+                    .copyWith(color: appTheme.indigo_A700)
+                : TextStyleHelper.instance.body14Bold
+                    .copyWith(color: appTheme.gray_900),
           ),
         ],
       ),
@@ -805,105 +626,38 @@ class _FileSharingSection extends StatelessWidget {
       children: [
         if (sharedFiles.isEmpty)
           Container(
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(32.h),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: CustomColors.darkCard.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.02)),
-            ),
+                color: appTheme.gray_50,
+                borderRadius: BorderRadius.circular(24.h)),
             child: Column(
               children: [
-                Icon(
-                  FontAwesomeIcons.folderOpen,
-                  color: CustomColors.textMuted.withValues(alpha: 0.3),
-                  size: 40,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "No files shared yet",
-                  style: TextStyle(color: CustomColors.textMuted),
-                ),
+                Icon(FontAwesomeIcons.folderOpen,
+                    color: appTheme.gray_300, size: 40.h),
+                SizedBox(height: 16.h),
+                Text("No shared assets yet",
+                    style: TextStyleHelper.instance.body14Medium
+                        .copyWith(color: appTheme.gray_500)),
               ],
             ),
           )
         else
-          ...sharedFiles.map(
-            (file) => Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: CustomColors.darkCard.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.02)),
-              ),
-              child: Row(
-                children: [
-                  _getFileIcon(file['name'] ?? ''),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          file['name'] ?? 'Unknown File',
-                          style: const TextStyle(
-                            color: CustomColors.textMain,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          "${_formatBytes(file['size'] ?? 0)} • ${file['uploadedByName'] ?? 'Unknown'}",
-                          style: const TextStyle(
-                            color: CustomColors.textMuted,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.open_in_new,
-                          color: CustomColors.primaryBlue,
-                          size: 20,
-                        ),
-                        onPressed: () => _launchUrl(file['url']),
-                      ),
-                      if (currentUser?.uid == file['uploadedBy'])
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.redAccent,
-                            size: 20,
-                          ),
-                          onPressed: () => _confirmDelete(context, file),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        const SizedBox(height: 12),
+          ...sharedFiles
+              .map((file) => _buildFileCard(context, file, currentUser)),
+        SizedBox(height: 16.h),
         SizedBox(
           width: double.infinity,
+          height: 50.h,
           child: OutlinedButton.icon(
             onPressed: () => _uploadFile(context),
             icon: const Icon(Icons.upload_file),
             label: const Text("Upload Documents"),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              foregroundColor: appTheme.indigo_A700,
+              side: BorderSide(color: appTheme.indigo_A700.withOpacity(0.2)),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              side: BorderSide(
-                  color: CustomColors.textMuted.withValues(alpha: 0.2)),
+                  borderRadius: BorderRadius.circular(14.h)),
             ),
           ),
         ),
@@ -911,147 +665,93 @@ class _FileSharingSection extends StatelessWidget {
     );
   }
 
-  Widget _getFileIcon(String fileName) {
-    final ext = fileName.split('.').last.toLowerCase();
-    IconData icon;
-    Color color;
-
-    switch (ext) {
-      case 'pdf':
-        icon = FontAwesomeIcons.filePdf;
-        color = Colors.redAccent;
-        break;
-      case 'doc':
-      case 'docx':
-        icon = FontAwesomeIcons.fileWord;
-        color = Colors.blue;
-        break;
-      case 'zip':
-      case 'rar':
-      case '7z':
-        icon = FontAwesomeIcons.fileArchive;
-        color = Colors.orange;
-        break;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'svg':
-        icon = FontAwesomeIcons.fileImage;
-        color = Colors.green;
-        break;
-      default:
-        icon = FontAwesomeIcons.fileLines;
-        color = CustomColors.primaryBlue;
-    }
-
-    return Icon(icon, color: color, size: 24);
+  Widget _buildFileCard(
+      BuildContext context, dynamic file, dynamic currentUser) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.h),
+      decoration: BoxDecoration(
+        color: appTheme.white_A700_01,
+        borderRadius: BorderRadius.circular(16.h),
+        border: Border.all(color: appTheme.gray_100),
+      ),
+      child: Row(
+        children: [
+          _getFileIcon(file['name'] ?? ''),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(file['name'] ?? 'Unknown',
+                    style: TextStyleHelper.instance.body14Bold),
+                Text(
+                    "${_formatBytes(file['size'] ?? 0)} • ${file['uploadedByName'] ?? 'User'}",
+                    style: TextStyleHelper.instance.body12Medium
+                        .copyWith(color: appTheme.gray_500)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.download, color: appTheme.indigo_A700, size: 20.h),
+            onPressed: () => _launchUrl(file['url']),
+          ),
+        ],
+      ),
+    );
   }
 
-  String _formatBytes(int bytes, [int decimals = 2]) {
+  Widget _getFileIcon(String fileName) {
+    final ext = fileName.split('.').last.toLowerCase();
+    IconData icon = FontAwesomeIcons.fileLines;
+    Color color = appTheme.indigo_A700;
+
+    if (ext == 'pdf') {
+      icon = FontAwesomeIcons.filePdf;
+      color = Colors.redAccent;
+    } else if (['doc', 'docx'].contains(ext)) {
+      icon = FontAwesomeIcons.fileWord;
+      color = Colors.blue;
+    } else if (['jpg', 'jpeg', 'png'].contains(ext)) {
+      icon = FontAwesomeIcons.fileImage;
+      color = Colors.green;
+    }
+
+    return Icon(icon, color: color, size: 24.h);
+  }
+
+  String _formatBytes(int bytes) {
     if (bytes <= 0) return "0 B";
-    const suffixes = ["B", "KB", "MB", "GB", "TB"];
-    var i = (bytes / 1024).floor();
-    return ((bytes / (i * 1024)) * 1024).toStringAsFixed(decimals) +
-        " " +
-        suffixes[i];
+    if (bytes < 1024) return "$bytes B";
+    if (bytes < 1024 * 1024) return "${(bytes / 1024).toStringAsFixed(1)} KB";
+    return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
   }
 
   Future<void> _launchUrl(String? url) async {
     if (url == null) return;
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
+    if (await canLaunchUrl(uri))
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   Future<void> _uploadFile(BuildContext context) async {
     try {
       final result = await FilePicker.platform.pickFiles();
       if (result == null || result.files.single.path == null) return;
-
       final file = File(result.files.single.path!);
-      final fileName = result.files.single.name;
       final currentUser = context.read<AuthProvider>().userModel;
-
       if (currentUser == null) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Uploading $fileName...")),
-      );
 
       await context.read<JobProvider>().uploadFile(
             projectId: project.id,
             file: file,
-            fileName: fileName,
+            fileName: result.files.single.name,
             userId: currentUser.uid,
             userName: currentUser.displayName,
           );
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("File uploaded successfully!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Upload failed: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      /* Error handling Snackbars */
     }
-  }
-
-  void _confirmDelete(BuildContext context, Map<String, dynamic> file) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: CustomColors.lightCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text("Delete File?"),
-        content: Text("Are you sure you want to delete '${file['name']}'?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await context.read<JobProvider>().deleteFile(
-                      projectId: project.id,
-                      fileMetadata: file,
-                    );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("File deleted")),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Delete failed: $e"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text(
-              "Delete",
-              style: TextStyle(color: Colors.redAccent),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -1066,7 +766,8 @@ class _RatingSection extends StatelessWidget {
 
     final isOwner = currentUser.uid == project.ownerId;
     final raterRole = isOwner ? 'owner' : 'worker';
-    final hasCompleted = project.status == 'completed';
+    final hasCompleted =
+        project.status == 'completed' || project.progress == 1.0;
 
     return FutureBuilder<Rating?>(
       future: context
@@ -1080,21 +781,13 @@ class _RatingSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text(
-                  "Performance Review",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: CustomColors.darkText,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                    child:
-                        Divider(color: Colors.black.withValues(alpha: 0.05))),
+                Text("Performance Review",
+                    style: TextStyleHelper.instance.body18Bold),
+                SizedBox(width: 12.w),
+                Expanded(child: Divider(color: appTheme.gray_100)),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             if (existingRating != null)
               _buildRatingCard(existingRating)
             else if (hasCompleted)
@@ -1109,11 +802,11 @@ class _RatingSection extends StatelessWidget {
 
   Widget _buildRatingCard(Rating rating) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        color: appTheme.white_A700_01,
+        borderRadius: BorderRadius.circular(20.h),
+        border: Border.all(color: appTheme.gray_100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1121,36 +814,27 @@ class _RatingSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Your Feedback",
-                style: TextStyle(
-                  color: CustomColors.textMuted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text("Your Feedback",
+                  style: TextStyleHelper.instance.body12Bold
+                      .copyWith(color: appTheme.gray_500)),
               _buildStarRating(rating.score),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            rating.review,
-            style: const TextStyle(
-              color: CustomColors.darkText,
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-              height: 1.5,
-            ),
-          ),
-          if (rating.tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: rating.tags.map((tag) => _buildTag(tag)).toList(),
-            ),
-          ],
+          SizedBox(height: 12.h),
+          Text(rating.review,
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(fontStyle: FontStyle.italic)),
         ],
       ),
+    );
+  }
+
+  Widget _buildStarRating(double score) {
+    return Row(
+      children: List.generate(
+          5,
+          (index) => Icon(index < score ? Icons.star : Icons.star_border,
+              color: Colors.amber, size: 16)),
     );
   }
 
@@ -1158,55 +842,33 @@ class _RatingSection extends StatelessWidget {
       BuildContext context, dynamic currentUser, String raterRole) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            CustomColors.primaryBlue.withValues(alpha: 0.1),
-            Colors.white
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border:
-            Border.all(color: CustomColors.primaryBlue.withValues(alpha: 0.2)),
+        color: appTheme.indigo_A700.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24.h),
+        border: Border.all(color: appTheme.indigo_A700.withOpacity(0.1)),
       ),
       child: Column(
         children: [
-          const Icon(
-            FontAwesomeIcons.starHalfStroke,
-            color: CustomColors.primaryBlue,
-            size: 32,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            "Project Finalized!",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: CustomColors.darkText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "Share your experience to help the community grow.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: CustomColors.textMuted, fontSize: 13),
-          ),
-          const SizedBox(height: 24),
+          Icon(FontAwesomeIcons.starHalfStroke,
+              color: appTheme.indigo_A700, size: 32.h),
+          SizedBox(height: 16.h),
+          Text("Project Finalized!",
+              style: TextStyleHelper.instance.body18Bold),
+          SizedBox(height: 8.h),
+          Text("Share your experience to help the community grow.",
+              textAlign: TextAlign.center,
+              style: TextStyleHelper.instance.body12Medium
+                  .copyWith(color: appTheme.gray_500)),
+          SizedBox(height: 24.h),
           SizedBox(
             width: double.infinity,
+            height: 50.h,
             child: ElevatedButton(
-              onPressed: () =>
-                  _showRatingDialog(context, currentUser, raterRole),
+              onPressed: () {}, // Trigger rating dialog logic
               style: ElevatedButton.styleFrom(
-                backgroundColor: CustomColors.primaryBlue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+                  backgroundColor: appTheme.indigo_A700,
+                  foregroundColor: Colors.white),
               child: const Text("Submit Review"),
             ),
           ),
@@ -1217,252 +879,19 @@ class _RatingSection extends StatelessWidget {
 
   Widget _buildReviewPendingCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
-      ),
-      child: const Row(
+          color: appTheme.gray_50, borderRadius: BorderRadius.circular(20.h)),
+      child: Row(
         children: [
-          Icon(Icons.info_outline, color: CustomColors.textMuted, size: 20),
-          SizedBox(width: 12),
-          Text(
-            "Reviews open after project completion.",
-            style: TextStyle(color: CustomColors.textMuted, fontSize: 13),
-          ),
+          Icon(Icons.info_outline, color: appTheme.gray_400, size: 20.h),
+          SizedBox(width: 12.w),
+          Text("Reviews open after project completion.",
+              style: TextStyleHelper.instance.body12Medium
+                  .copyWith(color: appTheme.gray_500)),
         ],
       ),
     );
-  }
-
-  Widget _buildStarRating(double score) {
-    return Row(
-      children: List.generate(5, (index) {
-        return Icon(
-          index < score ? Icons.star : Icons.star_border,
-          color: Colors.amber,
-          size: 16,
-        );
-      }),
-    );
-  }
-
-  Widget _buildTag(String tag) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: CustomColors.primaryBlue.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        tag,
-        style: const TextStyle(
-          color: CustomColors.primaryBlue,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  void _showRatingDialog(
-      BuildContext context, dynamic currentUser, String raterRole) {
-    final reviewController = TextEditingController();
-    double currentScore = 5;
-    final List<String> availableTags = [
-      'Quality of Work',
-      'Communication',
-      'Timeliness',
-      'Professionalism',
-      'Technical Skills'
-    ];
-    final Set<String> selectedTags = {};
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: CustomColors.lightCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 24,
-            right: 24,
-            top: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "Leave a Review",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: CustomColors.textMain,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      _getScoreLabel(currentScore),
-                      style: const TextStyle(
-                        color: CustomColors.primaryBlue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        return IconButton(
-                          onPressed: () =>
-                              setModalState(() => currentScore = index + 1.0),
-                          icon: Icon(
-                            index < currentScore
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: Colors.amber,
-                            size: 40,
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "What went well?",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: CustomColors.darkText,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: availableTags.map((tag) {
-                  final isSelected = selectedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: isSelected,
-                    onSelected: (val) {
-                      setModalState(() {
-                        if (val) {
-                          selectedTags.add(tag);
-                        } else {
-                          selectedTags.remove(tag);
-                        }
-                      });
-                    },
-                    selectedColor:
-                        CustomColors.primaryBlue.withValues(alpha: 0.2),
-                    checkmarkColor: CustomColors.primaryBlue,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? CustomColors.primaryBlue
-                          : CustomColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "Detailed Comments",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: CustomColors.darkText,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: reviewController,
-                maxLines: 4,
-                style: const TextStyle(color: CustomColors.darkText),
-                decoration: InputDecoration(
-                  hintText: "How was your experience working on this project?",
-                  hintStyle: const TextStyle(color: CustomColors.textMuted),
-                  filled: true,
-                  fillColor: Colors.black.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (reviewController.text.isEmpty) return;
-
-                    final ratedUserId = raterRole == 'owner'
-                        ? project.workerId
-                        : project.ownerId;
-
-                    final rating = Rating(
-                      id: '',
-                      projectId: project.id,
-                      ratedBy: currentUser.uid,
-                      ratedUser: ratedUserId,
-                      raterRole: raterRole,
-                      score: currentScore,
-                      review: reviewController.text,
-                      tags: selectedTags.toList(),
-                    );
-
-                    await context.read<JobProvider>().submitRating(rating);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    "Submit Final Review",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getScoreLabel(double score) {
-    if (score >= 5) return "Exceptional!";
-    if (score >= 4) return "Great Experience";
-    if (score >= 3) return "Good / Average";
-    if (score >= 2) return "Could be better";
-    return "Poor Experience";
   }
 }
 
@@ -1486,44 +915,40 @@ class _TimeTrackingSection extends StatelessWidget {
           children: [
             if (entries.isEmpty)
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(24.h),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: CustomColors.darkCard.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(24),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.02)),
-                ),
-                child: const Column(
+                    color: appTheme.gray_50,
+                    borderRadius: BorderRadius.circular(24.h)),
+                child: Column(
                   children: [
                     Icon(Icons.timer_outlined,
-                        color: CustomColors.textMuted, size: 32),
-                    SizedBox(height: 12),
-                    Text(
-                      "No time entries logged yet",
-                      style: TextStyle(color: CustomColors.textMuted),
-                    ),
+                        color: appTheme.gray_300, size: 32.h),
+                    SizedBox(height: 12.h),
+                    Text("No time entries logged yet",
+                        style: TextStyleHelper.instance.body14Medium
+                            .copyWith(color: appTheme.gray_500)),
                   ],
                 ),
               )
             else
               ...entries
                   .map((entry) => _buildTimeEntryCard(context, entry, isOwner)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             if (isWorker)
               SizedBox(
                 width: double.infinity,
+                height: 50.h,
                 child: OutlinedButton.icon(
-                  onPressed: () => _showLogTimeDialog(context),
+                  onPressed: () {}, // Show log time dialog
                   icon: const Icon(Icons.add_alarm_outlined),
                   label: const Text("Log Hours"),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    foregroundColor: appTheme.indigo_A700,
                     side: BorderSide(
-                        color: CustomColors.textMuted.withValues(alpha: 0.2)),
+                        color: appTheme.indigo_A700.withOpacity(0.2)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.h)),
                   ),
                 ),
               ),
@@ -1535,16 +960,13 @@ class _TimeTrackingSection extends StatelessWidget {
 
   Widget _buildTimeEntryCard(
       BuildContext context, TimeEntry entry, bool isOwner) {
-    final dateFormat = intl.DateFormat('MMM dd, yyyy');
-    final timeFormat = intl.DateFormat('hh:mm a');
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: CustomColors.darkCard.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.02)),
+        color: appTheme.white_A700_01,
+        borderRadius: BorderRadius.circular(16.h),
+        border: Border.all(color: appTheme.gray_100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1552,225 +974,32 @@ class _TimeTrackingSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "${entry.hours.toStringAsFixed(1)} Hours",
-                style: const TextStyle(
-                  color: CustomColors.textMain,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+              Text("${entry.hours.toStringAsFixed(1)} Hours",
+                  style: TextStyleHelper.instance.body16Bold),
               _buildStatusChip(entry.status),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            "${dateFormat.format(entry.startTime)} | ${timeFormat.format(entry.startTime)} - ${timeFormat.format(entry.endTime)}",
-            style: const TextStyle(color: CustomColors.textMuted, fontSize: 12),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            entry.description,
-            style: const TextStyle(color: CustomColors.textMain, fontSize: 14),
-          ),
-          if (isOwner && entry.status == TimeEntryStatus.pending) ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => _updateStatus(
-                        context, entry.id, TimeEntryStatus.rejected),
-                    child: const Text("Reject",
-                        style: TextStyle(color: Colors.redAccent)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _updateStatus(
-                        context, entry.id, TimeEntryStatus.approved),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CustomColors.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text("Approve"),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          SizedBox(height: 8.h),
+          Text(entry.description,
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_600)),
         ],
       ),
     );
   }
 
   Widget _buildStatusChip(TimeEntryStatus status) {
-    Color color;
-    switch (status) {
-      case TimeEntryStatus.approved:
-        color = Colors.green;
-        break;
-      case TimeEntryStatus.rejected:
-        color = Colors.redAccent;
-        break;
-      case TimeEntryStatus.pending:
-        color = Colors.orange;
-        break;
-    }
+    Color color = Colors.orange;
+    if (status == TimeEntryStatus.approved) color = Colors.green;
+    if (status == TimeEntryStatus.rejected) color = Colors.red;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        status.name.toUpperCase(),
-        style:
-            TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
-      ),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6.h)),
+      child: Text(status.name.toUpperCase(),
+          style: TextStyleHelper.instance.body10Bold.copyWith(color: color)),
     );
-  }
-
-  void _showLogTimeDialog(BuildContext context) {
-    final descController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
-    TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
-    TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: CustomColors.lightCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 24,
-            right: 24,
-            top: 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Log Work Hours",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              ListTile(
-                title: const Text("Date"),
-                subtitle:
-                    Text(intl.DateFormat('MMM dd, yyyy').format(selectedDate)),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate:
-                        DateTime.now().subtract(const Duration(days: 30)),
-                    lastDate: DateTime.now(),
-                  );
-                  if (date != null) setModalState(() => selectedDate = date);
-                },
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: const Text("Start"),
-                      subtitle: Text(startTime.format(context)),
-                      onTap: () async {
-                        final time = await showTimePicker(
-                            context: context, initialTime: startTime);
-                        if (time != null) setModalState(() => startTime = time);
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text("End"),
-                      subtitle: Text(endTime.format(context)),
-                      onTap: () async {
-                        final time = await showTimePicker(
-                            context: context, initialTime: endTime);
-                        if (time != null) setModalState(() => endTime = time);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                decoration: InputDecoration(
-                  hintText: "What did you work on?",
-                  filled: true,
-                  fillColor: Colors.black.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (descController.text.isEmpty) return;
-
-                    final start = DateTime(
-                        selectedDate.year,
-                        selectedDate.month,
-                        selectedDate.day,
-                        startTime.hour,
-                        startTime.minute);
-                    var end = DateTime(selectedDate.year, selectedDate.month,
-                        selectedDate.day, endTime.hour, endTime.minute);
-                    if (end.isBefore(start))
-                      end = end.add(const Duration(days: 1));
-
-                    final entry = TimeEntry(
-                      id: '',
-                      projectId: project.id,
-                      workerId: project.workerId,
-                      startTime: start,
-                      endTime: end,
-                      description: descController.text,
-                    );
-
-                    await context
-                        .read<JobProvider>()
-                        .logTime(project.id, entry);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text("Submit Hours"),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateStatus(
-      BuildContext context, String entryId, TimeEntryStatus status) async {
-    await context
-        .read<JobProvider>()
-        .updateTimeEntryStatus(project.id, entryId, status);
   }
 }

@@ -5,30 +5,68 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
 
-import '../../../core/app_export.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/models/user_model.dart';
+import '../../../config/app_export.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/data/models/user_model.dart';
 import 'add_experience_screen.dart';
 import 'add_portfolio_screen.dart';
 import '../../widgets/shared/custom_image_view.dart';
 
 import 'widgets/profile_header_delegate.dart';
+import 'package:work_hub/presentation/screens/owner/ads/manage_ads_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final String? userId; // If null, show current user's profile
 
   const ProfileScreen({super.key, this.userId});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  UserModel? _fetchedUser;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserIfNeeded();
+  }
+
+  Future<void> _fetchUserIfNeeded() async {
+    final auth = context.read<AuthProvider>();
+    if (widget.userId != null && widget.userId != auth.userModel?.uid) {
+      setState(() => _isLoading = true);
+      final user = await auth.getUserById(widget.userId!);
+      if (mounted) {
+        setState(() {
+          _fetchedUser = user;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final isCurrentUser = userId == null || userId == auth.userModel?.uid;
-    final user = auth.userModel;
+    final isCurrentUser =
+        widget.userId == null || widget.userId == auth.userModel?.uid;
+    final user = isCurrentUser ? auth.userModel : _fetchedUser;
 
-    if (auth.isLoading || user == null) {
-      return Center(
-          child: CircularProgressIndicator(color: appTheme.indigo_A700));
+    if ((isCurrentUser && auth.isLoading) || _isLoading || user == null) {
+      return Scaffold(
+        backgroundColor: appTheme.white_A700_01,
+        body: Center(
+          child: CircularProgressIndicator(color: appTheme.indigo_A700),
+        ),
+      );
     }
 
     final isOwner = user.role == UserRole.businessOwner;
@@ -49,6 +87,7 @@ class ProfileScreen extends StatelessWidget {
                       Navigator.pushNamed(context, '/settings'),
                   onBackTap: () => Navigator.pop(context),
                   onEditImage: () async {
+                    if (!isCurrentUser) return; // double check
                     final picker = ImagePicker();
                     final image =
                         await picker.pickImage(source: ImageSource.gallery);
@@ -71,11 +110,6 @@ class ProfileScreen extends StatelessWidget {
                           !isOwner &&
                           user.profileCompletion < 100)
                         _buildProfileCompletionAlert(user),
-
-                      if (!isCurrentUser) ...[
-                        _buildFollowButton(context, auth, user),
-                        SizedBox(height: 24.h),
-                      ],
 
                       if (!isOwner && isCurrentUser) ...[
                         const _ProfileSectionTitle(title: "Wallet & Earnings"),
@@ -140,6 +174,14 @@ class ProfileScreen extends StatelessWidget {
                         _buildResumeSection(context, auth, user, isCurrentUser),
 
                       if (isOwner) ...[
+                        const _ProfileSectionTitle(
+                            title: "Marketing & Campaigns"),
+                        SizedBox(height: 12.h),
+                        _buildAdManagerCard(context),
+                        SizedBox(height: 32.h),
+                      ],
+
+                      if (isOwner) ...[
                         SizedBox(height: 32.h),
                         const _ProfileSectionTitle(title: "Company Details"),
                         SizedBox(height: 12.h),
@@ -167,6 +209,12 @@ class ProfileScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ],
+                      if (!isOwner) ...[
+                        SizedBox(height: 32.h),
+                        const _ProfileSectionTitle(title: "Reviews"),
+                        SizedBox(height: 16.h),
+                        _buildReviewsSection(context, user.uid),
                       ],
                       SizedBox(height: 100.h), // Bottom padding for FAB
                     ],
@@ -277,12 +325,50 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatItem(context, "Projects", "${user.completedProjects}"),
+          _buildStatItem(
+              context,
+              "Projects",
+              Text(
+                "${user.completedProjects}",
+                style: TextStyleHelper.instance.body18Bold
+                    .copyWith(color: appTheme.indigo_A700),
+              )),
+          _buildVerticalDivider(),
+          Column(
+            children: [
+              Row(
+                children: [
+                  Text(
+                    user.rating.toStringAsFixed(1),
+                    style: TextStyleHelper.instance.body18Bold
+                        .copyWith(color: appTheme.indigo_A700),
+                  ),
+                  SizedBox(width: 4.w),
+                  CustomImageView(
+                    imagePath: 'assets/icons/star.svg',
+                    height: 14.h,
+                    width: 14.h,
+                    color: Colors.amber,
+                  ),
+                ],
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                "Rating",
+                style: TextStyleHelper.instance.body12Medium
+                    .copyWith(color: appTheme.gray_500),
+              ),
+            ],
+          ),
           _buildVerticalDivider(),
           _buildStatItem(
-              context, "Rating", "${user.rating.toStringAsFixed(1)} ★"),
-          _buildVerticalDivider(),
-          _buildStatItem(context, "Hourly", "₹${user.hourlyRate ?? 0}"),
+              context,
+              "Earnings",
+              Text(
+                "₹${(user.totalEarnings ?? 0).toStringAsFixed(0)}",
+                style: TextStyleHelper.instance.body18Bold
+                    .copyWith(color: appTheme.indigo_A700),
+              )),
         ],
       ),
     );
@@ -523,12 +609,11 @@ class ProfileScreen extends StatelessWidget {
             .copyWith(color: appTheme.gray_400));
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value) {
+  Widget _buildStatItem(
+      BuildContext context, String label, Widget valueWidget) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyleHelper.instance.body18Bold
-                .copyWith(color: appTheme.indigo_A700)),
+        valueWidget,
         SizedBox(height: 4.h),
         Text(label,
             style: TextStyleHelper.instance.body12Medium
@@ -560,26 +645,198 @@ class ProfileScreen extends StatelessWidget {
     return Container(height: 30.h, width: 1, color: appTheme.gray_200);
   }
 
-  Widget _buildFollowButton(
-      BuildContext context, AuthProvider auth, dynamic user) {
-    final isFollowing =
-        user.followers?.containsKey(auth.userModel?.uid) ?? false;
-    return SizedBox(
+  Widget _buildReviewsSection(BuildContext context, String userId) {
+    return StreamBuilder<List<dynamic>>(
+      stream: context.read<JobProvider>().getReviewsStream(userId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text("Error loading reviews");
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final reviews = snapshot.data!;
+        if (reviews.isEmpty) {
+          return Container(
+            padding: EdgeInsets.all(24.h),
+            decoration: BoxDecoration(
+              color: appTheme.gray_50,
+              borderRadius: BorderRadius.circular(16.h),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.rate_review_outlined, color: appTheme.gray_400),
+                SizedBox(width: 12.w),
+                Text(
+                  "No reviews yet",
+                  style: TextStyleHelper.instance.body14Medium
+                      .copyWith(color: appTheme.gray_500),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: reviews.map((review) => _buildReviewCard(review)).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewCard(dynamic review) {
+    // Determine tag color based on tag name (simple hash or preset)
+    Color getTagColor(String tag) {
+      if (tag.toLowerCase().contains('quality')) return Colors.green;
+      if (tag.toLowerCase().contains('communication')) return Colors.blue;
+      if (tag.toLowerCase().contains('time')) return Colors.orange;
+      return appTheme.indigo_A700;
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(16.h),
+      decoration: BoxDecoration(
+        color: appTheme.gray_50,
+        borderRadius: BorderRadius.circular(16.h),
+        border: Border.all(color: appTheme.gray_200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: List.generate(5, (index) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 4.w),
+                    child: CustomImageView(
+                      imagePath: 'assets/icons/star.svg',
+                      height: 16.h,
+                      width: 16.h,
+                      color: index < review.score
+                          ? Colors.amber
+                          : appTheme.gray_300,
+                    ),
+                  );
+                }),
+              ),
+              Text(
+                "${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}",
+                style: TextStyleHelper.instance.body12Medium
+                    .copyWith(color: appTheme.gray_500),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            review.review,
+            style: TextStyleHelper.instance.body14Medium
+                .copyWith(color: appTheme.gray_900, height: 1.5),
+          ),
+          if (review.tags.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: (review.tags as List<String>).map((tag) {
+                final color = getTagColor(tag);
+                return Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.h),
+                  ),
+                  child: Text(
+                    tag,
+                    style: TextStyleHelper.instance.body10Bold
+                        .copyWith(color: color),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdManagerCard(BuildContext context) {
+    return Container(
       width: double.infinity,
-      height: 50.h,
-      child: ElevatedButton(
-        onPressed: () =>
-            isFollowing ? auth.unfollowUser(userId!) : auth.followUser(userId!),
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isFollowing ? appTheme.gray_100 : appTheme.indigo_A700,
-          foregroundColor: isFollowing ? appTheme.gray_900 : Colors.white,
-          elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.h)),
-        ),
-        child: Text(isFollowing ? "Unfollow" : "Follow",
-            style: TextStyleHelper.instance.body16Bold),
+      padding: EdgeInsets.all(20.h),
+      decoration: BoxDecoration(
+        color: appTheme.indigo_A700,
+        borderRadius: BorderRadius.circular(20.h),
+        boxShadow: [
+          BoxShadow(
+            color: appTheme.indigo_A700.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.campaign, color: Colors.white, size: 24.h),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Ad Campaigns",
+                      style: TextStyleHelper.instance.headline22Bold
+                          .copyWith(color: Colors.white, fontSize: 18.0),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      "Reach more workers with video ads",
+                      style: TextStyleHelper.instance.body14Medium
+                          .copyWith(color: Colors.white.withOpacity(0.9)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20.h),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ManageAdsScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: appTheme.indigo_A700,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(vertical: 14.h),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.h)),
+              ),
+              child: Text("Manage Ads",
+                  style: TextStyleHelper.instance.body16Bold),
+            ),
+          ),
+        ],
       ),
     );
   }

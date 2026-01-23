@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/contract_terms_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/contract_terms_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 class ContractDetailsScreen extends StatefulWidget {

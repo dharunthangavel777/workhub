@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_hub/theme/theme_helper.dart';
 
-import '../../../core/app_export.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/models/job_post_model.dart';
+import '../../../config/app_export.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
 import '../shared/project_dashboard_screen.dart';
 import '../shared/job_details_screen.dart';
 import '../../widgets/become_hirer_banner.dart';
@@ -128,6 +129,8 @@ class _ApplicationsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final jobProvider = context.watch<JobProvider>();
     final applications = jobProvider.appliedJobs;
+    debugPrint(
+        "WorkerProjectsScreen: Building ApplicationsSection. Count: ${applications.length}");
 
     if (jobProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -413,16 +416,19 @@ class _ProjectCard extends StatelessWidget {
               style: TextStyleHelper.instance.body12Medium
                   .copyWith(color: appTheme.gray_500),
             ),
-            SizedBox(height: 16.h),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4.h),
-              child: LinearProgressIndicator(
-                value: project.progress,
-                minHeight: 8.h,
-                backgroundColor: appTheme.gray_100,
-                valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
+            if (project.progress < 1.0) ...[
+              SizedBox(height: 16.h),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4.h),
+                child: LinearProgressIndicator(
+                  value: project.progress,
+                  minHeight: 8.h,
+                  backgroundColor: appTheme.gray_100,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

@@ -668,6 +668,10 @@
                 <div class="nav-link" onclick="switchSection('job-moderation')">
                     <i class="fas fa-briefcase"></i> Job Posts
                 </div>
+                <div class="nav-link" onclick="switchSection('ad-moderation')">
+                    <i class="fas fa-ad"></i> Ad Campaigns <span id="badge-ads" class="nav-badge"
+                        style="display:none">0</span>
+                </div>
                 <div class="nav-link" onclick="switchSection('project-moderation')">
                     <i class="fas fa-code-merge"></i> Projects
                 </div>
@@ -885,6 +889,30 @@
                             </tr>
                         </thead>
                         <tbody id="projects-table"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AD MODERATION -->
+            <div id="ad-moderation" class="section">
+                <header>
+                    <div class="header-title">
+                        <h1>Ad Campaign Moderation</h1>
+                        <p>Review and approve promotional content.</p>
+                    </div>
+                </header>
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Campaign Info</th>
+                                <th>Budget & Duration</th>
+                                <th>Preview</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ads-table"></tbody>
                     </table>
                 </div>
             </div>
@@ -1397,6 +1425,49 @@
             onSnapshot(collection(db, 'job_posts'), snap => processItems(snap, 'jobs'));
             onSnapshot(collection(db, 'project_posts'), snap => processItems(snap, 'projects'));
 
+            onSnapshot(collection(db, 'job_posts'), snap => processItems(snap, 'jobs'));
+            onSnapshot(collection(db, 'project_posts'), snap => processItems(snap, 'projects'));
+
+            // ADS
+            onSnapshot(query(collection(db, 'ads'), orderBy('createdAt', 'desc')), snap => {
+                const body = document.getElementById('ads-table');
+                body.innerHTML = '';
+                let pendingCount = 0;
+                snap.forEach(d => {
+                    const data = { id: d.id, ...d.data() };
+                    if (data.status === 'pending') pendingCount++;
+
+                    // Only show pending or active for moderation context usually, but here showing all sorted
+                    if (data.status !== 'pending' && data.status !== 'active' && data.status !== 'rejected') return;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div style="font-weight:600">${data.caption || 'No Caption'}</div>
+                            <div style="font-size:12px; color:var(--text-muted)">ID: ${data.id.substring(0, 8)}...</div>
+                            <div style="font-size:12px; color:var(--primary)">${data.ctaLabel} -> ${data.ctaLink || '#'}</div>
+                        </td>
+                        <td>
+                            <div>₹${data.budget?.total || data.totalBudget || 0}</div>
+                            <div style="font-size:11px">${new Date(data.duration?.startDate?.seconds * 1000 || Date.now()).toLocaleDateString()} - ${new Date(data.duration?.endDate?.seconds * 1000 || Date.now()).toLocaleDateString()}</div>
+                        </td>
+                         <td>
+                            <a href="${data.videoUrl}" target="_blank" style="color:var(--ai-accent); text-decoration:underline;">Watch Video</a>
+                        </td>
+                        <td><span class="badge ${data.status === 'active' ? 'badge-success' : (data.status === 'rejected' ? 'badge-danger' : 'badge-pending')}">${data.status}</span></td>
+                        <td>
+                            ${data.status === 'pending' ? `
+                            <div class="action-btns">
+                                <button class="btn btn-primary" onclick="approveAd('${data.id}')"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-danger" onclick="rejectAd('${data.id}')"><i class="fas fa-times"></i></button>
+                            </div>` : '-'}
+                        </td>
+                    `;
+                    body.appendChild(tr);
+                });
+                updateBadge('badge-ads', pendingCount);
+            });
+
             // FINANCE
             onSnapshot(query(collection(db, 'transactions'), orderBy('timestamp', 'desc')), (snap) => {
                 let gross = 0, net = 0;
@@ -1495,6 +1566,32 @@
                 });
             });
         }
+
+        window.approveAd = async (id) => {
+            showConfirm("Approve Campaign?", "This will make the ad live immediately.", async () => {
+                try {
+                    await updateDoc(doc(db, 'ads', id), { status: 'active' });
+                    showToast("Campaign approved successfully!", "success");
+                } catch (e) {
+                    showToast("Error approving ad: " + e.message, "error");
+                }
+            });
+        };
+
+        window.rejectAd = async (id) => {
+            const reason = prompt("Enter rejection reason:");
+            if (reason) {
+                try {
+                    await updateDoc(doc(db, 'ads', id), {
+                        status: 'rejected',
+                        rejectionReason: reason
+                    });
+                    showToast("Campaign rejected.", "success");
+                } catch (e) {
+                    showToast("Error rejecting ad: " + e.message, "error");
+                }
+            }
+        };
 
         /* ---------------- RENDERING HELPERS ---------------- */
         function updateBadge(id, count) {

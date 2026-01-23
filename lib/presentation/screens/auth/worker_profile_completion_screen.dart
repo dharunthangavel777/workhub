@@ -5,12 +5,15 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/services/local_parser_service.dart';
-import '../../../data/services/resume_parse_cache.dart';
-import '../../../data/models/experience_model.dart';
-import '../../../data/models/resume_data_model.dart';
-import '../../../core/app_export.dart';
+import 'package:work_hub/data/models/experience_model.dart';
+import 'package:work_hub/data/services/local_parser_service.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
+import 'package:work_hub/data/services/resume_parse_cache.dart';
+import 'package:work_hub/data/models/resume_data_model.dart';
+import '../../../config/app_export.dart';
 
 class WorkerProfileCompletionScreen extends StatefulWidget {
   const WorkerProfileCompletionScreen({super.key});
@@ -24,7 +27,7 @@ class _WorkerProfileCompletionScreenState
     extends State<WorkerProfileCompletionScreen>
     with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
-  final _localParserService = LocalParserService();
+  final _resumeParserService = ResumeParserService();
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -110,7 +113,7 @@ class _WorkerProfileCompletionScreenState
     });
 
     try {
-      final result = await _localParserService.parseResume(_resumeFile!);
+      final result = await _resumeParserService.parseResume(_resumeFile!);
 
       if (result != null && mounted) {
         // Cache the result
@@ -118,13 +121,14 @@ class _WorkerProfileCompletionScreenState
         debugPrint('💾 Cached resume data');
 
         _applyResumeData(result, 'Local Parser');
+      } else {
+        throw Exception("Failed to parse data from resume");
       }
     } catch (e) {
       debugPrint('Unexpected error: $e');
       if (mounted) {
         setState(() {
-          _parsingError =
-              'A connection error occurred. Make sure the parser service is running.';
+          _parsingError = 'Error: $e';
         });
       }
     } finally {
@@ -179,6 +183,7 @@ class _WorkerProfileCompletionScreenState
           bio: _bioController.text.trim(),
           experiences: _experiences,
           portfolio: _portfolio,
+          resumeFile: _resumeFile,
         );
   }
 
@@ -445,11 +450,23 @@ class _WorkerProfileCompletionScreenState
             label: "Location",
             controller: _locationController,
             icon: Icons.location_on_outlined,
-            suffixIcon: IconButton(
-              icon: Icon(Icons.my_location,
-                  color: appTheme.indigo_A700, size: 20.h),
-              onPressed: _handleLocationDetection,
-            ),
+            suffixIcon: _isFetchingLocation
+                ? Padding(
+                    padding: EdgeInsets.all(12.h),
+                    child: SizedBox(
+                      width: 20.h,
+                      height: 20.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: appTheme.indigo_A700,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(Icons.my_location,
+                        color: appTheme.indigo_A700, size: 20.h),
+                    onPressed: _handleLocationDetection,
+                  ),
           ),
         ],
       ),

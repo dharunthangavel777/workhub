@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/chat_model.dart';
-import '../../logic/services/notification_service.dart';
+import 'package:work_hub/data/services/notification_service.dart';
 import 'package:flutter/foundation.dart';
 
 class ChatRepository {

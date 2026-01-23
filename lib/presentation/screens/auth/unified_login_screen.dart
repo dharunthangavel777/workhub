@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../core/constants/app_strings.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/constants/app_strings.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
 
 class UnifiedLoginScreen extends StatefulWidget {
   const UnifiedLoginScreen({super.key});

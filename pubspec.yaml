@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
 
   package_info_plus: ^8.1.2
-
   cupertino_icons: ^1.0.8
   firebase_core: ^3.1.0 
   firebase_auth: ^5.1.0
@@ -42,12 +41,16 @@ dependencies:
   supabase_flutter: ^2.5.0
   flutter_cashfree_pg_sdk: ^2.2.9+47
   google_generative_ai: ^0.4.6
+  shared_preferences: ^2.2.2
   video_player: ^2.9.2
   chewie: ^1.8.5
   visibility_detector: ^0.4.0+2
   flutter_cache_manager: ^3.4.1
   carousel_slider_plus: ^7.1.1
   smooth_page_indicator: ^2.0.1
+  firebase_storage: ^12.1.0
+  home_widget: ^0.9.0
+  fluttertoast: ^8.2.4
 
 dev_dependencies:
   flutter_test:

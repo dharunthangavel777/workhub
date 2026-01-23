@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/app_export.dart';
+import '../../../config/app_export.dart';
 
 class CustomSearchView extends StatelessWidget {
   CustomSearchView({

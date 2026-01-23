@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/models/project_model.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/project_model.dart';
 
 class EscrowDepositScreen extends StatefulWidget {
   final ProjectModel project;
@@ -19,6 +19,8 @@ class EscrowDepositScreen extends StatefulWidget {
 
 class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   bool _isProcessing = false;
 
   @override
@@ -29,11 +31,18 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
       _amountController.text =
           (widget.project.requiredDeposit ?? 0).toStringAsFixed(0);
     }
+
+    // Pre-fill user contact info if available
+    final currentUser = context.read<AuthProvider>().userModel;
+    _emailController.text = currentUser?.email ?? '';
+    _phoneController.text = currentUser?.phoneNumber ?? '';
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -70,6 +79,8 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
             const SizedBox(height: 24),
             _buildCurrentBalance(project),
             const SizedBox(height: 32),
+            _buildContactForm(currentUser),
+            const SizedBox(height: 24),
             _buildDepositForm(currentUser),
             const SizedBox(height: 24),
             _buildInfoCard(),
@@ -259,6 +270,101 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
     );
   }
 
+  Widget _buildContactForm(currentUser) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Contact Information',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: CustomColors.darkText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Required for payment processing',
+            style: TextStyle(
+              fontSize: 12,
+              color: CustomColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(
+              fontSize: 14,
+              color: CustomColors.darkText,
+            ),
+            decoration: InputDecoration(
+              labelText: 'Email Address',
+              hintText: 'your.email@example.com',
+              prefixIcon: const Icon(Icons.email_outlined),
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    const BorderSide(color: CustomColors.primaryBlue, width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            maxLength: 10,
+            style: const TextStyle(
+              fontSize: 14,
+              color: CustomColors.darkText,
+            ),
+            decoration: InputDecoration(
+              labelText: 'Phone Number',
+              hintText: '9999999999',
+              prefixIcon: const Icon(Icons.phone_outlined),
+              prefixText: '+91 ',
+              counterText: '',
+              hintStyle: TextStyle(color: Colors.grey.shade400),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    const BorderSide(color: CustomColors.primaryBlue, width: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -361,18 +467,37 @@ class _EscrowDepositScreenState extends State<EscrowDepositScreen> {
       return;
     }
 
+    // Validate email
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      _showError('Please enter a valid email address');
+      return;
+    }
+
+    // Validate phone number
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty ||
+        phone.length != 10 ||
+        !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      _showError('Please enter a valid 10-digit phone number');
+      return;
+    }
+
     setState(() => _isProcessing = true);
 
     try {
       final jobProvider = context.read<JobProvider>();
+
+      debugPrint(
+          '💳 Initiating payment: Amount=₹$amount, Email=$email, Phone=$phone');
 
       // 1. Create payment order on server
       final response = await jobProvider.initiateEscrowDeposit(
         projectId: project.id,
         amount: amount,
         userId: currentUser.uid,
-        userEmail: currentUser.email ?? '',
-        userPhone: currentUser.phoneNumber ?? '0000000000',
+        userEmail: email,
+        userPhone: phone,
       );
 
       if (response == null || response['paymentSessionId'] == null) {

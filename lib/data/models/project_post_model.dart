@@ -46,6 +46,8 @@ class ProjectPostModel {
   final int applicationsCount;
   final bool isVerified;
 
+  String get budget => "₹$budgetMin - ₹$budgetMax";
+
   ProjectPostModel({
     required this.id,
     required this.ownerId,

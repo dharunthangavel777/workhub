@@ -1,42 +1,65 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../models/resume_data_model.dart';
+import 'gemini_service.dart';
+import 'ocr_service.dart';
 
-class LocalParserService {
-  // Local server URL (default FastAPI port 8000)
-  // Use 10.0.2.2 for Android emulator to hit localhost
-  // Use 10.0.2.2 for Android emulator, or your local machine IP for physical devices
-  final String _baseUrl = kDebugMode
-      ? 'http://10.58.172.61:8000' // Your machine's local IP address
-      : 'http://localhost:8000';
+class ResumeParserService {
+  final _geminiService = GeminiService();
 
   Future<ResumeData?> parseResume(File file) async {
-    try {
-      final request =
-          http.MultipartRequest('POST', Uri.parse('$_baseUrl/parse'));
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+    final ext = file.path.split('.').last.toLowerCase();
 
-      final response = await request.send();
-      final responseData = await response.stream.bytesToString();
+    if (['jpg', 'jpeg', 'png', 'webp', 'heic'].contains(ext)) {
+      debugPrint('Processing as Image (OCR -> HF)...');
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> result = jsonDecode(responseData);
-        if (result['success'] == true) {
-          // Wrap the extracted data in the expected structure for for ResumeData.fromJson
-          final Map<String, dynamic> formattedData = {
-            "parsedData": result['data']
-          };
-          return ResumeData.fromJson(formattedData);
-        }
+      // Use OCR first to get text from the image
+      final ocrText = await OcrService.extractText(file);
+
+      if (ocrText.trim().isNotEmpty) {
+        return await _geminiService.parseResume(ocrText);
       } else {
-        debugPrint(
-            'Local Parser Error: ${response.statusCode} - $responseData');
+        throw Exception("OCR failed to extract text from image.");
       }
-    } catch (e) {
-      debugPrint('Local Parser Connection Error: $e');
+    } else if (ext == 'pdf') {
+      debugPrint('Processing as PDF...');
+      // Try text extraction first (faster, cheaper, better for digital PDFs)
+      final text = await _extractPdfText(file);
+
+      if (text.trim().length > 50) {
+        debugPrint('Extracted Text length: ${text.length}');
+        return await _geminiService.parseResume(text);
+      } else {
+        debugPrint('PDF text empty or too short, falling back to OCR...');
+        // Fallback to OCR for scanned PDFs
+        // OcrService supports PDF uploads to OCR.space
+        final ocrText = await OcrService.extractText(file);
+        if (ocrText.isNotEmpty) {
+          return await _geminiService.parseResume(ocrText);
+        }
+      }
+    } else {
+      // Doc, Docx, etc. - Try OCR.space
+      debugPrint('Processing as $ext using OCR...');
+      final ocrText = await OcrService.extractText(file);
+      if (ocrText.isNotEmpty) {
+        return await _geminiService.parseResume(ocrText);
+      }
     }
     return null;
+  }
+
+  Future<String> _extractPdfText(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      String text = PdfTextExtractor(document).extractText();
+      document.dispose();
+      return text;
+    } catch (e) {
+      debugPrint('PDF Extraction Error: $e');
+      return '';
+    }
   }
 }

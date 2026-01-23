@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../data/models/reel_model.dart';
-import '../../../../logic/providers/reel_provider.dart';
-import '../../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/reel_model.dart';
+import 'package:work_hub/logic/providers/reel_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 
 class ReelsProfileView extends StatefulWidget {
   final VoidCallback onUploadRequested;

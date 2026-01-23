@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/dispute_model.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../logic/providers/job_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/dispute_model.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
 
 class DisputeScreen extends StatefulWidget {
   final String projectId;

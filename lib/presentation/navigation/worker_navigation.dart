@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import '../../core/app_export.dart';
-import '../../logic/providers/auth_provider.dart';
+import '../../config/app_export.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 import '../screens/auth/unified_login_screen.dart';
 import '../screens/worker/worker_projects_screen.dart';
 import '../screens/worker/reels/reels_tab_container.dart';
 import '../screens/worker/job_search_dashboard_screen.dart';
+import '../screens/ai/ai_matchmaking_screen.dart';
 import '../widgets/shared/custom_bottom_bar.dart';
-import '../../core/utils/image_constant.dart';
+import 'package:work_hub/utils/image_constant.dart';
 import '../screens/profile/profile_screen.dart';
 
 class WorkerNavigation extends StatefulWidget {
@@ -28,6 +29,7 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
       JobSearchDashboardScreen(),
       const WorkerProjectsScreen(),
       ReelsTabContainer(isActive: _selectedIndex == 2),
+      const AIMatchmakingScreen(),
       const ProfileScreen(),
     ];
 
@@ -56,44 +58,105 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
       ),
       bottomNavigationBar: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: _isBottomBarVisible ? 84.h : 0,
+        height: _isBottomBarVisible
+            ? 90.h
+            : 0, // Increased height for floating effect
         child: SingleChildScrollView(
           physics: const NeverScrollableScrollPhysics(),
-          child: CustomBottomBar(
-            selectedIndex: _selectedIndex,
-            onChanged: (index) {
-              final auth = context.read<AuthProvider>();
-              if (auth.isGuest && index != 0) {
-                _showGuestLoginPrompt(context);
-                return;
-              }
-              setState(() {
-                _selectedIndex = index;
-                _isBottomBarVisible =
-                    true; // Always show bar when switching tabs
-              });
-            },
-            bottomBarItemList: [
-              CustomBottomBarItem(
-                icon: ImageConstant.imgNavHome,
-                title: 'Home',
-                routeName: '',
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              CustomBottomBar(
+                selectedIndex: _selectedIndex,
+                onChanged: (index) {
+                  final auth = context.read<AuthProvider>();
+                  if (auth.isGuest && index != 0) {
+                    _showGuestLoginPrompt(context);
+                    return;
+                  }
+                  setState(() {
+                    _selectedIndex = index;
+                    _isBottomBarVisible =
+                        true; // Always show bar when switching tabs
+                  });
+                },
+                bottomBarItemList: [
+                  CustomBottomBarItem(
+                    icon: ImageConstant.imgNavHome,
+                    title: 'Home',
+                    routeName: '',
+                  ),
+                  CustomBottomBarItem(
+                    icon: ImageConstant.imgNavJobs,
+                    title: isFreelancer ? 'Projects' : 'Jobs',
+                    routeName: '',
+                  ),
+                  CustomBottomBarItem(
+                    icon: ImageConstant.imgNavGigfeed,
+                    title: 'Reels',
+                    routeName: '',
+                  ),
+                  CustomBottomBarItem(
+                    icon: 'assets/images/img_nav_ai.svg',
+                    title: 'AI',
+                    routeName: '',
+                  ),
+                  CustomBottomBarItem(
+                    icon: ImageConstant.imgNavProfile,
+                    title: 'Profile',
+                    routeName: '',
+                  ),
+                ],
               ),
-              CustomBottomBarItem(
-                icon: ImageConstant.imgNavJobs,
-                title: isFreelancer ? 'Projects' : 'Jobs',
-                routeName: '',
-              ),
-              CustomBottomBarItem(
-                icon: ImageConstant.imgNavGigfeed,
-                title: 'Reels',
-                routeName: '',
-              ),
-              CustomBottomBarItem(
-                icon: ImageConstant.imgNavProfile,
-                title: 'Profile',
-                routeName: '',
-              ),
+              // Floating Button Overlay with Bold White Border
+              if (_isBottomBarVisible)
+                Positioned(
+                  bottom: 30.h, // Positioned to lift it out of the bar
+                  child: GestureDetector(
+                    onTap: () {
+                      final auth = context.read<AuthProvider>();
+                      if (auth.isGuest) {
+                        _showGuestLoginPrompt(context);
+                      } else {
+                        setState(() {
+                          _selectedIndex = 2;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(4.h), // The "Bold White Border"
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Container(
+                        height: 54.h,
+                        width: 54.h,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _selectedIndex == 2
+                              ? appTheme.indigo_A700
+                              : Colors.black,
+                          shape: BoxShape.circle,
+                        ),
+                        child: CustomImageView(
+                          imagePath: ImageConstant.imgNavGigfeed,
+                          height: 24.h,
+                          width: 24.h,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -134,8 +197,9 @@ class _WorkerNavigationState extends State<WorkerNavigation> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child:
-                const Text("Login Now", style: TextStyle(color: Colors.white)),
+            child: const Text("Login Now",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white)),
           ),
         ],
       ),

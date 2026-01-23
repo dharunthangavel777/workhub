@@ -6,3 +6,7 @@ tf2onnx
 spacy
 pydantic
 python-dotenv
+sentence-transformers
+numpy
+scikit-learn
+faiss-cpu

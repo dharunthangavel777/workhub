@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import '../../data/models/reel_model.dart';
-import '../../data/models/reel_comment_model.dart';
-import '../../data/repositories/reel_repository.dart';
-import '../../data/services/storage_service.dart';
-import '../../data/models/user_model.dart';
+import 'package:work_hub/data/models/reel_model.dart';
+import 'package:work_hub/data/models/reel_comment_model.dart';
+import 'package:work_hub/data/repositories/reel_repository.dart';
+import 'package:work_hub/data/services/storage_service.dart';
+import 'package:work_hub/data/models/user_model.dart';
 
 class ReelProvider extends ChangeNotifier {
   final ReelRepository _repository = ReelRepository();

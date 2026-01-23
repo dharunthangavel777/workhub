@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../data/models/job_post_model.dart';
-import '../../../../data/models/project_post_model.dart';
-import '../../../core/utils/image_constant.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/utils/image_constant.dart';
 import '../widgets/shared/custom_image_view.dart';
 
 class JobCard extends StatelessWidget {

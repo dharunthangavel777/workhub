@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/custom_colors.dart';
+import 'package:work_hub/theme/custom_colors.dart';
 
 class PromoCard extends StatelessWidget {
   final VoidCallback onTap;

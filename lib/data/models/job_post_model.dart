@@ -48,6 +48,17 @@ class JobPostModel {
   final int applicationsCount;
   final bool isVerified;
 
+  String get salaryRange {
+    if (salaryMin != null && salaryMax != null) {
+      return "₹$salaryMin - ₹$salaryMax";
+    } else if (salaryMin != null) {
+      return "From ₹$salaryMin";
+    } else if (salaryMax != null) {
+      return "Up to ₹$salaryMax";
+    }
+    return "Negotiable";
+  }
+
   JobPostModel({
     required this.id,
     required this.ownerId,

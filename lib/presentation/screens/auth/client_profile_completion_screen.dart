@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../core/app_export.dart';
-import '../../../core/theme/text_style_helper.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import '../../../config/app_export.dart';
 
 class ClientProfileCompletionScreen extends StatefulWidget {
   const ClientProfileCompletionScreen({super.key});

@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/app_export.dart';
+import '../../../config/app_export.dart';
 import '../../widgets/shared/custom_search_view.dart';
 import './widgets/company_recommendation_widget.dart';
 import './widgets/job_card_widget.dart';
 import './widgets/home_carousel_widget.dart';
 import 'saved_jobs_screen.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/models/job_post_model.dart';
-import '../../../data/models/project_post_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
 import '../shared/job_details_screen.dart';
 import '../../widgets/shared/animated_profile_header_delegate.dart';
-import './widgets/ai_match_button.dart';
 
 class JobSearchDashboardScreen extends StatelessWidget {
   final TextEditingController searchController = TextEditingController();
@@ -47,10 +46,12 @@ class JobSearchDashboardScreen extends StatelessWidget {
 
     // Extract unique companies for recommendation
     final companies = _extractCompanies(allPosts);
+    final horizontalPadding = EdgeInsets.symmetric(horizontal: 24.h);
 
     return Scaffold(
       backgroundColor: appTheme.white_A700_01,
       body: CustomScrollView(
+        cacheExtent: 3000.0,
         slivers: [
           SliverPersistentHeader(
             pinned: true,
@@ -73,32 +74,105 @@ class JobSearchDashboardScreen extends StatelessWidget {
               onProfileTap: () {},
             ),
           ),
+
+          // 1. Search Section
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.only(
-                  left: 24.h, right: 24.h, top: 0, bottom: 24.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSearchSection(context),
-                  SizedBox(height: 16.h),
-                  const HomeCarouselWidget(),
-                  SizedBox(height: 24.h),
-                  if (recentPosts.isNotEmpty) ...[
-                    _buildRecentlyPostedSection(context, recentPosts),
-                    SizedBox(height: 16.h),
-                  ],
-                  if (companies.isNotEmpty) ...[
-                    _buildRecommendedCompaniesSection(context, companies),
-                    SizedBox(height: 16.h),
-                  ],
-                  if (recommendedPosts.isNotEmpty) ...[
-                    _buildRecommendedJobsSection(context, recommendedPosts),
-                  ],
-                ],
-              ),
+              padding: EdgeInsets.only(left: 24.h, right: 24.h, bottom: 16.h),
+              child: _buildSearchSection(context),
             ),
           ),
+
+          // 2. Carousel
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(left: 24.h, right: 24.h, bottom: 24.h),
+              child: const HomeCarouselWidget(),
+            ),
+          ),
+
+          // 3. Recently Posted Header & List
+          if (recentPosts.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: horizontalPadding,
+                child: _buildSectionHeader(context, "Recently Posted",
+                    showSaved: true),
+              ),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+            SliverPadding(
+              padding: horizontalPadding,
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final post = recentPosts[index];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: RepaintBoundary(
+                        child: post is JobPostModel
+                            ? JobCardWidget.fromJobPost(post,
+                                onTap: () => _showJobDetails(context, post))
+                            : JobCardWidget.fromProjectPost(
+                                post as ProjectPostModel,
+                                onTap: () => _showJobDetails(context, post)),
+                      ),
+                    );
+                  },
+                  childCount: recentPosts.length,
+                ),
+              ),
+            ),
+          ],
+
+          // 4. Recommended Companies
+          if (companies.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 16.h),
+                child: _buildRecommendedCompaniesSection(context, companies),
+              ),
+            ),
+          ],
+
+          // 5. Recommended Jobs Header & List
+          if (recommendedPosts.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: horizontalPadding,
+                child: Text(
+                  "Recommended for you",
+                  style: TextStyleHelper.instance.headline22Bold,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 16.h)),
+            SliverPadding(
+              padding: horizontalPadding,
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final post = recommendedPosts[index];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: RepaintBoundary(
+                        child: post is JobPostModel
+                            ? JobCardWidget.fromJobPost(post,
+                                onTap: () => _showJobDetails(context, post))
+                            : JobCardWidget.fromProjectPost(
+                                post as ProjectPostModel,
+                                onTap: () => _showJobDetails(context, post)),
+                      ),
+                    );
+                  },
+                  childCount: recommendedPosts.length,
+                ),
+              ),
+            ),
+          ],
+
+          // Bottom Padding
+          SliverToBoxAdapter(child: SizedBox(height: 80.h)),
         ],
       ),
     );
@@ -148,74 +222,72 @@ class JobSearchDashboardScreen extends StatelessWidget {
           ),
         ),
         SizedBox(width: 12.w),
-        AIModeButton(
+        GestureDetector(
           onTap: () {
-            // Handle AI Match logic
+            // Handle filter tap
           },
+          child: Container(
+            padding: EdgeInsets.all(7.h),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE6E7FC),
+              borderRadius: BorderRadius.circular(12.h),
+            ),
+            child: CustomImageView(
+              imagePath: ImageConstant.imgMageFilterSquareFill,
+              height: 34.h,
+              width: 34.h,
+              color: appTheme.indigo_A700,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildRecentlyPostedSection(
-      BuildContext context, List<dynamic> posts) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildSectionHeader(BuildContext context, String title,
+      {bool showSaved = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              "Recently Posted",
-              style: TextStyleHelper.instance.headline22Bold,
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const SavedJobsScreen()),
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: appTheme.indigo_A700.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(16.h),
-                ),
-                child: Row(
-                  children: [
-                    CustomImageView(
-                      imagePath: ImageConstant.imgNavSaved,
-                      height: 14.h,
-                      width: 14.h,
+        Text(
+          title,
+          style: TextStyleHelper.instance.headline22Bold,
+        ),
+        if (showSaved)
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const SavedJobsScreen()),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: appTheme.indigo_A700.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16.h),
+              ),
+              child: Row(
+                children: [
+                  CustomImageView(
+                    imagePath: ImageConstant.imgNavSaved,
+                    height: 14.h,
+                    width: 14.h,
+                    color: appTheme.indigo_A700,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    "Saved Jobs",
+                    style: TextStyleHelper.instance.body12Medium.copyWith(
                       color: appTheme.indigo_A700,
+                      fontWeight: FontWeight.w600,
                     ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      "Saved Jobs",
-                      style: TextStyleHelper.instance.body12Medium.copyWith(
-                        color: appTheme.indigo_A700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        ...posts
-            .map((post) => Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: post is JobPostModel
-                      ? JobCardWidget.fromJobPost(post,
-                          onTap: () => _showJobDetails(context, post))
-                      : JobCardWidget.fromProjectPost(post as ProjectPostModel,
-                          onTap: () => _showJobDetails(context, post)),
-                ))
-            .toList(),
+          ),
       ],
     );
   }
@@ -225,15 +297,18 @@ class JobSearchDashboardScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Our Top Companies",
-          style: TextStyleHelper.instance.headline22Bold,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.h),
+          child: Text(
+            "Our Top Companies",
+            style: TextStyleHelper.instance.headline22Bold,
+          ),
         ),
         SizedBox(height: 12.h),
         Container(
           height: 190.h,
           child: ListView.separated(
-            padding: EdgeInsets.only(left: 4.w, right: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 24.h),
             scrollDirection: Axis.horizontal,
             separatorBuilder: (context, index) => SizedBox(width: 12.w),
             itemCount: companies.length,
@@ -252,30 +327,6 @@ class JobSearchDashboardScreen extends StatelessWidget {
             },
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildRecommendedJobsSection(
-      BuildContext context, List<dynamic> posts) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Recommended for you",
-          style: TextStyleHelper.instance.headline22Bold,
-        ),
-        SizedBox(height: 16.h),
-        ...posts
-            .map((post) => Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: post is JobPostModel
-                      ? JobCardWidget.fromJobPost(post,
-                          onTap: () => _showJobDetails(context, post))
-                      : JobCardWidget.fromProjectPost(post as ProjectPostModel,
-                          onTap: () => _showJobDetails(context, post)),
-                ))
-            .toList(),
       ],
     );
   }

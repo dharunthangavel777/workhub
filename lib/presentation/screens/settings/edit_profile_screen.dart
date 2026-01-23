@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_hub/data/models/user_model.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

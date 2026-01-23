@@ -15,7 +15,7 @@ import '../models/withdrawal_request_model.dart';
 import '../models/rating_model.dart';
 import '../models/time_entry_model.dart';
 import '../services/storage_service.dart';
-import '../../logic/services/notification_service.dart';
+import 'package:work_hub/data/services/notification_service.dart';
 
 class JobRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -160,18 +160,22 @@ class JobRepository {
         .collection('applications')
         .snapshots()
         .asyncMap((snapshot) async {
+      debugPrint(
+          "Fetching worker applications. Found ${snapshot.docs.length} docs in subcollection.");
       final List<dynamic> appliedPosts = [];
 
       for (var doc in snapshot.docs) {
         final jobId = doc.id;
         final mode = doc.data()['mode'] ?? 'job';
-
         // Filter by mode if provided
         if (modeFilter != null && mode != modeFilter) {
+          debugPrint(
+              "Skipping application $jobId due to mode mismatch. DocMode: $mode, Filter: $modeFilter");
           continue;
         }
 
         final collection = mode == 'freelancer' ? 'project_posts' : 'job_posts';
+        debugPrint("Fetching application detail for $jobId from $collection");
 
         final jobDoc = await _firestore
             .collection(collection)
@@ -184,6 +188,10 @@ class JobRepository {
           } else {
             appliedPosts.add(JobPostModel.fromMap(jobId, jobDoc.data()!));
           }
+          debugPrint("Successfully added application: $jobId");
+        } else {
+          debugPrint(
+              "Job/Project document not found for ID: $jobId in collection: $collection");
         }
       }
       // Sort by some criteria if needed, e.g. status or title
@@ -206,8 +214,12 @@ class JobRepository {
       final jobId = doc.id;
       final mode = doc.data()['mode'] ?? 'job';
 
+      // Normalize mode
+      final normalizedDocMode = (mode == 'worker') ? 'job' : mode;
+      final normalizedFilter = (modeFilter == 'worker') ? 'job' : modeFilter;
+
       // Filter by mode if provided
-      if (modeFilter != null && mode != modeFilter) {
+      if (normalizedFilter != null && normalizedDocMode != normalizedFilter) {
         continue;
       }
 
@@ -386,7 +398,7 @@ class JobRepository {
         startDate: DateTime.now(),
         expectedCompletion: expectedCompletion,
         paymentType: projectData['mode'] == 'hourly' ? 'hourly' : 'fixed',
-        platformFee: 10.0,
+        platformFee: 0.0,
         ownerAccepted: false,
         workerAccepted: false,
         additionalTerms: projectData['termsAndConditions'],
@@ -417,7 +429,7 @@ class JobRepository {
       }
 
       final double budget = (projectData['budget'] ?? 0.0).toDouble();
-      const double platformFeePercent = 10.0;
+      const double platformFeePercent = 0.0;
       final double feeAmount = budget * platformFeePercent / 100;
       final double totalRequired = budget + feeAmount;
 
@@ -562,7 +574,7 @@ class JobRepository {
     required String paymentType,
     DateTime? startDate,
     DateTime? expectedCompletion,
-    double platformFee = 10.0,
+    double platformFee = 0.0,
   }) async {
     try {
       final contractRef = _firestore.collection('contracts').doc();
@@ -635,7 +647,7 @@ class JobRepository {
             recipientId: recipientId,
             title: 'Contract Update',
             body:
-                'The contract for your project has been accepted by the ${role}.',
+                'The contract for your project has been accepted by the $role.',
             category: 'contract_accepted',
             data: {'projectId': projectId, 'contractId': contractId},
           );
@@ -976,45 +988,72 @@ class JobRepository {
             "Backend payment release triggered for milestone $milestoneId");
       }
 
-      // 7. Check for project completion (Post-transaction)
-      await _checkProjectCompletion(projectId);
+      // 7. Sync project progress (Post-transaction)
+      await syncProjectProgress(projectId);
     } catch (e) {
       debugPrint("Approve Milestone Error: $e");
       throw Exception('Failed to approve milestone: $e');
     }
   }
 
-  Future<void> _checkProjectCompletion(String projectId) async {
+  Future<void> syncProjectProgress(String projectId) async {
     try {
       final projectRef = _firestore.collection('projects').doc(projectId);
       final projectDoc = await projectRef.get();
       if (!projectDoc.exists) return;
 
       final projectData = projectDoc.data()!;
-      final milestoneIds =
-          (projectData['milestoneIds'] as List?)?.cast<String>() ?? [];
+      final milestoneSnapshot = await projectRef.collection('milestones').get();
 
-      if (milestoneIds.isNotEmpty) {
-        bool allApproved = true;
-        for (final mId in milestoneIds) {
-          final mDoc = await projectRef.collection('milestones').doc(mId).get();
-          if (!mDoc.exists ||
-              mDoc.data()?['status'] != MilestoneStatus.approved.name) {
-            allApproved = false;
-            break;
-          }
+      if (milestoneSnapshot.docs.isNotEmpty) {
+        final totalMilestones = milestoneSnapshot.docs.length;
+        final approvedMilestones = milestoneSnapshot.docs
+            .where((m) => m.data()['status'] == MilestoneStatus.approved.name)
+            .length;
+
+        final double progress = approvedMilestones / totalMilestones;
+        final bool isNewlyCompleted =
+            progress == 1.0 && projectData['status'] != 'completed';
+
+        final Map<String, dynamic> updates = {
+          'progress': progress,
+        };
+
+        if (isNewlyCompleted) {
+          updates['status'] = 'completed';
+          updates['completedAt'] = Timestamp.now().millisecondsSinceEpoch;
         }
 
-        if (allApproved) {
-          await projectRef.update({
-            'status': 'completed',
-            'completedAt': Timestamp.now().millisecondsSinceEpoch,
-            'progress': 1.0,
-          });
+        await projectRef.update(updates);
+
+        if (isNewlyCompleted) {
+          // AUTOMATION: Add to worker's portfolio
+          try {
+            final String workerId = projectData['workerId'];
+            final userRef = _firestore.collection('users').doc(workerId);
+
+            final portfolioEntry = {
+              'projectId': projectId,
+              'title': projectData['title'] ?? 'Untitled Project',
+              'description': projectData['description'] ?? '',
+              'role': 'Worker',
+              'completedAt': Timestamp.now().millisecondsSinceEpoch,
+            };
+
+            await userRef.update({
+              'portfolio.$projectId': portfolioEntry,
+              'completedProjects': FieldValue.increment(1),
+            });
+
+            debugPrint(
+                "Automatically added project $projectId to worker $workerId portfolio");
+          } catch (e) {
+            debugPrint("Failed to auto-add portfolio item: $e");
+          }
         }
       }
     } catch (e) {
-      debugPrint("Check Project Completion Error: $e");
+      debugPrint("Check Project Progress Error: $e");
     }
   }
 
@@ -1317,15 +1356,45 @@ class JobRepository {
             _firestore.collection('projects').doc(rating.projectId);
         final projectDoc = await transaction.get(projectRef);
 
-        if (projectDoc.exists) {
-          final isOwner = rating.raterRole == 'owner';
-          transaction.update(projectRef, {
-            isOwner ? 'ownerRatingId' : 'workerRatingId': docRef.id,
-          });
+        if (!projectDoc.exists) {
+          throw Exception("Project not found");
         }
 
-        // 3. Update the rated user's average rating (Optional/Future)
-        // This could be move to Cloud Functions for better consistency
+        final isOwner = rating.raterRole == 'owner';
+        transaction.update(projectRef, {
+          isOwner ? 'ownerRatingId' : 'workerRatingId': docRef.id,
+        });
+
+        // 3. Update the rated user's average rating and stats
+        final ratedUserRef =
+            _firestore.collection('users').doc(rating.ratedUser);
+        final ratedUserDoc = await transaction.get(ratedUserRef);
+
+        if (ratedUserDoc.exists) {
+          final data = ratedUserDoc.data()!;
+          final currentRating = (data['rating'] ?? 0.0).toDouble();
+          final currentCount = (data['ratingsCount'] ?? 0).toInt();
+          // completedProjects only increments if the user being rated is the Worker and the rating comes from Owner?
+          // Actually, the request implies 'completed projects' count on profile.
+          // Usually, a project is "completed" for a worker when they finish it.
+          // So we should increment it when the work is marked complete OR when they get a rating.
+          // Let's increment it here for robust "verified completion".
+          // Since this is a mutual system, we'll increment for whoever is receiving the rating if appropriate.
+          // Typically "Completed Projects" stat is more relevant for Workers.
+          // But Owners might have "Projects Hired" count.
+          // For now, let's increment 'completedProjects' for the rated user regardless of role, assuming the field exists.
+
+          final newCount = currentCount + 1;
+          final newAverage =
+              ((currentRating * currentCount) + rating.score) / newCount;
+          final currentCompleted = (data['completedProjects'] ?? 0).toInt();
+
+          transaction.update(ratedUserRef, {
+            'rating': newAverage,
+            'ratingsCount': newCount,
+            'completedProjects': currentCompleted + 1,
+          });
+        }
       });
 
       // Trigger Notification
@@ -1389,6 +1458,19 @@ class JobRepository {
       debugPrint("Get Rating Error: $e");
       return null;
     }
+  }
+
+  Stream<List<Rating>> getReviewsStream(String userId) {
+    return _firestore
+        .collection('ratings')
+        .where('ratedUser', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Rating.fromMap(doc.id, doc.data());
+      }).toList();
+    });
   }
 
   // ========== TIME TRACKING ==========

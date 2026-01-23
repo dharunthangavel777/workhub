@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/withdrawal_request_model.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../logic/providers/job_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/withdrawal_request_model.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -14,8 +14,12 @@ class WithdrawalScreen extends StatefulWidget {
 
 class _WithdrawalScreenState extends State<WithdrawalScreen> {
   final _amountController = TextEditingController();
-  final _addressController = TextEditingController();
+  final _accountHolderNameController = TextEditingController();
+  final _accountNumberController = TextEditingController();
+  final _ifscCodeController = TextEditingController();
+  final _upiIdController = TextEditingController();
   bool _isProcessing = false;
+  String _paymentMethod = 'bank'; // 'bank' or 'upi'
 
   @override
   void initState() {
@@ -31,7 +35,10 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   @override
   void dispose() {
     _amountController.dispose();
-    _addressController.dispose();
+    _accountHolderNameController.dispose();
+    _accountNumberController.dispose();
+    _ifscCodeController.dispose();
+    _upiIdController.dispose();
     super.dispose();
   }
 
@@ -39,7 +46,6 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userModel;
     final balance = user?.walletBalance ?? 0.0;
-    _addressController.text = user?.walletAddress ?? '';
 
     return Scaffold(
       backgroundColor: CustomColors.lightBg,
@@ -137,13 +143,40 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               const Text("₹ ", style: TextStyle(fontWeight: FontWeight.bold)),
           keyboardType: TextInputType.number,
         ),
-        const SizedBox(height: 20),
-        _buildTextField(
-          controller: _addressController,
-          label: "Wallet / Bank Details",
-          hint: "Enter payment destination details...",
-          maxLines: 3,
+        const SizedBox(height: 24),
+        // Payment method selection
+        const Text(
+          "Payment Method",
+          style: TextStyle(
+            color: CustomColors.textMuted,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildPaymentMethodOption(
+                'bank',
+                'Bank Transfer',
+                Icons.account_balance,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildPaymentMethodOption(
+                'upi',
+                'UPI',
+                Icons.qr_code_2,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        // Conditional fields based on payment method
+        if (_paymentMethod == 'bank') ..._buildBankFields(),
+        if (_paymentMethod == 'upi') ..._buildUpiFields(),
         const SizedBox(height: 40),
         SizedBox(
           width: double.infinity,
@@ -170,6 +203,88 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildPaymentMethodOption(String value, String label, IconData icon) {
+    final isSelected = _paymentMethod == value;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _paymentMethod = value;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CustomColors.primaryBlue.withValues(alpha: 0.1)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? CustomColors.primaryBlue
+                : Colors.black.withValues(alpha: 0.1),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? CustomColors.primaryBlue
+                  : CustomColors.textMuted,
+              size: 32,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? CustomColors.primaryBlue
+                    : CustomColors.textMuted,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildBankFields() {
+    return [
+      _buildTextField(
+        controller: _accountHolderNameController,
+        label: "Account Holder Name",
+        hint: "Enter full name as per bank records",
+      ),
+      const SizedBox(height: 20),
+      _buildTextField(
+        controller: _accountNumberController,
+        label: "Account Number",
+        hint: "Enter 9-18 digit account number",
+        keyboardType: TextInputType.number,
+      ),
+      const SizedBox(height: 20),
+      _buildTextField(
+        controller: _ifscCodeController,
+        label: "IFSC Code",
+        hint: "e.g., SBIN0001234",
+      ),
+    ];
+  }
+
+  List<Widget> _buildUpiFields() {
+    return [
+      _buildTextField(
+        controller: _upiIdController,
+        label: "UPI ID",
+        hint: "e.g., yourname@paytm",
+        keyboardType: TextInputType.emailAddress,
+      ),
+    ];
   }
 
   Widget _buildHistorySection() {
@@ -342,37 +457,86 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
 
   Future<void> _handleWithdrawal(String? uid) async {
     final amountText = _amountController.text;
-    final address = _addressController.text;
 
-    if (amountText.isEmpty || address.isEmpty) {
+    if (amountText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
+        const SnackBar(content: Text("Please enter withdrawal amount")),
       );
       return;
     }
 
     final amount = double.tryParse(amountText);
-    if (amount == null || amount <= 0) {
+    if (amount == null || amount < 50) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid amount")),
+        const SnackBar(content: Text("Minimum withdrawal amount is ₹50")),
       );
       return;
+    }
+
+    // Validate based on payment method
+    if (_paymentMethod == 'bank') {
+      if (_accountHolderNameController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please enter account holder name")),
+        );
+        return;
+      }
+
+      final accountNumber = _accountNumberController.text;
+      if (accountNumber.isEmpty ||
+          accountNumber.length < 9 ||
+          accountNumber.length > 18 ||
+          !RegExp(r'^[0-9]+$').hasMatch(accountNumber)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text("Please enter a valid account number (9-18 digits)")),
+        );
+        return;
+      }
+
+      final ifscCode = _ifscCodeController.text.toUpperCase();
+      if (ifscCode.isEmpty ||
+          ifscCode.length != 11 ||
+          !RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$').hasMatch(ifscCode)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text("Please enter a valid IFSC code (e.g., SBIN0001234)")),
+        );
+        return;
+      }
+    } else {
+      final upiId = _upiIdController.text;
+      if (upiId.isEmpty || !upiId.contains('@')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Please enter a valid UPI ID (e.g., name@paytm)")),
+        );
+        return;
+      }
     }
 
     setState(() => _isProcessing = true);
 
     final jobProvider = context.read<JobProvider>();
     try {
-      // 1. Update wallet address in profile if changed
-      await jobProvider.updateUserProfile(uid!, {'walletAddress': address});
-
-      // 2. Submit withdrawal request
+      // Create withdrawal request with proper bank details
       final request = WithdrawalRequest(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: uid,
+        userId: uid!,
         amount: amount,
-        bankAccountId: address, // Using address as ID/details for now
-        bankAccountName: 'User Wallet', // Placeholder
+        bankAccountId: _paymentMethod == 'bank'
+            ? _accountNumberController.text
+            : _upiIdController.text,
+        bankAccountName:
+            _paymentMethod == 'bank' ? _accountHolderNameController.text : null,
+        bankAccountNumber:
+            _paymentMethod == 'bank' ? _accountNumberController.text : null,
+        ifscCode: _paymentMethod == 'bank'
+            ? _ifscCodeController.text.toUpperCase()
+            : null,
+        upiId: _paymentMethod == 'upi' ? _upiIdController.text : null,
         status: WithdrawalStatus.pending,
       );
 

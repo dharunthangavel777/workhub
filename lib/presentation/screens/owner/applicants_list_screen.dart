@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/job_post_model.dart';
-import '../../../data/models/project_post_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 import '../profile/profile_screen.dart';
 
 class ApplicantsListScreen extends StatelessWidget {
@@ -106,56 +106,59 @@ class _ApplicantCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfileScreen(userId: userId),
-                  ),
-                ),
-                child: CircleAvatar(
-                  radius: 24,
-                  backgroundColor:
-                      CustomColors.primaryBlue.withValues(alpha: 0.1),
-                  child: Text(
-                    (data['workerName'] ?? "U")[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: CustomColors.primaryBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(userId: userId),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data['workerName'] ?? "Anonymous User",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: CustomColors.darkText,
-                      ),
-                    ),
-                    Text(
-                      isFreelancer
-                          ? "Bid: ₹${data['bidAmount'] ?? 0}"
-                          : "Applied for ${job is JobPostModel ? (job as JobPostModel).jobCategory : (job as ProjectPostModel).projectCategory}",
+            ),
+            child: Container(
+              color: Colors.transparent, // Ensure hit test works on empty space
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor:
+                        CustomColors.primaryBlue.withValues(alpha: 0.1),
+                    child: Text(
+                      (data['workerName'] ?? "U")[0].toUpperCase(),
                       style: const TextStyle(
                         color: CustomColors.primaryBlue,
-                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['workerName'] ?? "Anonymous User",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: CustomColors.darkText,
+                          ),
+                        ),
+                        Text(
+                          isFreelancer
+                              ? "Bid: ₹${data['bidAmount'] ?? 0}"
+                              : "Applied for ${job is JobPostModel ? (job as JobPostModel).jobCategory : (job as ProjectPostModel).projectCategory}",
+                          style: const TextStyle(
+                            color: CustomColors.primaryBlue,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              _statusBadge(status),
-            ],
+            ),
           ),
+          _statusBadge(status),
           if (isFreelancer && data['proposal'] != null) ...[
             const SizedBox(height: 16),
             const Text(

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../../core/app_export.dart';
-import '../../../../logic/providers/reel_provider.dart';
-import '../../../../logic/providers/auth_provider.dart';
-import '../../../../core/utils/image_utils.dart';
+import '../../../../config/app_export.dart';
+import 'package:work_hub/logic/providers/reel_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/utils/image_utils.dart';
 import 'reel_player.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/logic/providers/ad_provider.dart';
+import 'ad_reel_item.dart';
 
 class ReelsFeedView extends StatefulWidget {
   final bool isActive;
@@ -22,6 +26,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ReelProvider>().fetchReels();
+      context.read<AdProvider>().fetchActiveAds();
     });
   }
 
@@ -50,18 +55,57 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
             SizedBox(height: 16.h),
             Text(
               "No reels yet. Be the first to upload!",
-              style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_500),
+              style: TextStyleHelper.instance.body14Medium
+                  .copyWith(color: appTheme.gray_500),
             ),
           ],
         ),
       );
     }
 
+    final activeAds = context.watch<AdProvider>().activeAds;
+    print("ReelsFeedView: Active Ads Count: ${activeAds.length}");
+    const int adFrequency = 2; // Ad after every 2 reels for testing
+
+    // Calculate total items (reels + ads)
+    // If 5 reels, 0 ads -> total 5
+    // If 6 reels, 1 ad -> total 7. (Reel 0-4, Ad, Reel 5)
+
+    int totalItems = reels.length;
+    if (activeAds.isNotEmpty) {
+      totalItems += (reels.length ~/ adFrequency);
+    }
+
     return PageView.builder(
       scrollDirection: Axis.vertical,
-      itemCount: reels.length,
+      itemCount: totalItems,
       itemBuilder: (context, index) {
-        final reel = reels[index];
+        // Check if this index should be an ad
+        // Index 5 (6th item) should be ad if frequency is 5
+        // 0,1,2,3,4 -> Reel
+        // 5 -> Ad
+        // 6 -> Reel
+        final bool isAdSlot =
+            activeAds.isNotEmpty && (index + 1) % (adFrequency + 1) == 0;
+
+        if (isAdSlot) {
+          // Calculate which ad to show (wrap around if fewer ads than slots)
+          final int adIndex = ((index + 1) ~/ (adFrequency + 1)) - 1;
+          final ad = activeAds[adIndex % activeAds.length];
+          return AdReelItem(
+              ad: ad,
+              isActive:
+                  widget.isActive); // Pass simplified isActive or manage focus
+        }
+
+        // Calculate mapped reel index
+        final int reelIndex =
+            index - (activeAds.isEmpty ? 0 : (index ~/ (adFrequency + 1)));
+
+        // Safety check
+        if (reelIndex >= reels.length) return const SizedBox();
+
+        final reel = reels[reelIndex];
         final isLiked = reel.likedBy.contains(authProvider.userModel?.uid);
 
         return Stack(
@@ -106,7 +150,8 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20.h),
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,13 +160,15 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                             children: [
                               CircleAvatar(
                                 radius: 16.h,
-                                backgroundImage: ImageUtils.getImageProvider(reel.userPhotoUrl),
+                                backgroundImage: ImageUtils.getImageProvider(
+                                    reel.userPhotoUrl),
                                 backgroundColor: appTheme.white_A700_01,
                               ),
                               SizedBox(width: 10.w),
                               Text(
                                 "@${reel.username ?? 'user'}",
-                                style: TextStyleHelper.instance.body14Bold.copyWith(
+                                style: TextStyleHelper.instance.body14Bold
+                                    .copyWith(
                                   color: Colors.white,
                                 ),
                               ),
@@ -130,7 +177,8 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                           SizedBox(height: 8.h),
                           Text(
                             reel.caption,
-                            style: TextStyleHelper.instance.body12Medium.copyWith(color: Colors.white),
+                            style: TextStyleHelper.instance.body12Medium
+                                .copyWith(color: Colors.white),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -144,12 +192,15 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildActionItem(
-                        icon: isLiked ? FontAwesomeIcons.solidHeart : FontAwesomeIcons.heart,
+                        icon: isLiked
+                            ? FontAwesomeIcons.solidHeart
+                            : FontAwesomeIcons.heart,
                         color: isLiked ? Colors.red : appTheme.gray_900,
                         label: "${reel.likesCount}",
                         onTap: () {
                           if (authProvider.userModel != null) {
-                            reelProvider.toggleLike(reel.id, authProvider.userModel!);
+                            reelProvider.toggleLike(
+                                reel.id, authProvider.userModel!);
                           }
                         },
                       ),
@@ -236,7 +287,8 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
               if (isOwner)
                 ListTile(
                   leading: Icon(Icons.delete_outline, color: Colors.red),
-                  title: Text("Delete Reel", style: TextStyle(color: Colors.red)),
+                  title:
+                      Text("Delete Reel", style: TextStyle(color: Colors.red)),
                   onTap: () {
                     Navigator.pop(context);
                     _confirmDelete(context, reel.id);
@@ -244,12 +296,14 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                 ),
               ListTile(
                 leading: Icon(Icons.share_outlined, color: appTheme.gray_900),
-                title: Text("Share", style: TextStyleHelper.instance.body14Medium),
+                title:
+                    Text("Share", style: TextStyleHelper.instance.body14Medium),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
                 leading: Icon(Icons.info_outline, color: appTheme.gray_900),
-                title: Text("Info", style: TextStyleHelper.instance.body14Medium),
+                title:
+                    Text("Info", style: TextStyleHelper.instance.body14Medium),
                 onTap: () => Navigator.pop(context),
               ),
             ],
@@ -264,9 +318,11 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: appTheme.white_A700_01,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.h)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.h)),
         title: Text("Delete Reel?", style: TextStyleHelper.instance.body16Bold),
-        content: Text("Are you sure you want to delete this reel?", style: TextStyleHelper.instance.body14Medium),
+        content: Text("Are you sure you want to delete this reel?",
+            style: TextStyleHelper.instance.body14Medium),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -312,10 +368,13 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
               child: StreamBuilder(
                 stream: context.read<ReelProvider>().getComments(reelId),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                  if (!snapshot.hasData)
+                    return const Center(child: CircularProgressIndicator());
                   final comments = snapshot.data!;
                   if (comments.isEmpty) {
-                    return Center(child: Text("No comments yet.", style: TextStyle(color: appTheme.gray_400)));
+                    return Center(
+                        child: Text("No comments yet.",
+                            style: TextStyle(color: appTheme.gray_400)));
                   }
                   return ListView.builder(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -324,10 +383,14 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                       final comment = comments[index];
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: ImageUtils.getImageProvider(comment.userPhotoUrl),
+                          backgroundImage:
+                              ImageUtils.getImageProvider(comment.userPhotoUrl),
                         ),
-                        title: Text(comment.username ?? 'user', style: TextStyleHelper.instance.body14Bold),
-                        subtitle: Text(comment.text, style: TextStyleHelper.instance.body12Medium.copyWith(color: appTheme.gray_600)),
+                        title: Text(comment.username ?? 'user',
+                            style: TextStyleHelper.instance.body14Bold),
+                        subtitle: Text(comment.text,
+                            style: TextStyleHelper.instance.body12Medium
+                                .copyWith(color: appTheme.gray_600)),
                       );
                     },
                   );
@@ -379,7 +442,9 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
               if (controller.text.isNotEmpty) {
                 final auth = context.read<AuthProvider>();
                 if (auth.userModel != null) {
-                  context.read<ReelProvider>().addComment(reelId, controller.text, auth.userModel!);
+                  context
+                      .read<ReelProvider>()
+                      .addComment(reelId, controller.text, auth.userModel!);
                   controller.clear();
                 }
               }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
 
-import '../../../core/app_export.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../data/models/user_model.dart';
+import '../../../config/app_export.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/user_model.dart';
 import '../settings/become_owner_screen.dart';
 import '../owner/subscription_selection_screen.dart';
 import 'edit_profile_screen.dart';

@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../data/models/job_post_model.dart';
-import '../../data/models/project_post_model.dart';
-import '../../data/models/project_model.dart';
-import '../../data/models/contract_terms_model.dart';
-import '../../data/models/dispute_model.dart';
-import '../../data/models/milestone_model.dart';
-import '../../data/models/transaction_model.dart' as transaction_model;
-import '../../data/models/withdrawal_request_model.dart';
-import '../../data/models/rating_model.dart';
-import '../../data/models/time_entry_model.dart';
-import '../../data/repositories/job_repository.dart';
-import '../../data/services/payment_service.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
+import 'package:work_hub/data/models/project_model.dart';
+import 'package:work_hub/data/models/contract_terms_model.dart';
+import 'package:work_hub/data/models/dispute_model.dart';
+import 'package:work_hub/data/models/milestone_model.dart';
+import 'package:work_hub/data/models/transaction_model.dart'
+    as transaction_model;
+import 'package:work_hub/data/models/withdrawal_request_model.dart';
+import 'package:work_hub/data/models/rating_model.dart';
+import 'package:work_hub/data/models/time_entry_model.dart';
+import 'package:work_hub/data/repositories/job_repository.dart';
+import 'package:work_hub/data/services/payment_service.dart';
+import 'package:work_hub/data/services/widget_service.dart';
 
 class JobProvider extends ChangeNotifier {
   final JobRepository _repository = JobRepository();
@@ -48,13 +50,32 @@ class JobProvider extends ChangeNotifier {
   Set<String> get appliedJobIds => _appliedJobIds;
   Set<String> get appliedProjectIds => _appliedProjectIds;
   List<ProjectModel> get projects => _projects;
-  List<ProjectModel> get ongoingProjects => _projects
-      .where((p) =>
-          p.status == 'active' || p.status == 'disputed' || p.status == 'setup')
-      .toList();
-  List<ProjectModel> get archivedProjects => _projects
-      .where((p) => p.status == 'completed' || p.status == 'cancelled')
-      .toList();
+  List<ProjectModel> get ongoingProjects => _projects.where((p) {
+        if (p.status == 'active' ||
+            p.status == 'disputed' ||
+            p.status == 'setup') {
+          return true;
+        }
+        if (p.status == 'completed' || p.status == 'cancelled') {
+          // Keep in ongoing if completed less than 1 hour ago
+          final completedTime = p.completedAt ?? 0;
+          final oneHourAgo =
+              DateTime.now().millisecondsSinceEpoch - (3600 * 1000);
+          return completedTime > oneHourAgo;
+        }
+        return false;
+      }).toList();
+
+  List<ProjectModel> get archivedProjects => _projects.where((p) {
+        if (p.status == 'completed' || p.status == 'cancelled') {
+          // Only show in archive if completed more than 1 hour ago
+          final completedTime = p.completedAt ?? 0;
+          final oneHourAgo =
+              DateTime.now().millisecondsSinceEpoch - (3600 * 1000);
+          return completedTime <= oneHourAgo;
+        }
+        return false;
+      }).toList();
   bool get isLoading => _isLoading;
   String get activeMode => _activeMode;
   ContractTerms? get currentContract => _currentContract;
@@ -87,6 +108,7 @@ class JobProvider extends ChangeNotifier {
     _jobPostsSubscription = _repository.getJobPostsStream().listen((list) {
       _jobPosts = list;
       notifyListeners();
+      WidgetService.updateDashboardWidget(); // Live update for job count
     }, onError: (e) {
       debugPrint("Job Posts Stream Error: $e");
     });
@@ -95,6 +117,7 @@ class JobProvider extends ChangeNotifier {
         _repository.getProjectPostsStream().listen((list) {
       _projectPosts = list;
       notifyListeners();
+      WidgetService.updateDashboardWidget(); // Live update for freelance count
     }, onError: (e) {
       debugPrint("Project Posts Stream Error: $e");
     });
@@ -140,6 +163,8 @@ class JobProvider extends ChangeNotifier {
     _projectsSubscription = stream.listen((projectList) {
       _projects = projectList;
       notifyListeners();
+      WidgetService
+          .updateDashboardWidget(); // Trigger update on project changes
     }, onError: (e) {
       debugPrint("Projects Stream Error: $e");
     });
@@ -201,6 +226,8 @@ class JobProvider extends ChangeNotifier {
     _applicationsSubscription = _repository
         .getWorkerApplicationsStream(userId, modeFilter: _activeMode)
         .listen((list) {
+      debugPrint(
+          "Received ${list.length} worker applications for mode $_activeMode");
       _appliedPosts = list;
       _appliedJobIds = list.whereType<JobPostModel>().map((p) => p.id).toSet();
       _appliedProjectIds =
@@ -557,6 +584,14 @@ class JobProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> syncProjectProgress(String projectId) async {
+    try {
+      await _repository.syncProjectProgress(projectId);
+    } catch (e) {
+      debugPrint("Sync Progress Error: $e");
+    }
+  }
+
   Future<void> rejectMilestone(
       String projectId, String milestoneId, String reason) async {
     _isLoading = true;
@@ -744,6 +779,10 @@ class JobProvider extends ChangeNotifier {
   Future<Rating?> getRatingByProjectAndRole(
       String projectId, String raterRole) async {
     return await _repository.getRatingByProjectAndRole(projectId, raterRole);
+  }
+
+  Stream<List<Rating>> getReviewsStream(String userId) {
+    return _repository.getReviewsStream(userId);
   }
 
   // ========== TIME TRACKING ==========

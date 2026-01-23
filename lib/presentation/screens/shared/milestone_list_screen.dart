@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/milestone_model.dart';
-import '../../../data/models/project_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/milestone_model.dart';
+import 'package:work_hub/data/models/project_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 import '../../screens/owner/create_milestone_screen.dart';
 import 'milestone_details_screen.dart';
 

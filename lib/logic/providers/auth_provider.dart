@@ -6,10 +6,11 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import '../../data/models/user_model.dart';
-import '../../data/models/experience_model.dart';
-import '../../data/services/storage_service.dart';
-import '../services/notification_service.dart';
+import 'package:work_hub/data/models/user_model.dart';
+import 'package:work_hub/data/models/experience_model.dart';
+import 'package:work_hub/data/services/storage_service.dart';
+import 'package:work_hub/data/services/notification_service.dart';
+import 'package:work_hub/data/services/widget_service.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -70,6 +71,7 @@ class AuthProvider extends ChangeNotifier {
           _userModel = user;
           _status = AuthStatus.authenticated;
           notifyListeners();
+          WidgetService.updateDashboardWidget(user);
         }
       } else {
         // User exists in Auth but not in Firestore yet
@@ -250,12 +252,23 @@ class AuthProvider extends ChangeNotifier {
     String? bio,
     List<ExperienceModel>? experiences,
     Map<String, dynamic>? portfolio,
+    File? resumeFile,
   }) async {
     if (_userModel == null) return false;
     _setLoading(true);
 
     try {
-      // 1. Update User Model
+      String? resumeUrl = _userModel!.resumeUrl;
+
+      // 1. Upload Resume if provided
+      if (resumeFile != null) {
+        final fileName =
+            'resume_${DateTime.now().millisecondsSinceEpoch}.${resumeFile.path.split('.').last}';
+        final path = 'users/${_userModel!.uid}/resumes/$fileName';
+        resumeUrl = await _storage.uploadFile(path, resumeFile);
+      }
+
+      // 2. Update User Model
       final updatedUser = _userModel!.copyWith(
         displayName: fullName,
         username: username,
@@ -263,7 +276,7 @@ class AuthProvider extends ChangeNotifier {
         location: location,
         jobCategory: jobCategory,
         skills: skills,
-        resumeUrl: _userModel!.resumeUrl,
+        resumeUrl: resumeUrl,
         isFirstLogin: false,
         experiences: experiences,
         portfolio: portfolio,
@@ -277,7 +290,7 @@ class AuthProvider extends ChangeNotifier {
         'location': location,
         'jobCategory': jobCategory,
         'skills': skills,
-        'resumeUrl': _userModel!.resumeUrl,
+        'resumeUrl': resumeUrl,
         'isFirstLogin': false,
         'experiences': experiences?.map((e) => e.toMap()).toList(),
         'portfolio': portfolio,
@@ -618,7 +631,9 @@ class AuthProvider extends ChangeNotifier {
         'activeMode': mode,
       });
       _userModel = _userModel!.copyWith(activeMode: mode);
+      _userModel = _userModel!.copyWith(activeMode: mode);
       notifyListeners();
+      WidgetService.updateDashboardWidget(_userModel!);
     } catch (e) {
       debugPrint("Switch Mode Error: $e");
     }
@@ -672,6 +687,18 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("Mark Subscription Seen Error: $e");
     }
+  }
+
+  Future<UserModel?> getUserById(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return UserModel.fromMap(doc.data()!);
+      }
+    } catch (e) {
+      debugPrint("Get User By ID Error: $e");
+    }
+    return null;
   }
 
   void _setLoading(bool value) {

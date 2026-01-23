@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../data/models/milestone_model.dart';
-import '../../../logic/providers/job_provider.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/data/models/milestone_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
 import '../owner/escrow_deposit_screen.dart';
 
 class MilestoneDetailsScreen extends StatefulWidget {

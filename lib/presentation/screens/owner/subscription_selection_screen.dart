@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../../core/theme/custom_colors.dart';
-import '../../../logic/providers/auth_provider.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../data/services/payment_service.dart';
+import 'package:work_hub/theme/custom_colors.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/data/services/payment_service.dart';
 
 class SubscriptionSelectionScreen extends StatelessWidget {
   const SubscriptionSelectionScreen({super.key});

@@ -2,11 +2,13 @@ import os
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
+import pydantic
 
 from ocr_engine import OCREngine
 from extractor import ResumeExtractor
+from matcher import MatcherEngine
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -25,16 +27,20 @@ app.add_middleware(
 # Global engines (lazy loaded)
 ocr_engine = None
 extractor = None
+matcher = None
 
 def get_engines():
-    global ocr_engine, extractor
+    global ocr_engine, extractor, matcher
     if ocr_engine is None:
         logger.info("Lazy-loading OCR engine...")
         ocr_engine = OCREngine()
     if extractor is None:
         logger.info("Lazy-loading Extractor engine...")
         extractor = ResumeExtractor()
-    return ocr_engine, extractor
+    if matcher is None:
+        logger.info("Lazy-loading Matcher engine...")
+        matcher = MatcherEngine()
+    return ocr_engine, extractor, matcher
 
 @app.get("/")
 async def health_check():
@@ -51,7 +57,7 @@ async def parse_resume(file: UploadFile = File(...)):
     logger.info(f"Received file: {file.filename}")
     
     # Lazy load engines
-    ocr_engine, extractor = get_engines()
+    ocr_engine, extractor, _ = get_engines()
     
     # Save the uploaded file temporarily
     temp_file_path = f"temp_{file.filename}"
@@ -86,6 +92,7 @@ async def parse_resume(file: UploadFile = File(...)):
             "filename": file.filename,
             "data": structured_data,
             "processing_time": f"{total_time:.2f}s"
+        }
         
         
     except Exception as e:
@@ -96,6 +103,27 @@ async def parse_resume(file: UploadFile = File(...)):
         # Cleanup
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+class MatchRequest(pydantic.BaseModel):
+    worker_profile: Dict[str, Any]
+    jobs: List[Dict[str, Any]]
+
+import pydantic
+
+@app.post("/match")
+async def match_worker_to_jobs(request: MatchRequest):
+    """
+    Matches a worker against a list of jobs using AI embeddings.
+    """
+    logger.info("Received matchmaking request")
+    _, _, matcher_engine = get_engines()
+    
+    try:
+        matches = matcher_engine.match_worker_to_jobs(request.worker_profile, request.jobs)
+        return {"success": True, "matches": matches}
+    except Exception as e:
+        logger.error(f"Error in matchmaking: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

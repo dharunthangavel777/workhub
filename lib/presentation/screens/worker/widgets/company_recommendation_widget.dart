@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/app_export.dart';
+import '../../../../config/app_export.dart';
 import '../../../widgets/shared/custom_image_view.dart';
-import '../../../../core/theme/custom_colors.dart';
+import 'package:work_hub/theme/custom_colors.dart';
 
 class CompanyRecommendationWidget extends StatelessWidget {
   final String? companyName;
@@ -37,15 +37,9 @@ class CompanyRecommendationWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.08),
-              blurRadius: 20.h,
-              offset: Offset(0, 10.h),
-              spreadRadius: -5.h,
-            ),
-            BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.03),
-              blurRadius: 10.h,
-              offset: Offset(0, 4.h),
+              color: appTheme.black_900.withValues(alpha: 0.05),
+              blurRadius: 4.h,
+              offset: Offset(0, 2.h),
               spreadRadius: 0,
             ),
           ],

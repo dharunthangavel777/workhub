@@ -1,8 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../../core/app_export.dart';
-import '../../../../core/utils/image_utils.dart';
-import '../../../../data/models/user_model.dart';
+import 'package:work_hub/theme/text_style_helper.dart';
+import 'package:work_hub/theme/theme_helper.dart';
+import 'package:work_hub/utils/size_utils.dart';
+import '../../../../config/app_export.dart';
+import 'package:work_hub/utils/image_utils.dart';
+import 'package:work_hub/data/models/user_model.dart';
 
 class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final UserModel user;

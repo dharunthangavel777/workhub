@@ -22,7 +22,7 @@ class ContractTerms {
     required this.startDate,
     required this.expectedCompletion,
     required this.paymentType,
-    this.platformFee = 10.0,
+    this.platformFee = 0.0,
     this.ownerAccepted = false,
     this.workerAccepted = false,
     this.ownerAcceptedAt,
@@ -41,7 +41,7 @@ class ContractTerms {
       startDate: _parseTimestamp(map['startDate']),
       expectedCompletion: _parseTimestamp(map['expectedCompletion']),
       paymentType: map['paymentType'] ?? 'fixed',
-      platformFee: (map['platformFee'] ?? 10.0).toDouble(),
+      platformFee: (map['platformFee'] ?? 0.0).toDouble(),
       ownerAccepted: map['ownerAccepted'] ?? false,
       workerAccepted: map['workerAccepted'] ?? false,
       ownerAcceptedAt: map['ownerAcceptedAt'] != null

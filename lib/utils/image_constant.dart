@@ -14,7 +14,7 @@ class ImageConstant {
   static String imgBasilMapLocationSolid = '$imagePath/location.svg';
   static String imgMaterialSymbolsPersonRounded = '$imagePath/Homee.svg';
   static String imgMaterialSymbolsGroupRounded = '$imagePath/Homee.svg';
-  static String imgNavProfile = '$imagePath/Homee.svg';
+  static String imgNavProfile = '$imagePath/profile.svg';
   static String imgAppLogo = '$imagePath/app.png';
 
   // Fallbacks and Placeholders

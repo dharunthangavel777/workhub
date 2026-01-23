@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../../../core/app_export.dart';
-import '../../../../data/models/carousel_slide_model.dart';
-import '../../../../data/repositories/carousel_repository.dart';
+
+import '../../../../config/app_export.dart';
+import 'package:work_hub/data/models/carousel_slide_model.dart';
+import 'package:work_hub/data/repositories/carousel_repository.dart';
 
 class HomeCarouselWidget extends StatefulWidget {
   const HomeCarouselWidget({Key? key}) : super(key: key);
@@ -132,24 +132,18 @@ class _HomeCarouselWidgetState extends State<HomeCarouselWidget> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              blurRadius: 5, // Reduced blur
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16.h),
-          child: CachedNetworkImage(
-            imageUrl: slide.imageUrl,
+          child: CustomImageView(
+            imagePath: slide.imageUrl,
             fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              color: Colors.grey[200],
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-            errorWidget: (context, url, error) {
-              debugPrint("❌ Error loading image ${slide.imageUrl}: $error");
-              return const Icon(Icons.error);
-            },
+            height: 160.h,
+            width: double.infinity,
           ),
         ),
       ),

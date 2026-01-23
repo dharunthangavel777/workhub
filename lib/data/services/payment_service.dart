@@ -78,16 +78,25 @@ class PaymentService {
 
       final data = jsonDecode(response.body);
 
+      debugPrint('📦 Response status: ${response.statusCode}');
+      debugPrint('📦 Response body: ${response.body}');
+
       if (response.statusCode == 200 && data['success'] == true) {
         debugPrint('✅ Payment order created successfully');
         return data['paymentSessionId'] as String;
       } else {
         final errorMessage =
             data['message'] ?? 'Server error ${response.statusCode}';
+        debugPrint('❌ Backend error: $errorMessage');
         throw Exception(errorMessage);
       }
     } catch (e) {
       debugPrint('❌ Payment order creation failed: $e');
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('TimeoutException')) {
+        throw Exception(
+            'Network error. Please check your internet connection.');
+      }
       throw Exception('Failed to initiate payment: $e');
     }
   }

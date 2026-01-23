@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/app_export.dart';
+import '../../../../config/app_export.dart';
 import '../../../widgets/shared/custom_image_view.dart';
-import '../../../../data/models/job_post_model.dart';
-import '../../../../data/models/project_post_model.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
 
 class JobCardWidget extends StatelessWidget {
   final String? title;
@@ -92,15 +92,9 @@ class JobCardWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.08),
-              blurRadius: 20.h,
-              offset: Offset(0, 10.h),
-              spreadRadius: -5.h,
-            ),
-            BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.03),
-              blurRadius: 10.h,
-              offset: Offset(0, 4.h),
+              color: appTheme.black_900.withValues(alpha: 0.05),
+              blurRadius: 4.h,
+              offset: Offset(0, 2.h),
               spreadRadius: 0,
             ),
           ],

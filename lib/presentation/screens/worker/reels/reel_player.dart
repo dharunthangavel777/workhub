@@ -26,7 +26,7 @@ class _ReelPlayerState extends State<ReelPlayer> with WidgetsBindingObserver {
   bool _initialized = false;
   bool _error = false;
 
-  bool _isMuted = true;
+  bool _isMuted = false;
   bool _showMuteIcon = false;
   Timer? _muteIconTimer;
 

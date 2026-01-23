@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/custom_colors.dart';
+import 'package:work_hub/theme/custom_colors.dart';
 import '../../widgets/job_card.dart';
 import '../shared/job_details_screen.dart';
 
-import '../../../data/models/job_post_model.dart';
-import '../../../data/models/project_post_model.dart';
-import '../../../logic/providers/job_provider.dart';
-import '../../../logic/providers/auth_provider.dart';
+import 'package:work_hub/data/models/job_post_model.dart';
+import 'package:work_hub/data/models/project_post_model.dart';
+import 'package:work_hub/logic/providers/job_provider.dart';
+import 'package:work_hub/logic/providers/auth_provider.dart';
 import '../../widgets/promo_card.dart';
 import '../auth/unified_login_screen.dart';
 import '../settings/become_owner_screen.dart';
