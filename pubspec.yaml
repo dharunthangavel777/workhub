@@ -51,17 +51,28 @@ dependencies:
   firebase_storage: ^12.1.0
   home_widget: ^0.9.0
   fluttertoast: ^8.2.4
+  connectivity_plus: ^7.0.0
+  socket_io_client: ^2.0.3
+  animate_do: ^3.0.2
 
+  uuid: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.0
+
+flutter_native_splash:
+  color: "#000FE2"
+  image: "assets/icons/app.png"
+  android: true
+  ios: true
+  web: false
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
     - assets/icons/
-    - assets/Splash_Screen_Animation_Video.gif
     - .env

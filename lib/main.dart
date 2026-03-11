@@ -1,31 +1,30 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'theme/app_theme.dart';
-import 'logic/providers/auth_provider.dart';
-import 'logic/providers/job_provider.dart';
-import 'logic/providers/chat_provider.dart';
-import 'logic/providers/reel_provider.dart';
-import 'logic/providers/ad_provider.dart';
-import 'data/models/user_model.dart';
-
-import 'presentation/screens/splash/splash_screen.dart';
-import 'presentation/screens/onboarding/onboarding_screen.dart';
-import 'presentation/navigation/worker_navigation.dart';
-import 'presentation/navigation/business_owner_navigation.dart';
-import 'presentation/screens/auth/worker_profile_completion_screen.dart';
-import 'presentation/screens/auth/client_profile_completion_screen.dart';
-import 'presentation/screens/settings/settings_screen.dart';
-
-import 'presentation/screens/owner/subscription_selection_screen.dart';
-import 'presentation/screens/worker/withdrawal_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'data/services/notification_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'features/job/logic/job_controller.dart';
+import 'features/chat/logic/chat_controller.dart';
+import 'features/reel/logic/reel_controller.dart';
+import 'features/job/logic/ad_controller.dart';
+import 'features/common/services/ad_service.dart';
+import 'package:work_hub/core/services/connectivity_service.dart';
+import 'package:work_hub/core/widgets/offline_overlay.dart';
+import 'package:work_hub/firebase_options.dart';
+import 'features/ai/logic/resume_parse_provider.dart';
+import 'core/services/initialization_service.dart';
+import 'features/common/ui/splash_screen.dart';
+import 'features/auth/ui/auth_loading_screen.dart';
 
-import 'firebase_options.dart';
+import 'features/auth/models/user.dart';
+import 'features/onboarding/ui/onboarding_screen.dart';
+import 'features/common/navigation/worker_navigation.dart';
+import 'features/auth/ui/worker_profile_completion_screen.dart';
+import 'features/settings/ui/settings_screen.dart';
+import 'features/job/ui/withdrawal_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -35,6 +34,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Foundation Initializations (Required for Providers)
+  await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
 
   // Global Error Handler for Flutter errors
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -48,79 +55,18 @@ void main() async {
     return true; // Returning true means we've handled the error
   };
 
-  await dotenv.load(fileName: ".env");
-
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    // Initialize Supabase
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL'] ?? '',
-      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-    );
-
-    // Initialize Push Notifications
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    await NotificationService().initialize();
-  } on FirebaseException catch (e) {
-    // Ignore duplicate app error, but log it
-    if (e.code == 'duplicate-app') {
-      debugPrint('Firebase already initialized, continuing...');
-    } else {
-      // For other Firebase errors, show error screen
-      debugPrint('Firebase initialization error: $e');
-      runApp(
-        MaterialApp(
-          home: Scaffold(
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Firebase Initialization Error',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      e.toString(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      return;
-    }
-  } catch (e, stackTrace) {
-    debugPrint('Unexpected error during initialization: $e');
-    debugPrint('Stack trace: $stackTrace');
-  }
-
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AppInitializationService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => JobProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => ReelProvider()),
         ChangeNotifierProvider(create: (_) => AdProvider()),
+        ChangeNotifierProvider(create: (_) => AdService()),
+        ChangeNotifierProvider(create: (_) => ConnectivityService()),
+        ChangeNotifierProvider(create: (_) => ResumeParseProvider()),
       ],
       child: const WorkHubApp(),
     ),
@@ -138,16 +84,35 @@ class WorkHubApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const SplashScreen(),
+      home: const StartupFlow(),
+      builder: (context, child) {
+        return OfflineOverlay(child: child!);
+      },
       routes: {
         '/main': (context) => const RootWrapper(),
         '/settings': (context) => const SettingsScreen(),
         '/withdrawal': (context) => const WithdrawalScreen(),
-        '/become_hirer': (context) => const ClientProfileCompletionScreen(),
       },
     );
   }
 }
+
+class StartupFlow extends StatelessWidget {
+  const StartupFlow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final initService = context.watch<AppInitializationService>();
+
+    if (!initService.isInitialized) {
+      return const SplashScreen();
+    }
+
+    return const RootWrapper();
+  }
+}
+
+// ... (existing code for StartupFlow)
 
 class RootWrapper extends StatelessWidget {
   const RootWrapper({super.key});
@@ -159,7 +124,7 @@ class RootWrapper extends StatelessWidget {
     // 1. Initial/Loading States
     if (auth.status == AuthStatus.initial ||
         auth.status == AuthStatus.loading) {
-      return const Scaffold(backgroundColor: Color(0xFF003DEC));
+      return const AuthLoadingScreen();
     }
 
     // 2. Unauthenticated State
@@ -175,36 +140,26 @@ class RootWrapper extends StatelessWidget {
       );
     }
 
-    // 4. Role-based Navigation (Optimistic for Workers/Guests)
+    // 4. Authenticated but Data Syncing (No Cache yet)
+    if (auth.isAuthenticated && auth.userModel == null && !auth.isGuest) {
+      return const AuthLoadingScreen();
+    }
+
+    // 5. Role-based Navigation (Simplified for Workers/Guests)
     if (auth.isGuest || auth.userModel == null) {
       return const WorkerNavigation();
     }
 
     final user = auth.userModel!;
 
-    if (user.role == UserRole.worker || user.role == UserRole.none) {
-      if (user.isFirstLogin) {
-        return const WorkerProfileCompletionScreen();
-      }
-      return const WorkerNavigation();
-    }
-
-    if (user.role == UserRole.businessOwner) {
-      if (user.isTrialActive && !user.hasSeenSubscription) {
-        return const SubscriptionSelectionScreen();
-      }
-      return const BusinessOwnerNavigation();
-    }
-
     if (user.role == UserRole.admin) {
       return const _AdminWebNotice();
     }
 
-    // Fallback
-    return _GlobalErrorScreen(
-      message: "Unknown user role or state",
-      onRetry: () => auth.signOut(),
-    );
+    if (user.isFirstLogin) {
+      return const WorkerProfileCompletionScreen();
+    }
+    return const WorkerNavigation();
   }
 }
 
@@ -242,6 +197,8 @@ class _GlobalErrorScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onRetry,
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: CustomColors.primaryBlue,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -289,6 +246,10 @@ class _AdminWebNotice extends StatelessWidget {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => context.read<AuthProvider>().signOut(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CustomColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text("Log Out"),
               ),
             ],
