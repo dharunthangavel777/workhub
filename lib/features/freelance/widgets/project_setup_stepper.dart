@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/freelance/models/project.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
@@ -120,17 +121,13 @@ class _ProjectSetupStepperState extends State<ProjectSetupStepper> {
                   onTap: isOwner && contractSigned && !depositPaid
                       ? () async {
                           try {
-                            final scaffold = ScaffoldMessenger.of(context);
                             final depositAmount =
                                 widget.project.requiredDeposit ??
                                     widget.project.budget ??
                                     0.0;
 
                             if (depositAmount <= 0) {
-                              scaffold.showSnackBar(
-                                const SnackBar(
-                                    content: Text("Invalid deposit amount.")),
-                              );
+                              ToastService().showError("Invalid deposit amount.");
                               return;
                             }
 
@@ -139,15 +136,10 @@ class _ProjectSetupStepperState extends State<ProjectSetupStepper> {
                                   depositAmount,
                                 );
 
-                            scaffold.showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      "Deposit successful! Project funds secured.")),
-                            );
+                            ToastService().showSuccess("Deposit successful!", 
+                              message: "Project funds secured.");
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Deposit failed: $e")),
-                            );
+                            ToastService().showError("Deposit failed: $e");
                           }
                         }
                       : null,

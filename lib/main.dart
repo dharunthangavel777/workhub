@@ -17,7 +17,6 @@ import 'package:work_hub/firebase_options.dart';
 import 'features/ai/logic/resume_parse_provider.dart';
 import 'core/services/initialization_service.dart';
 import 'features/common/ui/splash_screen.dart';
-import 'features/auth/ui/auth_loading_screen.dart';
 
 import 'features/auth/models/user.dart';
 import 'features/onboarding/ui/onboarding_screen.dart';
@@ -31,6 +30,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   debugPrint("Handling a background message: ${message.messageId}");
 }
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +80,7 @@ class WorkHubApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Work Hub',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
@@ -124,7 +126,7 @@ class RootWrapper extends StatelessWidget {
     // 1. Initial/Loading States
     if (auth.status == AuthStatus.initial ||
         auth.status == AuthStatus.loading) {
-      return const AuthLoadingScreen();
+      return const SplashScreen();
     }
 
     // 2. Unauthenticated State
@@ -142,7 +144,7 @@ class RootWrapper extends StatelessWidget {
 
     // 4. Authenticated but Data Syncing (No Cache yet)
     if (auth.isAuthenticated && auth.userModel == null && !auth.isGuest) {
-      return const AuthLoadingScreen();
+      return const SplashScreen();
     }
 
     // 5. Role-based Navigation (Simplified for Workers/Guests)

@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/job/domain/models/ad_model.dart';
 import 'package:work_hub/features/job/logic/ad_controller.dart';
 import 'reel_player.dart';
@@ -46,9 +47,7 @@ class _AdReelItemState extends State<AdReelItem> {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open link")),
-      );
+      ToastService().showError("Could not open link");
     }
   }
 

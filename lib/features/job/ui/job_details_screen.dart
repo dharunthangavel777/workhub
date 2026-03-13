@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/job/domain/models/job.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
@@ -542,7 +543,10 @@ class JobDetailsScreen extends StatelessWidget {
     }
 
     return SmartButton(
-      text: buttonText,
+      text: (isClosed || hasApplied) ? buttonText : "Apply",
+      icon: (isClosed || hasApplied) 
+          ? null 
+          : Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 20.h),
       onPressed: (isClosed || hasApplied)
           ? null
           : () => _handleApplyAction(context, user, isFreelancer),
@@ -657,19 +661,12 @@ class JobDetailsScreen extends StatelessWidget {
                     );
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Application submitted!")),
-                      );
+                      ToastService().showSuccess("Application submitted!");
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content:
-                              Text(e.toString().replaceAll('Exception: ', '')),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      ToastService().showError("Submission failed", 
+                        message: e.toString().replaceAll('Exception: ', ''));
                     }
                   }
                 },
@@ -839,22 +836,12 @@ class JobDetailsScreen extends StatelessWidget {
 
                           if (amountController.text.isEmpty ||
                               proposalController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      "Please fill in all required fields")),
-                            );
+                            ToastService().showWarning("Incomplete Fields", message: "Please fill in all required fields");
                             return;
                           }
 
                           if (bidAmount < minBudget || bidAmount > maxBudget) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    "Bid must be between ₹$minBudget and ₹$maxBudget"),
-                                backgroundColor: Colors.orange.shade800,
-                              ),
-                            );
+                            ToastService().showWarning("Invalid Bid", message: "Bid must be between ₹$minBudget and ₹$maxBudget");
                             return;
                           }
 
@@ -873,22 +860,11 @@ class JobDetailsScreen extends StatelessWidget {
 
                             if (context.mounted) {
                               Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        "Proposal submitted successfully!")),
-                              );
+                              ToastService().showSuccess("Success", message: "Proposal submitted successfully!");
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e
-                                      .toString()
-                                      .replaceAll('Exception: ', '')),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              ToastService().showError("Error", message: e.toString().replaceAll('Exception: ', ''));
                             }
                           }
                         },

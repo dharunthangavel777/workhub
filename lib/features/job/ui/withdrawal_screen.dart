@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
@@ -484,25 +485,19 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
     final amountText = _amountController.text;
 
     if (amountText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter withdrawal amount")),
-      );
+      ToastService().showWarning("Please enter withdrawal amount");
       return;
     }
 
     final amount = double.tryParse(amountText);
     if (amount == null || amount < 50) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Minimum withdrawal amount is ₹50")),
-      );
+      ToastService().showWarning("Minimum withdrawal amount is ₹50");
       return;
     }
 
     if (_paymentMethod == 'bank') {
       if (_accountHolderNameController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please enter account holder name")),
-        );
+        ToastService().showWarning("Please enter account holder name");
         return;
       }
 
@@ -511,11 +506,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
           accountNumber.length < 9 ||
           accountNumber.length > 18 ||
           !RegExp(r'^[0-9]+$').hasMatch(accountNumber)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text("Please enter a valid account number (9-18 digits)")),
-        );
+        ToastService().showWarning("Please enter a valid account number (9-18 digits)");
         return;
       }
 
@@ -523,20 +514,13 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       if (ifscCode.isEmpty ||
           ifscCode.length != 11 ||
           !RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$').hasMatch(ifscCode)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text("Please enter a valid IFSC code (e.g., SBIN0001234)")),
-        );
+        ToastService().showWarning("Please enter a valid IFSC code (e.g., SBIN0001234)");
         return;
       }
     } else {
       final upiId = _upiIdController.text;
       if (upiId.isEmpty || !upiId.contains('@')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text("Please enter a valid UPI ID (e.g., name@paytm)")),
-        );
+        ToastService().showWarning("Please enter a valid UPI ID (e.g., name@paytm)");
         return;
       }
     }
@@ -566,18 +550,11 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       await jobProvider.requestWithdrawal(request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Withdrawal request submitted successfully!"),
-          backgroundColor: Colors.green,
-        ),
-      );
+      ToastService().showSuccess("Withdrawal request submitted successfully!");
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
+      ToastService().showError(e.toString());
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

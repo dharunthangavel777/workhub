@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:work_hub/features/reel/models/reel.dart';
 import 'package:work_hub/features/reel/logic/reel_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class ReelsProfileView extends StatefulWidget {
   final VoidCallback onUploadRequested;
@@ -122,9 +123,8 @@ class _ReelsProfileViewState extends State<ReelsProfileView> {
   void _viewReel(BuildContext context, List<ReelModel> reels, int index) {
     // Show in a simpler fullscreen viewer or just push the feed starting at this index
     // For now, let's just show a simple snackbar or maybe we can improve this later.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Viewing specific reel is coming soon!")),
-    );
+    ToastService().showInfo("Coming Soon", 
+      message: "Viewing specific reel is coming soon!");
   }
 }
 

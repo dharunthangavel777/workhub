@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:work_hub/core/config/app_export.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class PrivacySecurityScreen extends StatelessWidget {
   const PrivacySecurityScreen({super.key});
@@ -95,10 +96,8 @@ class PrivacySecurityScreen extends StatelessWidget {
                       icon: Icons.password_outlined,
                       title: "Change Password",
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("Password reset email sent (Demo)")),
-                        );
+                        ToastService().showInfo("Reset Email Sent", 
+                          message: "Password reset email sent (Demo)");
                       },
                     ),
                     _buildActionTile(

@@ -6,6 +6,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import '../logic/resume_parse_provider.dart';
 import 'resume_preview_screen.dart';
 
@@ -41,19 +42,14 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
         debugPrint('Extracted ${text.length} characters');
 
         if (text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Could not extract text from this PDF.')),
-          );
+          ToastService().showError('Extraction failed', message: 'Could not extract text from this PDF.');
           return;
         }
 
         // 3. Submit for AI Parsing
         await provider.submitResume(text);
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ToastService().showError('Error during parsing', message: e.toString());
       }
     }
   }
@@ -160,7 +156,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
                                 child: Container(
                                   padding: EdgeInsets.all(12.h),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8.h),
                                   ),
                                   child: Text(
@@ -210,7 +206,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
       width: double.infinity,
       height: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
+        color: Colors.white.withValues(alpha: 0.7),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(32.h),
           topRight: Radius.circular(32.h),
@@ -228,7 +224,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
                 width: 120.h,
                 height: 120.h,
                 decoration: BoxDecoration(
-                  color: CustomColors.primaryBlue.withOpacity(0.1),
+                  color: CustomColors.primaryBlue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

@@ -8,6 +8,7 @@ import 'package:work_hub/features/profile/domain/models/experience.dart';
 import 'package:work_hub/features/ai/services/local_parser_service.dart';
 import 'package:work_hub/features/ai/domain/models/resume_data_model.dart' as ai;
 import 'package:file_picker/file_picker.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -104,18 +105,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _parsedCertifications = data.certifications;
             }
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(
-                    "✨ Profile auto-filled! ${data.workExperience.length} exp, ${data.projects.length} projects, ${data.certifications.length} certs found.")),
-          );
+          ToastService().showSuccess('Magic Fill', message: "✨ Profile auto-filled! ${data.workExperience.length} exp, ${data.projects.length} projects, ${data.certifications.length} certs found.");
         }
       } catch (e) {
         debugPrint("Magic Fill Error: $e");
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Failed to parse resume: $e")),
-          );
+          ToastService().showError('Parsing Error', message: "Failed to parse resume: $e");
         }
       } finally {
         if (mounted) setState(() => _isParsing = false);
@@ -176,13 +171,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (mounted) {
         if (auth.errorMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(auth.errorMessage!)));
+          ToastService().showError("Update failed", 
+            message: auth.errorMessage!);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Profile updated successfully!")),
-          );
+          ToastService().showSuccess("Profile updated successfully!");
           Navigator.pop(context);
         }
       }

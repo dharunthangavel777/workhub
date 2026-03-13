@@ -5,6 +5,7 @@ import 'package:work_hub/features/common/contract/models/contract.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:intl/intl.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class ContractDetailsScreen extends StatefulWidget {
   final String contractId;
@@ -171,22 +172,12 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
 
       if (context.mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contract accepted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastService().showSuccess('Contract accepted', message: 'Contract accepted successfully!');
       }
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error accepting contract: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService().showError('Error accepting contract: $e');
       }
     }
   }

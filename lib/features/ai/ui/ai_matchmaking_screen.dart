@@ -9,6 +9,7 @@ import '../services/ai_matching_service.dart';
 import '../../job/domain/models/job.dart';
 import '../../job/ui/job_details_screen.dart';
 import '../services/ai_cache_service.dart';
+import '../../../../core/services/toast_service.dart';
 import '../../../../core/config/app_export.dart'; // Added for CustomColors and screen utils
 
 class AIMatchmakingScreen extends StatefulWidget {
@@ -61,11 +62,8 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
     final remaining = await AICacheService().getTimeRemaining();
     if (remaining.inMinutes > 0 && _matches.isNotEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "AI results are cached for 24h. Next refresh in ${remaining.inHours}h ${remaining.inMinutes % 60}m.")),
-        );
+        ToastService().showInfo('Cached results', 
+          message: "AI results are cached for 24h. Next refresh in ${remaining.inHours}h ${remaining.inMinutes % 60}m.");
       }
       return;
     }
@@ -448,10 +446,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
                     }
                   } catch (e) {
                     debugPrint("Navigation Error: $e");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("Could not find the original post.")),
-                    );
+                    ToastService().showError("Post not found", message: "Could not find the original post.");
                   }
                 },
               );

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:work_hub/core/constants/api_constants.dart';
@@ -50,8 +51,57 @@ class NotificationService {
     // 4. Handle Background/Terminated state clicks
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('Notification clicked: ${message.data}');
-      // Handle navigation here if needed
+      _handleNotificationClick(message);
     });
+
+    // 5. Handle initial message (when app is launched from terminated state)
+    RemoteMessage? initialMessage = await _fcm.getInitialMessage();
+    if (initialMessage != null) {
+      _handleNotificationClick(initialMessage);
+    }
+  }
+
+  void _handleNotificationClick(RemoteMessage message) {
+    final String? category = message.data['category'];
+    final Map<String, dynamic> data = message.data;
+
+    // We assume there's a Global Navigator Key set up. 
+    // If not, we'll need to provide one or use a navigation service.
+    // For now, I'll implement the logic assuming we can navigate.
+
+    debugPrint('Handling click for category: $category');
+
+    switch (category) {
+      case 'chat_message':
+        final chatId = data['chatId'];
+        if (chatId != null) {
+          // Navigator.of(context).pushNamed('/chat', arguments: chatId);
+          debugPrint('Navigating to Chat: $chatId');
+        }
+        break;
+      case 'bid_approved':
+      case 'application_status':
+        final projectId = data['projectId'];
+        if (projectId != null) {
+          debugPrint('Navigating to Project Details: $projectId');
+        }
+        break;
+      case 'withdrawal_pending':
+      case 'payout_initiated':
+      case 'payout_settled':
+      case 'payout_failed':
+        debugPrint('Navigating to Transaction History');
+        break;
+      case 'dispute_raised':
+      case 'dispute_resolved':
+        final projectId = data['projectId'];
+        if (projectId != null) {
+          debugPrint('Navigating to Dispute Resolution: $projectId');
+        }
+        break;
+      default:
+        debugPrint('Unknown category or no specific route for $category');
+    }
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -31,9 +31,8 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   void _submitSupportRequest() {
     if (_formKey.currentState!.validate()) {
       // Logic for submitting the help request would go here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Support request submitted. We will get back to you soon!')),
-      );
+      ToastService().showSuccess('Support request submitted.', 
+        message: 'We will get back to you soon!');
       Navigator.pop(context);
     }
   }

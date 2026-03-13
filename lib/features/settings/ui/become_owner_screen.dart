@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:work_hub/core/theme/text_style_helper.dart';
 import 'package:work_hub/core/theme/theme_helper.dart';
@@ -52,13 +53,8 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
       if (success) {
         _showSuccessDialog();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.read<AuthProvider>().errorMessage ??
-                AppStrings.submitError),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService().showError("Submission Error", 
+          message: context.read<AuthProvider>().errorMessage ?? AppStrings.submitError);
       }
     }
   }
@@ -247,7 +243,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                                 ? const SizedBox(
                                     height: 24,
                                     width: 24,
-                                    child: CircularProgressIndicator(
+                                    child: const CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 3),
                                   )
                                 : Text(
@@ -284,7 +280,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
           Container(
             padding: EdgeInsets.all(12.h),
             decoration: BoxDecoration(
-              color: appTheme.indigo_A700.withOpacity(0.1),
+              color: appTheme.indigo_A700.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: appTheme.indigo_A700, size: 24.h),

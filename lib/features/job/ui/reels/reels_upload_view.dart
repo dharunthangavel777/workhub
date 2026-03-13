@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:work_hub/features/reel/logic/reel_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class ReelsUploadView extends StatefulWidget {
   final VoidCallback onUploadComplete;
@@ -49,14 +50,10 @@ class _ReelsUploadViewState extends State<ReelsUploadView> {
         );
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Reel uploaded successfully!")),
-      );
+      ToastService().showSuccess("Success", message: "Reel uploaded successfully!");
       widget.onUploadComplete();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to upload reel.")),
-      );
+      ToastService().showError("Failed to upload reel.");
     }
   }
 

@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:work_hub/core/config/app_export.dart';
 
 enum ToastType { success, warning, loading, info, error }
 
@@ -7,12 +6,16 @@ class CustomToast extends StatelessWidget {
   final ToastType type;
   final String title;
   final String? message;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onRetry;
 
   const CustomToast({
     super.key,
     required this.type,
     required this.title,
     this.message,
+    this.onDismiss,
+    this.onRetry,
   });
 
   @override
@@ -20,114 +23,117 @@ class CustomToast extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: _getBgColor().withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _getBgColor().withValues(alpha: 0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
+        margin: EdgeInsets.fromLTRB(16.w, 40.h, 16.w, 80.h),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.h),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 15,
+                spreadRadius: 2,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
               color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              width: 1,
             ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _getIcon(),
-                color: _getIconColor(),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Flexible(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: CustomColors.darkText,
-                    ),
-                  ),
-                  if (message != null) ...[
-                    const SizedBox(height: 2),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildIcon(),
+              SizedBox(width: 12.w),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      message!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: CustomColors.darkText.withValues(alpha: 0.7),
+                      title,
+                      style: TextStyleHelper.instance.body14Medium.copyWith(
+                        color: CustomColors.darkText,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (message != null) ...[
+                      SizedBox(height: 2.h),
+                      Text(
+                        message!,
+                        style: TextStyleHelper.instance.body12Medium.copyWith(
+                          color: appTheme.gray_600,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+              SizedBox(width: 12.w),
+              if (type == ToastType.error && onRetry != null)
+                IconButton(
+                  onPressed: onRetry,
+                  icon: Icon(Icons.refresh_rounded, 
+                    color: Colors.red.shade400, 
+                    size: 20.h
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                )
+              else if (onDismiss != null)
+                IconButton(
+                  onPressed: onDismiss,
+                  icon: Icon(Icons.close_rounded, 
+                    color: appTheme.gray_400, 
+                    size: 20.h
+                  ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+            ],
+          ),
       ),
     );
   }
 
-  Color _getBgColor() {
-    switch (type) {
-      case ToastType.success:
-        return const Color(0xFFE8F5E9); // Light Green
-      case ToastType.warning:
-        return const Color(0xFFFFF3E0); // Light Orange
-      case ToastType.loading:
-        return const Color(0xFFF5F5F5); // Light Grey
-      case ToastType.info:
-        return const Color(0xFFE3F2FD); // Light Blue
-      case ToastType.error:
-        return const Color(0xFFFFEBEE); // Light Red
-    }
-  }
+  Widget _buildIcon() {
+    IconData iconData;
+    Color iconColor;
 
-  Color _getIconColor() {
     switch (type) {
       case ToastType.success:
-        return Colors.green.shade600;
+        iconData = Icons.check_circle_rounded;
+        iconColor = Colors.green;
+        break;
       case ToastType.warning:
-        return Colors.orange.shade600;
+        iconData = Icons.warning_rounded;
+        iconColor = Colors.orange;
+        break;
       case ToastType.loading:
-        return Colors.grey.shade600;
+        return SizedBox(
+          height: 18.h,
+          width: 18.h,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(CustomColors.primaryBlue),
+          ),
+        );
       case ToastType.info:
-        return Colors.blue.shade600;
+        iconData = Icons.info_rounded;
+        iconColor = CustomColors.primaryBlue;
+        break;
       case ToastType.error:
-        return Colors.red.shade600;
+        iconData = Icons.error_rounded;
+        iconColor = Colors.red;
+        break;
     }
-  }
 
-  IconData _getIcon() {
-    switch (type) {
-      case ToastType.success:
-        return Icons.check_circle;
-      case ToastType.warning:
-        return Icons.warning;
-      case ToastType.loading:
-        return Icons.refresh; // Should rotate in a real imp, but static for now
-      case ToastType.info:
-        return Icons.info;
-      case ToastType.error:
-        return Icons.error;
-    }
+    return Icon(
+      iconData,
+      color: iconColor,
+      size: 24.h,
+    );
   }
 }
 

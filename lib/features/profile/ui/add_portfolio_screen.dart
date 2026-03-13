@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:work_hub/core/config/app_export.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 
 class AddPortfolioScreen extends StatefulWidget {
@@ -150,9 +151,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                               ? null
                               : () async {
                                   if (_titleController.text.isEmpty || _imageFile == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Please provide a title and an image")),
-                                    );
+                                    ToastService().showWarning("Please provide a title and an image");
                                     return;
                                   }
 

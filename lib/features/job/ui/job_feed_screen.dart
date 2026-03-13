@@ -157,12 +157,12 @@ class JobFeedScreen extends StatelessWidget {
               Expanded(
                 child: Container(
                   child: AnimatedTypingSearchView(
-                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    backgroundColor: Colors.white,
                     borderColor: Colors.white.withValues(alpha: 0.2),
-                    iconColor: Colors.white,
-                    textColor: Colors.white,
-                    hintColor: Colors.white.withValues(alpha: 0.6),
-                    showShadow: false,
+                    iconColor: CustomColors.primaryBlue,
+                    textColor: CustomColors.darkText,
+                    hintColor: appTheme.gray_500,
+                    showShadow: true,
                     onChanged: (value) {
                       // Handle search
                     },
@@ -180,7 +180,7 @@ class JobFeedScreen extends StatelessWidget {
                 },
                 child: Container(
                   height: 54.h,
-                  width: 54.h,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16.h),
@@ -192,10 +192,21 @@ class JobFeedScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(
-                    Icons.assignment_turned_in_rounded,
-                    color: CustomColors.primaryBlue,
-                    size: 24.h,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.rocket_launch_rounded,
+                        color: CustomColors.primaryBlue,
+                        size: 20.h,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        "Applied",
+                        style: TextStyleHelper.instance.body14Bold
+                            .copyWith(color: CustomColors.primaryBlue),
+                      ),
+                    ],
                   ),
                 ),
               ),

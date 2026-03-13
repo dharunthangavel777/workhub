@@ -6,6 +6,7 @@ import 'package:work_hub/core/theme/custom_colors.dart';
 import 'package:work_hub/features/common/dispute/models/dispute.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class DisputeScreen extends StatefulWidget {
   final String projectId;
@@ -221,18 +222,12 @@ class _DisputeScreenState extends State<DisputeScreen> {
       await context.read<JobProvider>().raiseDispute(dispute);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Dispute submitted. Support will contact you shortly."),
-          backgroundColor: Colors.green,
-        ),
-      );
+      ToastService().showSuccess("Dispute submitted", 
+        message: "Support will contact you shortly.");
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-      );
+      ToastService().showError("Error: $e");
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

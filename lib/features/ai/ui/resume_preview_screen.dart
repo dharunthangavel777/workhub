@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../logic/resume_parse_provider.dart';
 import '../ui/widgets/resume_score_card.dart';
 import '../../../../core/theme/custom_colors.dart';
+import '../../../../core/services/toast_service.dart';
 import '../../auth/logic/auth_controller.dart';
 import '../../profile/domain/models/experience.dart';
 
@@ -123,12 +124,11 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
                   final success = await auth.updateUserFields(updates);
 
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(success != false
-                              ? 'Profile updated successfully!'
-                              : 'Failed to update profile.')),
-                    );
+                    if (success != false) {
+                      ToastService().showSuccess('Profile updated', message: 'Profile updated successfully!');
+                    } else {
+                      ToastService().showError('Update failed', message: 'Failed to update profile.');
+                    }
                     if (success != false) Navigator.pop(context);
                   }
                 },

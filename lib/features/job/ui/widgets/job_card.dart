@@ -452,17 +452,17 @@ class _JobCardState extends State<JobCard> with SingleTickerProviderStateMixin {
                 const SizedBox(width: 12),
                 Row(
                   children: [
+                    const Icon(Icons.rocket_launch_rounded,
+                        color: Color(0xFF000FE2), size: 14),
+                    const SizedBox(width: 6),
                     Text(
-                      "View Project",
+                      "Apply",
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF000FE2),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios_rounded,
-                        color: Color(0xFF000FE2), size: 12),
                   ],
                 ),
               ],
@@ -683,17 +683,17 @@ class _JobCardState extends State<JobCard> with SingleTickerProviderStateMixin {
                 const SizedBox(width: 16),
                 Row(
                   children: [
+                    const Icon(Icons.rocket_launch_rounded,
+                        color: Color(0xFF000FE2), size: 16),
+                    const SizedBox(width: 6),
                     Text(
-                      "View Details",
+                      "Apply",
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF000FE2),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: Color(0xFF000FE2), size: 16),
                   ],
                 ),
               ],

@@ -4,6 +4,7 @@ import 'package:work_hub/core/theme/custom_colors.dart';
 
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/freelance/models/milestone.dart';
+import 'package:work_hub/core/services/toast_service.dart';
 
 class MilestoneDetailsScreen extends StatefulWidget {
   final Milestone milestone;
@@ -353,9 +354,7 @@ class _MilestoneDetailsScreenState extends State<MilestoneDetailsScreen> {
                   final links = link.isNotEmpty ? [link] : <String>[];
 
                   if (note.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please add a note")),
-                    );
+                    ToastService().showWarning("Note required", message: "Please add a note to your submission.");
                     return;
                   }
 
