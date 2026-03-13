@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:work_hub/core/config/app_export.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import '../../auth/ui/unified_login_screen.dart';
-import '../../freelance/ui/worker_projects_screen.dart';
 import '../../job/ui/reels/reels_tab_container.dart';
 import '../../job/ui/job_search_dashboard_screen.dart';
+import '../../job/ui/job_feed_screen.dart';
 import '../../ai/ui/ai_matchmaking_screen.dart';
 import '../../../core/widgets/custom_bottom_bar.dart';
 import '../../profile/ui/profile_screen.dart';
@@ -41,8 +41,14 @@ class _WorkerNavigationState extends State<WorkerNavigation>
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      const JobSearchDashboardScreen(),
-      const WorkerProjectsScreen(),
+      JobSearchDashboardScreen(
+        onNavigateToJobs: () {
+          setState(() {
+            _selectedIndex = 1;
+          });
+        },
+      ),
+      const JobFeedScreen(),
       ReelsTabContainer(isActive: _selectedIndex == 2),
       const AIMatchmakingScreen(),
       const ProfileScreen(),
@@ -57,7 +63,7 @@ class _WorkerNavigationState extends State<WorkerNavigation>
         children: [
           NotificationListener<UserScrollNotification>(
             onNotification: (notification) {
-              if (_selectedIndex != 0) return true; // Only apply to Home screen
+              if (_selectedIndex != 0 && _selectedIndex != 1) return true; // Home or Jobs screen
 
               if (notification.direction == ScrollDirection.reverse) {
                 if (!_hideController.isAnimating &&

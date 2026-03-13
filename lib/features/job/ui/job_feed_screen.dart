@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/theme/text_style_helper.dart';
+import 'package:work_hub/core/config/app_export.dart';
 import 'package:work_hub/constants/app_strings.dart';
 
 import 'package:work_hub/features/job/ui/job_details_screen.dart';
 import 'package:work_hub/features/job/ui/widgets/job_card.dart';
 import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
 import 'package:work_hub/features/auth/ui/unified_login_screen.dart';
+import 'package:work_hub/features/freelance/ui/worker_projects_screen.dart';
 
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 import 'package:work_hub/core/orchestration/enterprise_state.dart';
+import 'package:work_hub/core/widgets/animated_typing_search_view.dart';
 
 class JobFeedScreen extends StatelessWidget {
   const JobFeedScreen({super.key});
@@ -25,214 +26,182 @@ class JobFeedScreen extends StatelessWidget {
 
     final posts = activeMode == 'job'
         ? jobProvider.jobPosts
-            .where((p) =>
-                p.status != 'filled' &&
-                p.status != 'closed' &&
-                !jobProvider.appliedJobIds.contains(p.id))
+            .where((p) => p.status != 'filled' && p.status != 'closed')
             .toList()
         : jobProvider.projectPosts
-            .where((p) =>
-                p.status != 'filled' &&
-                p.status != 'closed' &&
-                !jobProvider.appliedProjectIds.contains(p.id))
+            .where((p) => p.status != 'filled' && p.status != 'closed')
             .toList();
 
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          _buildAppBar(context, user),
-          _buildSearchField(),
-          if (jobProvider.feedState.status == UnifiedState.loading)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => UniversalSkeleton.card(),
-                  childCount: 3,
+    return Scaffold(
+      backgroundColor: CustomColors.primaryBlue,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            /// BLUE HEADER SECTION
+            _buildBlueHeader(context, user),
+
+            SizedBox(height: 16.h),
+
+            /// WHITE BODY SECTION
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: appTheme.white_A700_01,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32.h),
+                    topRight: Radius.circular(32.h),
+                  ),
                 ),
-              ),
-            )
-          else if (posts.isEmpty)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      AppStrings.noOpportunities,
-                      style: TextStyleHelper.instance.body14Regular,
-                    ),
+                child: CustomScrollView(
+                  slivers: [
+                    if (jobProvider.feedState.status == UnifiedState.loading)
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => UniversalSkeleton.card(),
+                            childCount: 3,
+                          ),
+                        ),
+                      )
+                    else if (posts.isEmpty)
+                      SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            AppStrings.noOpportunities,
+                            style: TextStyleHelper.instance.body14Regular
+                                .copyWith(color: appTheme.gray_500),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              if (index >= posts.length) return null;
+
+                              final post = posts[index];
+                              final isJob = activeMode == 'job';
+                              final isBookmarked = isJob
+                                  ? (user?.savedJobIds.contains(post.id) ?? false)
+                                  : (user?.savedProjectIds.contains(post.id) ?? false);
+
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 16.h),
+                                child: OpenContainer(
+                                  closedElevation: 0,
+                                  openElevation: 0,
+                                  closedColor: Colors.transparent,
+                                  middleColor: Colors.transparent,
+                                  openColor: Colors.transparent,
+                                  closedShape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20.h),
+                                  ),
+                                  transitionDuration: const Duration(milliseconds: 500),
+                                  openBuilder: (context, action) {
+                                    if (context.read<AuthProvider>().isGuest) {
+                                      return const UnifiedLoginScreen();
+                                    }
+                                    return JobDetailsScreen(post: post);
+                                  },
+                                  closedBuilder: (context, action) {
+                                    return isJob
+                                        ? JobCard.fromJobPost(post).copyWith(
+                                            isBookmarked: isBookmarked,
+                                            onBookmarkToggle: () => _toggleSave(
+                                              context,
+                                              post.id,
+                                              'job',
+                                              isBookmarked,
+                                            ),
+                                          )
+                                        : JobCard.fromProjectPost(post).copyWith(
+                                            isBookmarked: isBookmarked,
+                                            onBookmarkToggle: () => _toggleSave(
+                                              context,
+                                              post.id,
+                                              'project',
+                                              isBookmarked,
+                                            ),
+                                          );
+                                  },
+                                ),
+                              );
+                            },
+                            childCount: posts.length,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    // Calculate the actual post index
-                    // index 0 -> post 0
-                    // index 1 -> Promo
-                    // index 2 -> post 1
-                    final postIndex = index > 1 ? index - 1 : index;
-                    if (postIndex >= posts.length) return null;
-
-                    final post = posts[postIndex];
-                    final isJob = activeMode == 'job';
-                    final isBookmarked = isJob
-                        ? (user?.savedJobIds.contains(post.id) ?? false)
-                        : (user?.savedProjectIds.contains(post.id) ?? false);
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: OpenContainer(
-                        closedElevation: 0,
-                        openElevation: 0,
-                        closedColor: Colors.transparent,
-                        middleColor: Colors.transparent,
-                        openColor: Colors.transparent,
-                        closedShape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        transitionDuration: const Duration(milliseconds: 500),
-                        openBuilder: (context, action) {
-                          if (context.read<AuthProvider>().isGuest) {
-                            return const UnifiedLoginScreen();
-                          }
-                          return JobDetailsScreen(post: post);
-                        },
-                        closedBuilder: (context, action) {
-                          return isJob
-                              ? JobCard.fromJobPost(post).copyWith(
-                                  isBookmarked: isBookmarked,
-                                  onBookmarkToggle: () => _toggleSave(
-                                    context,
-                                    post.id,
-                                    'job',
-                                    isBookmarked,
-                                  ),
-                                )
-                              : JobCard.fromProjectPost(post).copyWith(
-                                  isBookmarked: isBookmarked,
-                                  onBookmarkToggle: () => _toggleSave(
-                                    context,
-                                    post.id,
-                                    'project',
-                                    isBookmarked,
-                                  ),
-                                );
-                        },
-                      ),
-                    );
-                  },
-                  childCount: posts.length + (posts.isEmpty ? 0 : 1),
-                ),
-              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, dynamic user) {
-    return SliverAppBar(
-      floating: true,
-      expandedHeight: 180,
-      backgroundColor: CustomColors.lightBg,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Row(
+  Widget _buildBlueHeader(BuildContext context, dynamic user) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const Text(AppStrings.modeLabel,
-                  style:
-                      TextStyle(color: CustomColors.textMuted, fontSize: 12)),
-              const SizedBox(width: 8),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                      value: 'job',
-                      label: Text(AppStrings.jobLabel,
-                          style: TextStyleHelper.instance.body12Medium),
-                      icon: const Icon(Icons.work_outline, size: 14)),
-                  ButtonSegment(
-                      value: 'freelancer',
-                      label: Text(AppStrings.freeLabel,
-                          style: TextStyleHelper.instance.body12Medium),
-                      icon: const Icon(Icons.bolt, size: 14)),
-                ],
-                selected: {user?.activeMode ?? 'job'},
-                onSelectionChanged: (newSelection) async {
-                  if (context.read<AuthProvider>().isGuest) {
-                    _showGuestLoginPrompt(context);
-                    return;
-                  }
-                  final newMode = newSelection.first;
-                  await context.read<AuthProvider>().switchWorkerMode(newMode);
-                  if (context.mounted) {
-                    context.read<JobProvider>().updateMode(newMode);
-                  }
+              Expanded(
+                child: Container(
+                  child: AnimatedTypingSearchView(
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    borderColor: Colors.white.withValues(alpha: 0.2),
+                    iconColor: Colors.white,
+                    textColor: Colors.white,
+                    hintColor: Colors.white.withValues(alpha: 0.6),
+                    showShadow: false,
+                    onChanged: (value) {
+                      // Handle search
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const WorkerProjectsScreen()),
+                  );
                 },
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return CustomColors.primaryBlue.withValues(alpha: 0.2);
-                    }
-                    return Colors.transparent;
-                  }),
+                child: Container(
+                  height: 54.h,
+                  width: 54.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.h),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.assignment_turned_in_rounded,
+                    color: CustomColors.primaryBlue,
+                    size: 24.h,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                user?.activeMode == 'freelancer'
-                    ? AppStrings.projectFeed
-                    : AppStrings.discoverJobs,
-                style: TextStyleHelper.instance.headline30Bold
-                    .copyWith(fontSize: 28),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                user?.activeMode == 'freelancer'
-                    ? AppStrings.projectFeedSubtitle
-                    : AppStrings.jobFeedSubtitle,
-                style: TextStyleHelper.instance.body14Regular,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: TextField(
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search, color: Colors.white),
-            hintText: AppStrings.searchPlaceholder,
-            filled: true,
-            fillColor: CustomColors.primaryBlue.withValues(alpha: 0.1),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -257,7 +226,7 @@ class JobFeedScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.h)),
         backgroundColor: Colors.white,
         title: Text(
           AppStrings.guestPromptTitle,
@@ -284,7 +253,7 @@ class JobFeedScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: CustomColors.primaryBlue,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.h),
               ),
             ),
             child: Text(AppStrings.loginNow,

@@ -37,10 +37,10 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  double get maxExtent => 260.h;
+  double get maxExtent => 310.h;
 
   @override
-  double get minExtent => 90.h;
+  double get minExtent => 120.h;
 
   @override
   bool shouldRebuild(covariant AnimatedProfileHeaderDelegate oldDelegate) {
@@ -282,7 +282,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       ],
                     ),
                   ),
-                  SizedBox(height: lerpDouble(12.h, 0, easeProgress)!),
+                  SizedBox(height: lerpDouble(20.h, 0, easeProgress)!),
                   // Transformable Main Content (Greeting, Search, Chips)
                   if (contentVisibility > 0)
                     Transform.translate(
@@ -326,7 +326,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 30.h),
+                              SizedBox(height: 40.h),
                               // Search Bar - Professional Morph target
                               RepaintBoundary(
                                 child: Row(

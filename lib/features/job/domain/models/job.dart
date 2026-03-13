@@ -234,14 +234,19 @@ class Job {
       deadline: map['deadlineDate'] != null
           ? (map['deadlineDate'] is Timestamp
               ? (map['deadlineDate'] as Timestamp).toDate()
-              : DateTime.fromMillisecondsSinceEpoch(map['deadlineDate']))
+              : (map['deadlineDate'] is int
+                  ? DateTime.fromMillisecondsSinceEpoch(map['deadlineDate'])
+                  : DateTime.tryParse(map['deadlineDate'].toString())))
           : null,
       postImage: map['postImage'],
       status: map['status'] ?? 'pending',
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] is Timestamp
               ? (map['createdAt'] as Timestamp).toDate()
-              : DateTime.fromMillisecondsSinceEpoch(map['createdAt']))
+              : (map['createdAt'] is int
+                  ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'])
+                  : DateTime.tryParse(map['createdAt'].toString()) ??
+                      DateTime.now()))
           : DateTime.now(),
       applicationsCount: map['applicationsCount'] ?? map['proposalsCount'] ?? 0,
       isVerified: map['isVerified'] ?? false,

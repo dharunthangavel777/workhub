@@ -7,13 +7,13 @@ import 'package:work_hub/features/job/ui/widgets/job_card.dart';
 import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
 import './widgets/company_recommendation_widget.dart';
 import 'saved_jobs_screen.dart';
-import 'package:work_hub/features/job/ui/search_screen.dart';
 import 'package:work_hub/features/job/logic/job_controller.dart';
 import 'package:work_hub/features/job/domain/models/job.dart';
 import 'package:work_hub/features/auth/logic/auth_controller.dart';
 
 class JobSearchDashboardScreen extends StatefulWidget {
-  const JobSearchDashboardScreen({super.key});
+  final VoidCallback? onNavigateToJobs;
+  const JobSearchDashboardScreen({super.key, this.onNavigateToJobs});
 
   @override
   State<JobSearchDashboardScreen> createState() =>
@@ -175,21 +175,27 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                       },
                       onProfileTap: () {},
                       searchController: searchController,
-                      onSearchTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SearchScreen(
-                                    initialQuery: searchController.text,
-                                  )),
-                        );
-                      },
+                      onSearchTap: widget.onNavigateToJobs,
                     ),
                   );
                 },
               ),
-
-
+              // Curved Finishing Transition
+              SliverToBoxAdapter(
+                child: Container(
+                  height: 32.h,
+                  color: CustomColors.primaryBlue,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: CustomColors.lightBg,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32.h),
+                        topRight: Radius.circular(32.h),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
               // Loading State Shimmers
               if (provider.isLoading && allFilteredPosts.isEmpty)

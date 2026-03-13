@@ -27,12 +27,12 @@ class JobRepository {
       final list = snapshot.docs
           .map((doc) => Job.fromMap(doc.id, doc.data(), postType: 'job'))
           .where((post) {
-        final isApproved = post.status == 'approved';
+        final isVisible = post.status == 'approved' || post.status == 'pending';
         final isNotExpired =
             post.deadline == null || post.deadline!.isAfter(DateTime.now());
         final isNotFull = post.maxApplications == null ||
             post.applicationsCount < post.maxApplications!;
-        return isApproved && isNotExpired && isNotFull;
+        return isVisible && isNotExpired && isNotFull;
       }).toList();
       // Sort in memory to avoid index requirements
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -45,12 +45,12 @@ class JobRepository {
       final list = snapshot.docs
           .map((doc) => Job.fromMap(doc.id, doc.data(), postType: 'project'))
           .where((post) {
-        final isApproved = post.status == 'approved';
+        final isVisible = post.status == 'approved' || post.status == 'pending';
         final isNotExpired =
             post.deadline == null || post.deadline!.isAfter(DateTime.now());
         final isNotFull = post.maxApplications == null ||
             post.applicationsCount < post.maxApplications!;
-        return isApproved && isNotExpired && isNotFull;
+        return isVisible && isNotExpired && isNotFull;
       }).toList();
       // Sort in memory
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));

@@ -19,7 +19,7 @@ class ProjectRepository {
     return _firestore.collection('project_posts').snapshots().map((snapshot) {
       final list = snapshot.docs
           .map((doc) => Job.fromMap(doc.id, doc.data(), postType: 'project'))
-          .where((post) => post.status == 'approved')
+          .where((post) => post.status == 'approved' || post.status == 'pending')
           .toList();
       // Sort in memory to avoid composite index requirements
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));

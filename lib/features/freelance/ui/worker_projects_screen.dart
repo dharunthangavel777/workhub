@@ -73,14 +73,25 @@ class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
           children: [
             /// HEADER
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-              child: Center(
-                child: Text(
-                  isFreelancer ? 'My Projects' : 'Job Applications',
-                  style: TextStyleHelper.instance.headline22Bold.copyWith(
-                    color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                ),
+                  Text(
+                    isFreelancer ? 'My Projects' : 'Job Applications',
+                    style: TextStyleHelper.instance.headline22Bold.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
 

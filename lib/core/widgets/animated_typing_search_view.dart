@@ -5,12 +5,24 @@ class AnimatedTypingSearchView extends StatefulWidget {
   final Function(String)? onChanged;
   final TextEditingController? controller;
   final VoidCallback? onTap;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final Color? iconColor;
+  final Color? textColor;
+  final Color? hintColor;
+  final bool showShadow;
 
   const AnimatedTypingSearchView({
     super.key,
     this.onChanged,
     this.controller,
     this.onTap,
+    this.backgroundColor,
+    this.borderColor,
+    this.iconColor,
+    this.textColor,
+    this.hintColor,
+    this.showShadow = true,
   });
 
   @override
@@ -90,25 +102,27 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       height: 54.h,
       decoration: BoxDecoration(
-        color: CustomColors.lightCard,
+        color: widget.backgroundColor ?? CustomColors.lightCard,
         borderRadius: BorderRadius.circular(16.h),
         border: Border.all(
-          color: appTheme.indigo_A700.withValues(alpha: 0.1),
+          color: widget.borderColor ?? appTheme.indigo_A700.withValues(alpha: 0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: widget.showShadow
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
           Icon(
             Icons.search,
-            color: Colors.white,
+            color: widget.iconColor ?? Colors.white,
             size: 24.h,
           ),
           SizedBox(width: 8.w),
@@ -117,16 +131,16 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
               controller: widget.controller,
               onChanged: widget.onChanged,
               onTap: widget.onTap,
-              cursorColor: appTheme.indigo_A700,
+              cursorColor: widget.textColor ?? appTheme.indigo_A700,
               style: TextStyle(
-                color: appTheme.black_900,
+                color: widget.textColor ?? appTheme.black_900,
                 fontSize: 16.fSize,
                 fontFamily: 'Poppins',
               ),
               decoration: InputDecoration(
                 hintText: _currentHint,
                 hintStyle: TextStyle(
-                  color: appTheme.gray_400,
+                  color: widget.hintColor ?? appTheme.gray_400,
                   fontSize: 14.fSize,
                   fontFamily: 'Poppins',
                 ),
@@ -147,7 +161,7 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
                           }
                           return IconButton(
                             icon: Icon(Icons.close,
-                                size: 20.h, color: appTheme.gray_400),
+                                size: 20.h, color: widget.hintColor ?? appTheme.gray_400),
                             onPressed: () {
                               widget.controller!.clear();
                               widget.onChanged?.call("");
