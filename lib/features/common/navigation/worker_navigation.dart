@@ -1,7 +1,7 @@
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 import '../../auth/ui/unified_login_screen.dart';
 import '../../job/ui/reels/reels_tab_container.dart';
 import '../../job/ui/job_search_dashboard_screen.dart';
@@ -9,6 +9,7 @@ import '../../job/ui/job_feed_screen.dart';
 import '../../ai/ui/ai_matchmaking_screen.dart';
 import '../../../core/widgets/custom_bottom_bar.dart';
 import '../../profile/ui/profile_screen.dart';
+import '../../freelance/ui/worker_projects_screen.dart';
 
 class WorkerNavigation extends StatefulWidget {
   const WorkerNavigation({super.key});
@@ -40,6 +41,10 @@ class _WorkerNavigationState extends State<WorkerNavigation>
 
   @override
   Widget build(BuildContext context) {
+    final userMode =
+        context.watch<AuthProvider>().userModel?.activeMode ?? 'job';
+    final isFreelancer = userMode == 'freelancer';
+
     final List<Widget> screens = [
       JobSearchDashboardScreen(
         onNavigateToJobs: () {
@@ -48,15 +53,11 @@ class _WorkerNavigationState extends State<WorkerNavigation>
           });
         },
       ),
-      const JobFeedScreen(),
+      isFreelancer ? const WorkerProjectsScreen() : const JobFeedScreen(),
       ReelsTabContainer(isActive: _selectedIndex == 2),
       const AIMatchmakingScreen(),
       const ProfileScreen(),
     ];
-
-    final userMode =
-        context.watch<AuthProvider>().userModel?.activeMode ?? 'job';
-    final isFreelancer = userMode == 'freelancer';
 
     return Scaffold(
       body: Stack(
@@ -182,7 +183,7 @@ class _WorkerNavigationState extends State<WorkerNavigation>
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: _selectedIndex == 2
-                                  ? appTheme.indigo_A700
+                                  ? appTheme.indigoA700
                                   : Colors.black,
                               shape: BoxShape.circle,
                             ),

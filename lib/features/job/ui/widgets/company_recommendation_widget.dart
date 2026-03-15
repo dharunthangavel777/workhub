@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CompanyRecommendationWidget extends StatelessWidget {
   final String? companyName;
@@ -29,12 +29,12 @@ class CompanyRecommendationWidget extends StatelessWidget {
           color: CustomColors.lightCard,
           borderRadius: BorderRadius.circular(16.h),
           border: Border.all(
-            color: appTheme.indigo_A700.withOpacity(0.1),
+            color: appTheme.indigoA700.withValues(alpha: 0.1),
             width: 1.h,
           ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.04),
+              color: appTheme.black900.withValues(alpha: 0.04),
               blurRadius: 12.h,
               offset: Offset(0, 4.h),
               spreadRadius: 0,
@@ -89,13 +89,13 @@ class CompanyRecommendationWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.h, vertical: 4.h),
               decoration: BoxDecoration(
-                color: appTheme.indigo_50,
+                color: appTheme.indigo50,
                 borderRadius: BorderRadius.circular(8.h),
               ),
               child: Text(
                 "${openJobsCount ?? 1} Open Jobs",
                 style: TextStyleHelper.instance.body12Medium.copyWith(
-                  color: appTheme.indigo_A700,
+                  color: appTheme.indigoA700,
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

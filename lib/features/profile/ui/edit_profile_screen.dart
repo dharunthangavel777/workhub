@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/utils/image_utils.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/profile/domain/models/experience.dart';
-import 'package:work_hub/features/ai/services/local_parser_service.dart';
-import 'package:work_hub/features/ai/domain/models/resume_data_model.dart' as ai;
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/utils/image_utils.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/profile/domain/models/experience.dart';
+import 'package:qwok/features/ai/services/local_parser_service.dart';
+import 'package:qwok/features/ai/domain/models/resume_data_model.dart' as ai;
 import 'package:file_picker/file_picker.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -42,7 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bioController = TextEditingController(text: user?.bio);
     _locationController = TextEditingController(text: user?.location);
     _jobCategoryController = TextEditingController(text: user?.jobCategory);
-    _skillsController = TextEditingController(text: user?.skills?.join(', '));
+    _skillsController = TextEditingController(text: user?.skills?.map((s) => s.name).join(', '));
     _resumeUrl = user?.resumeUrl;
   }
 
@@ -86,7 +86,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _jobCategoryController.text = data.category!;
             }
             if (data.skills.isNotEmpty) {
-              _skillsController.text = data.skills.join(', ');
+              _skillsController.text = data.skills.allSkills.map((s) => s.name).join(', ');
             }
             if (data.workExperience.isNotEmpty) {
               _parsedExperiences = data.workExperience
@@ -240,7 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -258,7 +258,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 50.h,
-                                backgroundColor: appTheme.gray_100,
+                                backgroundColor: appTheme.gray100,
                                 backgroundImage: ImageUtils.getImageProvider(
                                     auth.userModel?.photoURL),
                               ),
@@ -279,7 +279,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                   child: Container(
                                     padding: EdgeInsets.all(8.h),
                                     decoration: BoxDecoration(
-                                      color: appTheme.indigo_A700,
+                                      color: appTheme.indigoA700,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                           color: Colors.white, width: 2),
@@ -309,8 +309,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                     ? "Analyzing..."
                                     : "Magic Fill from Resume"),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: appTheme.indigo_A700,
-                                  backgroundColor: appTheme.indigo_A700
+                                  foregroundColor: appTheme.indigoA700,
+                                  backgroundColor: appTheme.indigoA700
                                       .withValues(alpha: 0.05),
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 16.w, vertical: 8.h),
@@ -425,13 +425,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Container(
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         children: [
-          Icon(Icons.description, color: appTheme.indigo_A700, size: 32.h),
+          Icon(Icons.description, color: appTheme.indigoA700, size: 32.h),
           SizedBox(width: 16.w),
           Expanded(
             child: Column(
@@ -448,7 +448,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ? "Will be updated upon saving profile"
                       : "Upload your CV in PDF/DOCX",
                   style: TextStyleHelper.instance.body12Medium
-                      .copyWith(color: appTheme.gray_500),
+                      .copyWith(color: appTheme.gray500),
                 ),
               ],
             ),

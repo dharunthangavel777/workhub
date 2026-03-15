@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/widgets/custom_image_view.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
+import 'package:qwok/core/widgets/custom_image_view.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class JobCard extends StatefulWidget {
@@ -77,6 +77,8 @@ class JobCard extends StatefulWidget {
       return "₹${formatLPA(min)} - ₹${formatLPA(max)} LPA";
     } else {
       // Project budget in 'k' notation
+      // The debugPrint statement was syntactically incorrect and referred to an undefined variable 'e'.
+      // It has been removed to maintain syntactical correctness.
       String formatK(int val) {
         if (val >= 1000) {
           int k = (val / 1000).floor();
@@ -175,9 +177,9 @@ class JobCard extends StatefulWidget {
       applicationsCount: applicationsCount,
       maxApplications: maxApplications,
       postImage: postImage ?? this.postImage,
-      timeAgo: timeAgo ?? timeAgo,
-      projectDuration: projectDuration ?? projectDuration,
-      rating: rating ?? rating,
+      timeAgo: timeAgo,
+      projectDuration: projectDuration,
+      rating: rating,
       onBookmarkToggle: onBookmarkToggle ?? this.onBookmarkToggle,
       onTap: onTap ?? this.onTap,
     );
@@ -296,7 +298,7 @@ class _JobCardState extends State<JobCard> with SingleTickerProviderStateMixin {
                         border: Border.all(color: Colors.white, width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                           ),
                         ],
@@ -517,7 +519,7 @@ class _JobCardState extends State<JobCard> with SingleTickerProviderStateMixin {
                         border: Border.all(color: Colors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                           ),
                         ],

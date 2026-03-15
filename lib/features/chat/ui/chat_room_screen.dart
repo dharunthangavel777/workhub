@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/features/chat/models/message.dart';
-import 'package:work_hub/features/chat/logic/chat_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/features/chat/models/message.dart';
+import 'package:qwok/features/chat/logic/chat_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String chatId;

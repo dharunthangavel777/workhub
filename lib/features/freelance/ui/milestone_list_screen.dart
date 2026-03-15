@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 
-import 'package:work_hub/features/freelance/models/milestone.dart';
-import 'package:work_hub/features/freelance/models/project.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
+import 'package:qwok/features/freelance/models/project.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 import 'milestone_details_screen.dart';
 
 class MilestoneListScreen extends StatefulWidget {

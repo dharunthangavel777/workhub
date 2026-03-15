@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 
 class SubscriptionBanner extends StatelessWidget {
   final String tier;

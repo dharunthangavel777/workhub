@@ -7,12 +7,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/profile/domain/models/experience.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/profile/domain/models/experience.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 
-import 'package:work_hub/features/ai/logic/resume_parse_provider.dart';
-import 'package:work_hub/features/ai/domain/models/resume_data_model.dart';
+import 'package:qwok/features/ai/logic/resume_parse_provider.dart';
+import 'package:qwok/features/ai/domain/models/resume_data_model.dart';
 
 class WorkerProfileCompletionScreen extends StatefulWidget {
   const WorkerProfileCompletionScreen({super.key});
@@ -179,7 +179,7 @@ class _WorkerProfileCompletionScreenState
       if (data.bio != null) _bioController.text = data.bio!;
       if (data.skills.isNotEmpty) {
         _skills.clear();
-        _skills.addAll(data.skills);
+        _skills.addAll(data.skills.allSkills.map((s) => s.name));
       }
       // Mapping experiences
       _experiences.clear();
@@ -292,16 +292,16 @@ class _WorkerProfileCompletionScreenState
                 width: 130,
                 height: 130,
                 decoration: BoxDecoration(
-                  color: appTheme.indigo_A700.withValues(alpha: 0.1),
+                  color: appTheme.indigoA700.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: appTheme.indigo_A700.withValues(alpha: 0.2),
+                      color: appTheme.indigoA700.withValues(alpha: 0.2),
                       width: 2),
                 ),
                 child: Icon(
                   Icons.auto_awesome,
                   size: 60.h,
-                  color: appTheme.indigo_A700,
+                  color: appTheme.indigoA700,
                 ),
               ),
             ),
@@ -309,7 +309,7 @@ class _WorkerProfileCompletionScreenState
             Text(
               _getAIStatusText(provider.status),
               style: TextStyleHelper.instance.headline22Bold
-                  .copyWith(color: appTheme.indigo_A700),
+                  .copyWith(color: appTheme.indigoA700),
             ),
             SizedBox(height: 12.h),
             const Text(
@@ -323,8 +323,8 @@ class _WorkerProfileCompletionScreenState
             SizedBox(
               width: 200.w,
               child: LinearProgressIndicator(
-                backgroundColor: appTheme.indigo_A700.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
+                backgroundColor: appTheme.indigoA700.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigoA700),
                 minHeight: 6,
               ),
             ),
@@ -332,7 +332,7 @@ class _WorkerProfileCompletionScreenState
             Text(
               "Please wait, this might take a moment.",
               style: TextStyleHelper.instance.body12Medium
-                  .copyWith(color: appTheme.gray_400),
+                  .copyWith(color: appTheme.gray400),
             ),
           ],
         ),
@@ -365,8 +365,8 @@ class _WorkerProfileCompletionScreenState
               height: 4.h,
               decoration: BoxDecoration(
                 color: index <= _currentPage
-                    ? appTheme.indigo_A700
-                    : appTheme.gray_100,
+                    ? appTheme.indigoA700
+                    : appTheme.gray100,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -386,10 +386,10 @@ class _WorkerProfileCompletionScreenState
           Container(
             padding: EdgeInsets.all(16.h),
             decoration: BoxDecoration(
-                color: appTheme.indigo_A700.withValues(alpha: 0.1),
+                color: appTheme.indigoA700.withValues(alpha: 0.1),
                 shape: BoxShape.circle),
             child: Icon(Icons.auto_awesome,
-                color: appTheme.indigo_A700, size: 40.h),
+                color: appTheme.indigoA700, size: 40.h),
           ),
           SizedBox(height: 24.h),
           Text("Magic Profile Fill",
@@ -399,7 +399,7 @@ class _WorkerProfileCompletionScreenState
             "Upload your resume and our AI will build your professional profile in seconds.",
             textAlign: TextAlign.center,
             style: TextStyleHelper.instance.body14Medium
-                .copyWith(color: appTheme.gray_500),
+                .copyWith(color: appTheme.gray500),
           ),
           SizedBox(height: 48.h),
           _buildGlowingFilePicker(),
@@ -408,7 +408,7 @@ class _WorkerProfileCompletionScreenState
             onPressed: _nextPage,
             child: Text("Skip, I'll enter manually",
                 style: TextStyleHelper.instance.body14Bold
-                    .copyWith(color: appTheme.gray_400)),
+                    .copyWith(color: appTheme.gray400)),
           ),
         ],
       ),
@@ -429,17 +429,17 @@ class _WorkerProfileCompletionScreenState
                 height: 180.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.circular(24.h),
                   border: Border.all(
                       color: _resumeFile != null
-                          ? appTheme.indigo_A700
-                          : appTheme.indigo_A700
+                          ? appTheme.indigoA700
+                          : appTheme.indigoA700
                               .withValues(alpha: 0.2 + (value * 0.3)),
                       width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: appTheme.indigo_A700.withValues(
+                      color: appTheme.indigoA700.withValues(
                           alpha: _resumeFile != null ? 0.15 : 0.1 * value),
                       blurRadius: _resumeFile != null ? 20 : 15 * value,
                       spreadRadius: _resumeFile != null ? 3 : 2 * value,
@@ -451,7 +451,7 @@ class _WorkerProfileCompletionScreenState
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           CircularProgressIndicator(
-                              color: appTheme.indigo_A700),
+                              color: appTheme.indigoA700),
                           SizedBox(height: 16.h),
                           Text(
                             context.watch<ResumeParseProvider>().status ==
@@ -467,7 +467,7 @@ class _WorkerProfileCompletionScreenState
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.check_circle,
-                                  color: appTheme.indigo_A700, size: 48.h),
+                                  color: appTheme.indigoA700, size: 48.h),
                               SizedBox(height: 12.h),
                               Text("File Selected",
                                   style: TextStyleHelper.instance.body16Bold),
@@ -481,7 +481,7 @@ class _WorkerProfileCompletionScreenState
                                       .split('\\')
                                       .last,
                                   style: TextStyleHelper.instance.body12Medium
-                                      .copyWith(color: appTheme.gray_600),
+                                      .copyWith(color: appTheme.gray600),
                                   textAlign: TextAlign.center,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -491,7 +491,7 @@ class _WorkerProfileCompletionScreenState
                               Text(
                                 "Tap to change file",
                                 style: TextStyleHelper.instance.body12Medium
-                                    .copyWith(color: appTheme.gray_400),
+                                    .copyWith(color: appTheme.gray400),
                               ),
                             ],
                           )
@@ -499,13 +499,13 @@ class _WorkerProfileCompletionScreenState
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.cloud_upload_outlined,
-                                  color: appTheme.indigo_A700, size: 48.h),
+                                  color: appTheme.indigoA700, size: 48.h),
                               SizedBox(height: 12.h),
                               Text("Drop your resume here",
                                   style: TextStyleHelper.instance.body16Bold),
                               Text("PDF, DOCX or Image",
                                   style: TextStyleHelper.instance.body12Medium
-                                      .copyWith(color: appTheme.gray_400)),
+                                      .copyWith(color: appTheme.gray400)),
                             ],
                           ),
               ),
@@ -536,14 +536,14 @@ class _WorkerProfileCompletionScreenState
                     Text(
                       "Found: ${_experiences.length} Exp, ${_portfolio['projects']?.length ?? 0} Proj, ${_certifications.length} Certs",
                       style: TextStyleHelper.instance.body12Bold
-                          .copyWith(color: appTheme.indigo_A700),
+                          .copyWith(color: appTheme.indigoA700),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8.h),
                     Text(
                       "Profile auto-filled! Click next to review.",
                       style: TextStyleHelper.instance.body12Medium
-                          .copyWith(color: appTheme.gray_600),
+                          .copyWith(color: appTheme.gray600),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -561,7 +561,7 @@ class _WorkerProfileCompletionScreenState
                         .copyWith(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: appTheme.indigo_A700,
+                    backgroundColor: appTheme.indigoA700,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16.h)),
@@ -588,7 +588,7 @@ class _WorkerProfileCompletionScreenState
           SizedBox(height: 8.h),
           Text("This is how you'll appear to employers.",
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
           SizedBox(height: 32.h),
           _buildTextField(
             label: "Full Name",
@@ -617,13 +617,13 @@ class _WorkerProfileCompletionScreenState
                       height: 20.h,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: appTheme.indigo_A700,
+                        color: appTheme.indigoA700,
                       ),
                     ),
                   )
                 : IconButton(
                     icon: Icon(Icons.my_location,
-                        color: appTheme.indigo_A700, size: 20.h),
+                        color: appTheme.indigoA700, size: 20.h),
                     onPressed: _handleLocationDetection,
                   ),
           ),
@@ -644,7 +644,7 @@ class _WorkerProfileCompletionScreenState
           SizedBox(height: 8.h),
           Text("Select the category that best describes your skills.",
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
           SizedBox(height: 32.h),
           Wrap(
             spacing: 12.w,
@@ -659,18 +659,18 @@ class _WorkerProfileCompletionScreenState
                       EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? appTheme.indigo_A700
-                        : appTheme.white_A700_01,
+                        ? appTheme.indigoA700
+                        : appTheme.whiteA70001,
                     borderRadius: BorderRadius.circular(16.h),
                     border: Border.all(
                         color: isSelected
-                            ? appTheme.indigo_A700
-                            : appTheme.gray_200),
+                            ? appTheme.indigoA700
+                            : appTheme.gray200),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
                                 color:
-                                    appTheme.indigo_A700.withValues(alpha: 0.2),
+                                    appTheme.indigoA700.withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4))
                           ]
@@ -679,7 +679,7 @@ class _WorkerProfileCompletionScreenState
                   child: Text(
                     category,
                     style: TextStyleHelper.instance.body14Bold.copyWith(
-                        color: isSelected ? Colors.white : appTheme.gray_900),
+                        color: isSelected ? Colors.white : appTheme.gray900),
                   ),
                 ),
               );
@@ -703,7 +703,7 @@ class _WorkerProfileCompletionScreenState
       children: [
         Text(label,
             style: TextStyleHelper.instance.body12Bold
-                .copyWith(color: appTheme.gray_500)),
+                .copyWith(color: appTheme.gray500)),
         SizedBox(height: 8.h),
         TextFormField(
           controller: controller,
@@ -711,17 +711,17 @@ class _WorkerProfileCompletionScreenState
           validator: validator,
           style: TextStyleHelper.instance.body14Medium,
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: appTheme.indigo_A700, size: 20.h),
+            prefixIcon: Icon(icon, color: appTheme.indigoA700, size: 20.h),
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: appTheme.gray_50,
+            fillColor: appTheme.gray50,
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16.h),
                 borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16.h),
                 borderSide:
-                    BorderSide(color: appTheme.indigo_A700, width: 1.5)),
+                    BorderSide(color: appTheme.indigoA700, width: 1.5)),
           ),
         ),
       ],
@@ -739,7 +739,7 @@ class _WorkerProfileCompletionScreenState
               onPressed: () => _pageController.previousPage(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.ease),
-              icon: Icon(Icons.arrow_back, color: appTheme.gray_400),
+              icon: Icon(Icons.arrow_back, color: appTheme.gray400),
             )
           else
             const SizedBox.shrink(),
@@ -751,7 +751,7 @@ class _WorkerProfileCompletionScreenState
                   ? _nextPage
                   : _nextPage,
               style: ElevatedButton.styleFrom(
-                backgroundColor: appTheme.indigo_A700,
+                backgroundColor: appTheme.indigoA700,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.h)),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/shared_widgets/predictive_shimmer.dart';
-import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/shared_widgets/predictive_shimmer.dart';
+import 'package:qwok/core/shared_widgets/universal_skeleton.dart';
 
 class AuthLoadingScreen extends StatelessWidget {
   const AuthLoadingScreen({super.key});

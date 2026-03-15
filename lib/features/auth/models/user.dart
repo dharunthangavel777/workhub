@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../profile/domain/models/experience.dart';
+import '../../profile/domain/models/skill.dart';
 
 enum UserRole { worker, businessOwner, admin, none }
 
@@ -13,7 +14,7 @@ class UserModel {
   final String? bannerImage;
   final String? username;
   final String? bio;
-  final List<String>? skills;
+  final List<SkillModel>? skills;
   final List<String>? badges;
   final Map<String, dynamic>? portfolio;
   final List<Map<String, dynamic>>? certifications;
@@ -127,7 +128,12 @@ class UserModel {
         bannerImage: map['bannerImage']?.toString(),
         username: map['username']?.toString(),
         bio: map['bio']?.toString(),
-        skills: _safeList(map['skills']),
+        skills: map['skills'] is List
+            ? (map['skills'] as List).map((e) {
+                if (e is Map) return SkillModel.fromMap(Map<String, dynamic>.from(e));
+                return SkillModel.fromString(e.toString());
+              }).toList()
+            : [],
         badges: _safeList(map['badges']),
         portfolio: _safeMap(map['portfolio']),
         certifications: map['certifications'] is List
@@ -231,7 +237,7 @@ class UserModel {
       'bannerImage': bannerImage,
       'username': username,
       'bio': bio,
-      'skills': skills,
+      'skills': skills?.map((e) => e.toMap()).toList(),
       'badges': badges,
       'portfolio': portfolio,
       'certifications': certifications,
@@ -295,7 +301,7 @@ class UserModel {
     String? bannerImage,
     String? username,
     String? bio,
-    List<String>? skills,
+    List<SkillModel>? skills,
     List<String>? badges,
     Map<String, dynamic>? portfolio,
     List<Map<String, dynamic>>? certifications,
@@ -388,26 +394,35 @@ class UserModel {
   int get profileCompletion {
     double score = 0.0;
 
-    // 1. Profile Image (15%)
-    if (photoURL != null && photoURL!.isNotEmpty) score += 15.0;
+    // 1. Profile Image (10%)
+    if (photoURL != null && photoURL!.isNotEmpty) score += 10.0;
 
-    // 2. User Name (15%) - Using username or non-default displayName
+    // 2. User Name (10%)
     if ((username != null && username!.isNotEmpty) ||
         (displayName.isNotEmpty && displayName != 'User')) {
-      score += 15.0;
+      score += 10.0;
     }
 
-    // 3. Bio (20%)
-    if (bio != null && bio!.isNotEmpty) score += 20.0;
+    // 3. Bio (15%)
+    if (bio != null && bio!.isNotEmpty) score += 15.0;
 
-    // 4. Location (15%)
-    if (location != null && location!.isNotEmpty) score += 15.0;
+    // 4. Location (10%)
+    if (location != null && location!.isNotEmpty) score += 10.0;
 
-    // 5. Job Category (15%)
-    if (jobCategory != null && jobCategory!.isNotEmpty) score += 15.0;
+    // 5. Job Category (10%)
+    if (jobCategory != null && jobCategory!.isNotEmpty) score += 10.0;
 
-    // 6. Skills (20%)
-    if (skills != null && skills!.isNotEmpty) score += 20.0;
+    // 6. Skills (15%)
+    if (skills != null && skills!.isNotEmpty) score += 15.0;
+
+    // 7. Experiences (15%)
+    if (experiences != null && experiences!.isNotEmpty) score += 15.0;
+
+    // 8. Certifications (10%)
+    if (certifications != null && certifications!.isNotEmpty) score += 10.0;
+
+    // 9. Resume (5%)
+    if (resumeUrl != null && resumeUrl!.isNotEmpty) score += 5.0;
 
     return score.round();
   }
@@ -425,6 +440,9 @@ class UserModel {
       missing.add("Job Category");
     }
     if (skills == null || skills!.isEmpty) missing.add("Skills");
+    if (experiences == null || experiences!.isEmpty) missing.add("Work Experience");
+    if (certifications == null || certifications!.isEmpty) missing.add("Certifications");
+    if (resumeUrl == null || resumeUrl!.isEmpty) missing.add("Resume");
     return missing;
   }
 }

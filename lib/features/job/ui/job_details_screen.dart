@@ -1,16 +1,16 @@
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/freelance/ui/project_dashboard_screen.dart';
-import 'package:work_hub/core/shared_widgets/smart_button.dart';
-import 'package:work_hub/core/orchestration/enterprise_state.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/freelance/ui/project_dashboard_screen.dart';
+import 'package:qwok/core/shared_widgets/smart_button.dart';
+import 'package:qwok/core/orchestration/enterprise_state.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:work_hub/core/analytics/behavioral_tracker.dart';
-import 'package:work_hub/features/profile/ui/edit_profile_screen.dart';
+import 'package:qwok/core/analytics/behavioral_tracker.dart';
+import 'package:qwok/features/profile/ui/edit_profile_screen.dart';
 
 class JobDetailsScreen extends StatelessWidget {
   final Job post;
@@ -26,7 +26,7 @@ class JobDetailsScreen extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         body: Center(
-            child: CircularProgressIndicator(color: appTheme.indigo_A700)),
+            child: CircularProgressIndicator(color: appTheme.indigoA700)),
       );
     }
 
@@ -74,7 +74,7 @@ class JobDetailsScreen extends StatelessWidget {
                         Text(
                           companyName,
                           style: TextStyleHelper.instance.body16Bold.copyWith(
-                            color: appTheme.indigo_A700,
+                            color: appTheme.indigoA700,
                           ),
                         ),
                         SizedBox(width: 8.w),
@@ -136,7 +136,7 @@ class JobDetailsScreen extends StatelessWidget {
           backgroundColor: Colors.white,
           child: IconButton(
             icon: Icon(Icons.arrow_back_ios_new,
-                color: appTheme.gray_900, size: 18.h),
+                color: appTheme.gray900, size: 18.h),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -148,8 +148,8 @@ class JobDetailsScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    appTheme.indigo_A700,
-                    appTheme.indigo_A700.withValues(alpha: 0.8)
+                    appTheme.indigoA700,
+                    appTheme.indigoA700.withValues(alpha: 0.8)
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -174,7 +174,7 @@ class JobDetailsScreen extends StatelessWidget {
                         offset: const Offset(0, 8),
                       )
                     ],
-                    border: Border.all(color: appTheme.gray_100, width: 1),
+                    border: Border.all(color: appTheme.gray100, width: 1),
                   ),
                   padding: EdgeInsets.all(12.h),
                   child: ClipRRect(
@@ -187,7 +187,7 @@ class JobDetailsScreen extends StatelessWidget {
                               companyName[0].toUpperCase(),
                               style: TextStyleHelper.instance.headline22Bold
                                   .copyWith(
-                                color: appTheme.indigo_A700,
+                                color: appTheme.indigoA700,
                               ),
                             ),
                           ),
@@ -205,9 +205,9 @@ class JobDetailsScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Column(
         children: [
@@ -230,7 +230,7 @@ class JobDetailsScreen extends StatelessWidget {
                           : "₹${post.budgetMin}-${post.budgetMax}")),
             ],
           ),
-          Divider(height: 32.h, color: appTheme.gray_200),
+          Divider(height: 32.h, color: appTheme.gray200),
           Row(
             children: [
               Expanded(
@@ -248,7 +248,7 @@ class JobDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildVerticalDivider() =>
-      Container(height: 40.h, width: 1, color: appTheme.gray_200);
+      Container(height: 40.h, width: 1, color: appTheme.gray200);
 
   String _getDeadlineText() {
     final deadline = post.deadline;
@@ -262,17 +262,17 @@ class JobDetailsScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: appTheme.gray_400, size: 16.h),
+            Icon(icon, color: appTheme.gray400, size: 16.h),
             SizedBox(width: 6.w),
             Text(label,
                 style: TextStyleHelper.instance.body10Medium
-                    .copyWith(color: appTheme.gray_500)),
+                    .copyWith(color: appTheme.gray500)),
           ],
         ),
         SizedBox(height: 6.h),
         Text(value,
             style: TextStyleHelper.instance.body14Bold
-                .copyWith(color: appTheme.gray_900)),
+                .copyWith(color: appTheme.gray900)),
       ],
     );
   }
@@ -286,7 +286,7 @@ class JobDetailsScreen extends StatelessWidget {
         Text(
           content,
           style: TextStyleHelper.instance.body14Regular.copyWith(
-            color: appTheme.gray_700,
+            color: appTheme.gray700,
             height: 1.6,
           ),
         ),
@@ -304,17 +304,17 @@ class JobDetailsScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(16.h),
           decoration: BoxDecoration(
-            color: appTheme.white_A700_01,
+            color: appTheme.whiteA70001,
             borderRadius: BorderRadius.circular(20.h),
-            border: Border.all(color: appTheme.gray_100),
+            border: Border.all(color: appTheme.gray100),
           ),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 24.h,
-                backgroundColor: appTheme.gray_50,
+                backgroundColor: appTheme.gray50,
                 child: Icon(Icons.person_pin,
-                    color: appTheme.indigo_A700, size: 28.h),
+                    color: appTheme.indigoA700, size: 28.h),
               ),
               SizedBox(width: 16.w),
               Expanded(
@@ -333,13 +333,13 @@ class JobDetailsScreen extends StatelessWidget {
                     ),
                     Text(isJob ? companyName : "Hiring Manager",
                         style: TextStyleHelper.instance.body12Medium
-                            .copyWith(color: appTheme.gray_500)),
+                            .copyWith(color: appTheme.gray500)),
                     if (isJob) ...[
                       SizedBox(height: 4.h),
                       Text(
                         "${post.companyIndustry ?? 'N/A'} • ${post.companySize ?? 'N/A'}",
                         style: TextStyleHelper.instance.body10Medium
-                            .copyWith(color: appTheme.gray_400),
+                            .copyWith(color: appTheme.gray400),
                       ),
                     ],
                   ],
@@ -348,11 +348,11 @@ class JobDetailsScreen extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                    color: appTheme.gray_50,
+                    color: appTheme.gray50,
                     borderRadius: BorderRadius.circular(12.h)),
                 child: Text("Contact",
                     style: TextStyleHelper.instance.body12Bold
-                        .copyWith(color: appTheme.indigo_A700)),
+                        .copyWith(color: appTheme.indigoA700)),
               ),
             ],
           ),
@@ -375,15 +375,15 @@ class JobDetailsScreen extends StatelessWidget {
             return Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
               decoration: BoxDecoration(
-                color: appTheme.indigo_A700.withValues(alpha: 0.05),
+                color: appTheme.indigoA700.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12.h),
                 border: Border.all(
-                    color: appTheme.indigo_A700.withValues(alpha: 0.1)),
+                    color: appTheme.indigoA700.withValues(alpha: 0.1)),
               ),
               child: Text(
                 s,
                 style: TextStyleHelper.instance.body12Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               ),
             );
           }).toList(),
@@ -453,10 +453,10 @@ class JobDetailsScreen extends StatelessWidget {
         children: [
           Text(label,
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
           Text(value,
               style: TextStyleHelper.instance.body14Bold
-                  .copyWith(color: appTheme.gray_900)),
+                  .copyWith(color: appTheme.gray900)),
         ],
       ),
     );
@@ -476,7 +476,7 @@ class JobDetailsScreen extends StatelessWidget {
         return Container(
           padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 32.h),
           decoration: BoxDecoration(
-            color: appTheme.white_A700_01,
+            color: appTheme.whiteA70001,
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withValues(alpha: 0.06),
@@ -582,7 +582,7 @@ class JobDetailsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: appTheme.white_A700_01,
+        backgroundColor: appTheme.whiteA70001,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.h)),
         title:
@@ -605,7 +605,7 @@ class JobDetailsScreen extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: appTheme.indigo_A700,
+              backgroundColor: appTheme.indigoA700,
               padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.h)),
@@ -627,7 +627,7 @@ class JobDetailsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: appTheme.white_A700_01,
+        backgroundColor: appTheme.whiteA70001,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.h)),
         title: Text("Confirm Application",
@@ -720,7 +720,7 @@ class JobDetailsScreen extends StatelessWidget {
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: BoxDecoration(
-                color: appTheme.white_A700_01,
+                color: appTheme.whiteA70001,
                 borderRadius:
                     BorderRadius.vertical(top: Radius.circular(32.h))),
             padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w,
@@ -735,7 +735,7 @@ class JobDetailsScreen extends StatelessWidget {
                           height: 4.h,
                           margin: EdgeInsets.symmetric(vertical: 8.h),
                           decoration: BoxDecoration(
-                              color: appTheme.gray_200,
+                              color: appTheme.gray200,
                               borderRadius: BorderRadius.circular(2)))),
                   SizedBox(height: 16.h),
                   Text("Submit Proposal",
@@ -743,7 +743,7 @@ class JobDetailsScreen extends StatelessWidget {
                   SizedBox(height: 8.h),
                   Text("Drafts are saved automatically as you type.",
                       style: TextStyleHelper.instance.body12Medium.copyWith(
-                          color: appTheme.indigo_A700.withValues(alpha: 0.7))),
+                          color: appTheme.indigoA700.withValues(alpha: 0.7))),
                   SizedBox(height: 24.h),
                   _buildBidField(
                     amountController,
@@ -756,7 +756,7 @@ class JobDetailsScreen extends StatelessWidget {
                   SizedBox(height: 20.h),
                   Text("Expected Delivery",
                       style: TextStyleHelper.instance.body12Bold
-                          .copyWith(color: appTheme.gray_900)),
+                          .copyWith(color: appTheme.gray900)),
                   SizedBox(height: 10.h),
                   Row(
                     children: [
@@ -767,7 +767,7 @@ class JobDetailsScreen extends StatelessWidget {
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             hintText: "Value",
-                            fillColor: appTheme.gray_50,
+                            fillColor: appTheme.gray50,
                             filled: true,
                             border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14.h),
@@ -780,7 +780,7 @@ class JobDetailsScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 12.w),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14.h),
-                          color: appTheme.gray_50,
+                          color: appTheme.gray50,
                         ),
                         child: DropdownButton<String>(
                           value: durationUnit,
@@ -813,7 +813,7 @@ class JobDetailsScreen extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText:
                           "Describe why you are the best fit for this project...",
-                      fillColor: appTheme.gray_50,
+                      fillColor: appTheme.gray50,
                       filled: true,
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14.h),
@@ -891,7 +891,7 @@ class JobDetailsScreen extends StatelessWidget {
       children: [
         Text(label,
             style: TextStyleHelper.instance.body12Bold
-                .copyWith(color: appTheme.gray_900)),
+                .copyWith(color: appTheme.gray900)),
         SizedBox(height: 10.h),
         TextField(
           controller: controller,
@@ -906,17 +906,17 @@ class JobDetailsScreen extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyleHelper.instance.body14Medium
-                .copyWith(color: appTheme.gray_400),
-            prefixIcon: Icon(icon, color: appTheme.indigo_A700, size: 20.h),
-            fillColor: isReadOnly ? appTheme.gray_100 : appTheme.white_A700_01,
+                .copyWith(color: appTheme.gray400),
+            prefixIcon: Icon(icon, color: appTheme.indigoA700, size: 20.h),
+            fillColor: isReadOnly ? appTheme.gray100 : appTheme.whiteA70001,
             filled: true,
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.h),
-                borderSide: BorderSide(color: appTheme.gray_200)),
+                borderSide: BorderSide(color: appTheme.gray200)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.h),
                 borderSide:
-                    BorderSide(color: appTheme.indigo_A700, width: 1.5)),
+                    BorderSide(color: appTheme.indigoA700, width: 1.5)),
           ),
         ),
       ],

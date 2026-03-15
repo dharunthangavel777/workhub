@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
-import 'package:work_hub/features/profile/domain/models/rating.dart';
+import 'package:qwok/core/constants/api_constants.dart';
+import 'package:qwok/features/profile/domain/models/rating.dart';
 
 class RatingRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

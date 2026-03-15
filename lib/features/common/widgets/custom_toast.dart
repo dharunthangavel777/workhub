@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 enum ToastType { success, warning, loading, info, error }
 
@@ -63,7 +63,7 @@ class CustomToast extends StatelessWidget {
                       Text(
                         message!,
                         style: TextStyleHelper.instance.body12Medium.copyWith(
-                          color: appTheme.gray_600,
+                          color: appTheme.gray600,
                         ),
                       ),
                     ],
@@ -85,7 +85,7 @@ class CustomToast extends StatelessWidget {
                 IconButton(
                   onPressed: onDismiss,
                   icon: Icon(Icons.close_rounded, 
-                    color: appTheme.gray_400, 
+                    color: appTheme.gray400, 
                     size: 20.h
                   ),
                   padding: EdgeInsets.zero,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/features/common/contract/models/contract.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/features/common/contract/models/contract.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 import 'package:intl/intl.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class ContractDetailsScreen extends StatefulWidget {
   final String contractId;

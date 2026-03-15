@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/theme/theme_helper.dart';
-import 'package:work_hub/core/theme/text_style_helper.dart';
+import 'package:qwok/core/theme/theme_helper.dart';
+import 'package:qwok/core/theme/text_style_helper.dart';
 import 'match_score_ring.dart';
 
 class AIMatchCard extends StatelessWidget {
@@ -27,7 +27,7 @@ class AIMatchCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: appTheme.white_A700,
+          color: appTheme.whiteA700,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -37,7 +37,7 @@ class AIMatchCard extends StatelessWidget {
             ),
           ],
           border:
-              Border.all(color: appTheme.indigo_A700.withValues(alpha: 0.1)),
+              Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -53,7 +53,7 @@ class AIMatchCard extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyleHelper.instance.body16Bold.copyWith(
-                      color: appTheme.gray_900,
+                      color: appTheme.gray900,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -62,7 +62,7 @@ class AIMatchCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyleHelper.instance.body14Regular.copyWith(
-                      color: appTheme.gray_600,
+                      color: appTheme.gray600,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -78,14 +78,14 @@ class AIMatchCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: appTheme.indigo_50,
+                                  color: appTheme.indigo50,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   reason,
                                   style: TextStyleHelper.instance.body10Medium
                                       .copyWith(
-                                    color: appTheme.indigo_A700,
+                                    color: appTheme.indigoA700,
                                   ),
                                 ),
                               ))

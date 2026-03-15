@@ -1,5 +1,5 @@
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/shared_widgets/predictive_shimmer.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/shared_widgets/predictive_shimmer.dart';
 
 enum SkeletonType { card, circle, line, profile, square }
 
@@ -78,7 +78,7 @@ class UniversalSkeleton extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.h),
         border: Border.all(
-          color: appTheme.black_900.withValues(alpha: 0.05),
+          color: appTheme.black900.withValues(alpha: 0.05),
           width: 1.h,
         ),
       ),
@@ -159,7 +159,7 @@ class UniversalSkeleton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

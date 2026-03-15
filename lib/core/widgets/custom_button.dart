@@ -1,5 +1,5 @@
 
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -28,7 +28,7 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? appTheme.indigo_A700,
+          backgroundColor: backgroundColor ?? appTheme.indigoA700,
           foregroundColor: textColor ?? Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.h),

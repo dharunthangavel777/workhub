@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.workhub.work_hub"
+    namespace = "com.qwok.talents"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.workhub.work_hub"
+        applicationId = "com.qwok.talents"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../logic/resume_parse_provider.dart';
+import '../domain/models/resume_data_model.dart';
 import '../ui/widgets/resume_score_card.dart';
 import '../../../../core/theme/custom_colors.dart';
 import '../../../../core/services/toast_service.dart';
 import '../../auth/logic/auth_controller.dart';
 import '../../profile/domain/models/experience.dart';
+import '../../profile/domain/models/skill.dart';
 
 class ResumePreviewScreen extends StatefulWidget {
   const ResumePreviewScreen({super.key});
@@ -30,10 +32,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         title: const Text('Review Parsed Data'),
         actions: [
           TextButton(
-            onPressed: () {
-              // TODO: Apply to profile logic
-              Navigator.pop(context);
-            },
+            onPressed: () => _applyToProfile(context, data),
             child: const Text('Save',
                 style: TextStyle(color: CustomColors.primaryBlue)),
           ),
@@ -58,17 +57,13 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
               children: [
                 Wrap(
                   spacing: 8,
-                  children: data.skills
-                      .map((skill) => Chip(
-                            label: Text(skill),
-                            backgroundColor:
-                                CustomColors.primaryBlue.withValues(alpha: 0.1),
-                            deleteIcon: const Icon(Icons.close, size: 14),
-                            onDeleted: () {
-                              // TODO: Implement removal
-                            },
-                          ))
-                      .toList(),
+                  runSpacing: 8,
+                  children: data.skills.allSkills.map((s) {
+                    return Chip(
+                      label: Text(s.name),
+                      backgroundColor: CustomColors.primaryBlue.withValues(alpha: 0.1),
+                    );
+                  }).toList(),
                 ),
               ],
             ),
@@ -95,43 +90,7 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: ElevatedButton(
-                onPressed: () async {
-                  final auth = context.read<AuthProvider>();
-
-                  // Map ResumeData to User Fields
-                  final updates = <String, dynamic>{};
-                  if (data.name != null) updates['displayName'] = data.name;
-                  if (data.bio != null) updates['bio'] = data.bio;
-                  if (data.location != null) {
-                    updates['location'] = data.location;
-                  }
-                  if (data.category != null) {
-                    updates['jobCategory'] = data.category;
-                  }
-                  if (data.skills.isNotEmpty) updates['skills'] = data.skills;
-
-                  if (data.workExperience.isNotEmpty) {
-                    updates['experiences'] = data.workExperience
-                        .map((exp) => ExperienceModel(
-                              title: exp.title ?? '',
-                              company: exp.company ?? '',
-                              duration: exp.duration ?? '',
-                              description: exp.description ?? '',
-                            ).toMap())
-                        .toList();
-                  }
-
-                  final success = await auth.updateUserFields(updates);
-
-                  if (mounted) {
-                    if (success != false) {
-                      ToastService().showSuccess('Profile updated', message: 'Profile updated successfully!');
-                    } else {
-                      ToastService().showError('Update failed', message: 'Failed to update profile.');
-                    }
-                    if (success != false) Navigator.pop(context);
-                  }
-                },
+                onPressed: () => _applyToProfile(context, data),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CustomColors.primaryBlue,
                   foregroundColor: Colors.white,
@@ -147,6 +106,67 @@ class _ResumePreviewScreenState extends State<ResumePreviewScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _applyToProfile(BuildContext context, ResumeData data) async {
+    final auth = context.read<AuthProvider>();
+
+    // Map ResumeData to User Fields
+    final updates = <String, dynamic>{};
+    if (data.name != null) updates['displayName'] = data.name;
+    if (data.bio != null) updates['bio'] = data.bio;
+    if (data.location != null) {
+      updates['location'] = data.location;
+    }
+    if (data.category != null) {
+      updates['jobCategory'] = data.category;
+    }
+
+    if (data.skills.allSkills.isNotEmpty) {
+      updates['skills'] = data.skills.allSkills
+          .map((s) => SkillModel(
+                name: s.name,
+                isVerified: true,
+                verificationSource: 'ai',
+                confidence: s.confidence,
+              ).toMap())
+          .toList();
+    }
+
+    if (data.workExperience.isNotEmpty) {
+      updates['experiences'] = data.workExperience
+          .map((exp) => ExperienceModel(
+                title: exp.title ?? '',
+                company: exp.company ?? '',
+                duration: exp.duration ?? '',
+                description: exp.description ?? '',
+              ).toMap())
+          .toList();
+    }
+
+    // Add certifications if available
+    if (data.certifications.isNotEmpty) {
+      updates['certifications'] = data.certifications
+          .map((c) => {
+                'name': c.name,
+                'issuer': c.issuer,
+                'date': c.date,
+              })
+          .toList();
+    }
+
+    final success = await auth.updateUserFields(updates);
+
+    if (mounted) {
+      if (success != false) {
+        ToastService().showSuccess('Profile updated', message: 'Your profile has been enhanced with AI insights!');
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      } else {
+        ToastService().showError('Update failed', message: 'Failed to update profile. Please try again.');
+      }
+    }
   }
 
   Widget _buildSection(

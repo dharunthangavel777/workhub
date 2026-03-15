@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:qwok/core/config/app_export.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/theme/theme_helper.dart';
-import '../../../../core/theme/text_style_helper.dart';
 import '../ui/widgets/ai_match_card.dart';
 import '../../auth/logic/auth_controller.dart';
 import '../../job/logic/job_controller.dart';
@@ -10,7 +8,6 @@ import '../../job/domain/models/job.dart';
 import '../../job/ui/job_details_screen.dart';
 import '../services/ai_cache_service.dart';
 import '../../../../core/services/toast_service.dart';
-import '../../../../core/config/app_export.dart'; // Added for CustomColors and screen utils
 
 class AIMatchmakingScreen extends StatefulWidget {
   const AIMatchmakingScreen({super.key});
@@ -184,7 +181,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -223,7 +220,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: appTheme.orange_600),
+              Icon(Icons.error_outline, size: 48, color: appTheme.orange600),
               const SizedBox(height: 16),
               Text(
                 _error!,
@@ -234,7 +231,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
               ElevatedButton(
                 onPressed: _fetchMatches,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: appTheme.indigo_A700,
+                  backgroundColor: appTheme.indigoA700,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text("Retry"),
@@ -255,13 +252,13 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: appTheme.indigo_A700.withValues(alpha: 0.1),
+                  color: appTheme.indigoA700.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.auto_awesome,
                   size: 64,
-                  color: appTheme.indigo_A700,
+                  color: appTheme.indigoA700,
                 ),
               ),
               const SizedBox(height: 24),
@@ -274,7 +271,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
               Text(
                 "Let our AI analyze your profile and find the best job opportunities tailored just for you.",
                 style: TextStyleHelper.instance.body16Regular.copyWith(
-                  color: appTheme.gray_600,
+                  color: appTheme.gray600,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -285,7 +282,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
                 child: ElevatedButton(
                   onPressed: _fetchMatches,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: appTheme.indigo_A700,
+                    backgroundColor: appTheme.indigoA700,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -310,7 +307,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: appTheme.gray_400),
+            Icon(Icons.search_off, size: 64, color: appTheme.gray400),
             const SizedBox(height: 16),
             Text(
               "No matches found using AI.\nTry updating your profile skills.",
@@ -340,8 +337,8 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        appTheme.indigo_A700,
-                        appTheme.indigo_A700.withValues(alpha: 0.8),
+                        appTheme.indigoA700,
+                        appTheme.indigoA700.withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -349,7 +346,7 @@ class _AIMatchmakingScreenState extends State<AIMatchmakingScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: appTheme.indigo_A700.withValues(alpha: 0.3),
+                        color: appTheme.indigoA700.withValues(alpha: 0.3),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),

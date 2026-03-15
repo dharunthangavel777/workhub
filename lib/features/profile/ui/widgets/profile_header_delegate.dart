@@ -1,7 +1,7 @@
 import 'dart:ui';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/utils/image_utils.dart';
-import 'package:work_hub/features/auth/models/user.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/utils/image_utils.dart';
+import 'package:qwok/features/auth/models/user.dart';
 
 class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final UserModel user;
@@ -170,7 +170,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
             child: Opacity(
               opacity: rawProgress > 0.9 ? 1.0 : 0.0,
               child:
-                  Divider(height: 1, color: appTheme.gray_200, thickness: 0.5),
+                  Divider(height: 1, color: appTheme.gray200, thickness: 0.5),
             ),
           ),
         ],
@@ -181,7 +181,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   Widget _buildBanner() {
     return Container(
       decoration: BoxDecoration(
-        color: appTheme.indigo_A700.withValues(alpha: 0.1),
+        color: appTheme.indigoA700.withValues(alpha: 0.1),
         image: user.bannerImage != null
             ? DecorationImage(
                 image: ImageUtils.getImageProvider(user.bannerImage),
@@ -215,7 +215,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
           padding: EdgeInsets.all(lerpDouble(4.h, 1.5.h, progress)!),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: appTheme.white_A700_01,
+            color: appTheme.whiteA70001,
             boxShadow: [
               if (progress < 0.5)
                 BoxShadow(
@@ -228,15 +228,15 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
           child: CircularProgressIndicator(
             value: profileCompletion / 100,
             strokeWidth: lerpDouble(3, 1.5, progress)!,
-            backgroundColor: appTheme.gray_100,
-            valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
+            backgroundColor: appTheme.gray100,
+            valueColor: AlwaysStoppedAnimation<Color>(appTheme.indigoA700),
           ),
         ),
         Positioned.fill(
           child: Padding(
             padding: EdgeInsets.all(lerpDouble(6.h, 3.h, progress)!),
             child: CircleAvatar(
-              backgroundColor: appTheme.gray_100,
+              backgroundColor: appTheme.gray100,
               backgroundImage: ImageUtils.getImageProvider(user.photoURL),
               child: user.photoURL == null
                   ? Text(
@@ -246,7 +246,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                       style: TextStyle(
                         fontSize: lerpDouble(32, 16, progress),
                         fontWeight: FontWeight.bold,
-                        color: appTheme.indigo_A700,
+                        color: appTheme.indigoA700,
                       ),
                     )
                   : null,
@@ -262,7 +262,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
               child: Container(
                 padding: EdgeInsets.all(6.h),
                 decoration: BoxDecoration(
-                  color: appTheme.indigo_A700,
+                  color: appTheme.indigoA700,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2.h),
                   boxShadow: [
@@ -293,7 +293,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyleHelper.instance.headline22Bold.copyWith(
-        color: appTheme.gray_900,
+        color: appTheme.gray900,
         fontSize: fontSize ?? 24.fSize,
       ),
     );
@@ -306,7 +306,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyleHelper.instance.body14Medium.copyWith(
-        color: appTheme.gray_600,
+        color: appTheme.gray600,
         fontSize: fontSize,
       ),
     );
@@ -318,12 +318,12 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.location_on, size: 14.h, color: appTheme.gray_400),
+          Icon(Icons.location_on, size: 14.h, color: appTheme.gray400),
           SizedBox(width: 4.w),
           Text(
             user.location!,
             style: TextStyleHelper.instance.body12Medium
-                .copyWith(color: appTheme.gray_500),
+                .copyWith(color: appTheme.gray500),
           ),
         ],
       ),
@@ -335,7 +335,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       margin: EdgeInsets.symmetric(horizontal: 30.w),
       padding: EdgeInsets.symmetric(vertical: 12.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(16.h),
       ),
       child: Row(
@@ -356,16 +356,16 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
       children: [
         Text(value,
             style: TextStyleHelper.instance.body10Medium
-                .copyWith(color: appTheme.gray_900)),
+                .copyWith(color: appTheme.gray900)),
         Text(label,
             style: TextStyleHelper.instance.body10Medium
-                .copyWith(color: appTheme.gray_500)),
+                .copyWith(color: appTheme.gray500)),
       ],
     );
   }
 
   Widget _buildStatDivider() {
-    return Container(height: 20.h, width: 1, color: appTheme.gray_200);
+    return Container(height: 20.h, width: 1, color: appTheme.gray200);
   }
 
   Widget _buildTopActions(BuildContext context, double paddingTop,
@@ -418,7 +418,7 @@ class ProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         child: Icon(
           icon,
           size: 20.h,
-          color: appTheme.gray_900,
+          color: appTheme.gray900,
         ),
       ),
     );

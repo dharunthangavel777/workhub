@@ -5,22 +5,22 @@ import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'package:work_hub/features/chat/ui/chat_room_screen.dart';
-import 'package:work_hub/features/common/contract/ui/contract_details_screen.dart';
-import 'package:work_hub/features/freelance/models/milestone.dart';
-import 'package:work_hub/features/freelance/models/project.dart';
-import 'package:work_hub/features/common/contract/models/contract.dart';
+import 'package:qwok/features/chat/ui/chat_room_screen.dart';
+import 'package:qwok/features/common/contract/ui/contract_details_screen.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
+import 'package:qwok/features/freelance/models/project.dart';
+import 'package:qwok/features/common/contract/models/contract.dart';
 
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/chat/logic/chat_controller.dart';
-import 'package:work_hub/features/freelance/models/time_entry.dart';
-import 'package:work_hub/features/freelance/widgets/project_setup_stepper.dart';
-import 'package:work_hub/features/profile/domain/models/rating.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/chat/logic/chat_controller.dart';
+import 'package:qwok/features/freelance/models/time_entry.dart';
+import 'package:qwok/features/freelance/widgets/project_setup_stepper.dart';
+import 'package:qwok/features/profile/domain/models/rating.dart';
 
 import 'milestone_list_screen.dart';
 import 'milestone_list_section_widget.dart';
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final Project project;
@@ -67,13 +67,13 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: appTheme.gray_900),
+          icon: Icon(Icons.arrow_back, color: appTheme.gray900),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
             icon: Icon(FontAwesomeIcons.circleQuestion,
-                color: appTheme.gray_400, size: 20.h),
+                color: appTheme.gray400, size: 20.h),
             onPressed: () {},
           ),
           SizedBox(width: 8.w),
@@ -203,10 +203,10 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         Text(
           title,
           style: TextStyleHelper.instance.body18Bold
-              .copyWith(color: appTheme.gray_900),
+              .copyWith(color: appTheme.gray900),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Divider(color: appTheme.gray_100)),
+        Expanded(child: Divider(color: appTheme.gray100)),
         if (onAction != null) ...[
           const SizedBox(width: 8),
           InkWell(
@@ -217,7 +217,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               child: Text(
                 actionText ?? "View All",
                 style: TextStyleHelper.instance.body14Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               ),
             ),
           ),
@@ -233,13 +233,13 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
           decoration: BoxDecoration(
-            color: appTheme.indigo_A700.withValues(alpha: 0.08),
+            color: appTheme.indigoA700.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8.h),
           ),
           child: Text(
             project.status.toUpperCase(),
             style: TextStyleHelper.instance.body10Bold.copyWith(
-              color: appTheme.indigo_A700,
+              color: appTheme.indigoA700,
               letterSpacing: 1.2,
             ),
           ),
@@ -248,7 +248,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         Text(
           project.title,
           style: TextStyleHelper.instance.headline30Bold.copyWith(
-            color: appTheme.gray_900,
+            color: appTheme.gray900,
             fontSize: 26.fSize,
             letterSpacing: -0.5,
           ),
@@ -257,7 +257,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         Text(
           project.description,
           style: TextStyleHelper.instance.body14Medium.copyWith(
-            color: appTheme.gray_600,
+            color: appTheme.gray600,
             height: 1.5,
           ),
         ),
@@ -274,9 +274,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     return Container(
       padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -304,20 +304,20 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         Text(
           label,
           style: TextStyleHelper.instance.body12Medium
-              .copyWith(color: appTheme.gray_500),
+              .copyWith(color: appTheme.gray500),
         ),
         SizedBox(height: 4.h),
         Text(
           value,
           style: TextStyleHelper.instance.body16Bold
-              .copyWith(color: appTheme.gray_900),
+              .copyWith(color: appTheme.gray900),
         ),
       ],
     );
   }
 
   Widget _buildVerticalDivider() {
-    return Container(height: 30.h, width: 1, color: appTheme.gray_200);
+    return Container(height: 30.h, width: 1, color: appTheme.gray200);
   }
 
   Widget _buildBottomActions(
@@ -325,8 +325,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
-        border: Border(top: BorderSide(color: appTheme.gray_100)),
+        color: appTheme.whiteA70001,
+        border: Border(top: BorderSide(color: appTheme.gray100)),
       ),
       child: _ActionButtons(project: project),
     );
@@ -348,15 +348,15 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       child: Container(
         padding: EdgeInsets.all(20.h),
         decoration: BoxDecoration(
-          color: appTheme.white_A700_01,
+          color: appTheme.whiteA70001,
           borderRadius: BorderRadius.circular(20.h),
           border:
-              Border.all(color: appTheme.indigo_A700.withValues(alpha: 0.1)),
+              Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4))
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 6))
           ],
         ),
         child: Row(
@@ -364,11 +364,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             Container(
               padding: EdgeInsets.all(12.h),
               decoration: BoxDecoration(
-                color: appTheme.indigo_A700.withValues(alpha: 0.08),
+                color: appTheme.indigoA700.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12.h),
               ),
               child: Icon(Icons.description,
-                  color: appTheme.indigo_A700, size: 24.h),
+                  color: appTheme.indigoA700, size: 24.h),
             ),
             SizedBox(width: 16.w),
             Expanded(
@@ -380,11 +380,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                   SizedBox(height: 4.h),
                   Text("Tap to view contract details",
                       style: TextStyleHelper.instance.body12Medium
-                          .copyWith(color: appTheme.gray_500)),
+                          .copyWith(color: appTheme.gray500)),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: appTheme.gray_400, size: 16.h),
+            Icon(Icons.arrow_forward_ios, color: appTheme.gray400, size: 16.h),
           ],
         ),
       ),
@@ -412,9 +412,9 @@ class _ProgressSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Column(
         children: [
@@ -423,11 +423,11 @@ class _ProgressSection extends StatelessWidget {
             children: [
               Text("Completion Rate",
                   style: TextStyleHelper.instance.body14Medium
-                      .copyWith(color: appTheme.gray_600)),
+                      .copyWith(color: appTheme.gray600)),
               Text(
                 "${(progress * 100).toInt()}%",
                 style: TextStyleHelper.instance.body18Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               ),
             ],
           ),
@@ -438,7 +438,7 @@ class _ProgressSection extends StatelessWidget {
                 height: 10.h,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                    color: appTheme.gray_200,
+                    color: appTheme.gray200,
                     borderRadius: BorderRadius.circular(10.h)),
               ),
               FractionallySizedBox(
@@ -447,7 +447,7 @@ class _ProgressSection extends StatelessWidget {
                   height: 10.h,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                        colors: [appTheme.indigo_A700, Colors.blueAccent]),
+                        colors: [appTheme.indigoA700, Colors.blueAccent]),
                     borderRadius: BorderRadius.circular(10.h),
                   ),
                 ),
@@ -500,7 +500,7 @@ class _ActionButtons extends StatelessWidget {
             style: TextStyleHelper.instance.body16Bold
                 .copyWith(color: Colors.white)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: appTheme.indigo_A700,
+          backgroundColor: appTheme.indigoA700,
           foregroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.h)),
@@ -528,9 +528,9 @@ class _PaymentSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(24.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,7 +548,7 @@ class _PaymentSection extends StatelessWidget {
               "Platform Fees", "₹${project.platformFee.toStringAsFixed(2)}"),
           Padding(
               padding: EdgeInsets.symmetric(vertical: 8.h),
-              child: Divider(color: appTheme.gray_200)),
+              child: Divider(color: appTheme.gray200)),
           _buildLedgerRow(
             "Net Distributed",
             "₹${project.netEarnings.toStringAsFixed(2)}",
@@ -568,14 +568,14 @@ class _PaymentSection extends StatelessWidget {
         children: [
           Text(label,
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
           Text(
             value,
             style: isHighlight
                 ? TextStyleHelper.instance.body16Bold
-                    .copyWith(color: appTheme.indigo_A700)
+                    .copyWith(color: appTheme.indigoA700)
                 : TextStyleHelper.instance.body14Bold
-                    .copyWith(color: appTheme.gray_900),
+                    .copyWith(color: appTheme.gray900),
           ),
         ],
       ),
@@ -599,16 +599,16 @@ class _FileSharingSection extends StatelessWidget {
             padding: EdgeInsets.all(32.h),
             width: double.infinity,
             decoration: BoxDecoration(
-                color: appTheme.gray_50,
+                color: appTheme.gray50,
                 borderRadius: BorderRadius.circular(24.h)),
             child: Column(
               children: [
                 Icon(FontAwesomeIcons.folderOpen,
-                    color: appTheme.gray_300, size: 40.h),
+                    color: appTheme.gray300, size: 40.h),
                 SizedBox(height: 16.h),
                 Text("No shared assets yet",
                     style: TextStyleHelper.instance.body14Medium
-                        .copyWith(color: appTheme.gray_500)),
+                        .copyWith(color: appTheme.gray500)),
               ],
             ),
           )
@@ -624,9 +624,9 @@ class _FileSharingSection extends StatelessWidget {
             icon: const Icon(Icons.upload_file),
             label: const Text("Upload Documents"),
             style: OutlinedButton.styleFrom(
-              foregroundColor: appTheme.indigo_A700,
+              foregroundColor: appTheme.indigoA700,
               side: BorderSide(
-                  color: appTheme.indigo_A700.withValues(alpha: 0.2)),
+                  color: appTheme.indigoA700.withValues(alpha: 0.2)),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14.h)),
             ),
@@ -642,9 +642,9 @@ class _FileSharingSection extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         children: [
@@ -659,12 +659,12 @@ class _FileSharingSection extends StatelessWidget {
                 Text(
                     "${_formatBytes(file['size'] ?? 0)} • ${file['uploadedByName'] ?? 'User'}",
                     style: TextStyleHelper.instance.body12Medium
-                        .copyWith(color: appTheme.gray_500)),
+                        .copyWith(color: appTheme.gray500)),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.download, color: appTheme.indigo_A700, size: 20.h),
+            icon: Icon(Icons.download, color: appTheme.indigoA700, size: 20.h),
             onPressed: () => _launchUrl(file['url']),
           ),
         ],
@@ -675,7 +675,7 @@ class _FileSharingSection extends StatelessWidget {
   Widget _getFileIcon(String fileName) {
     final ext = fileName.split('.').last.toLowerCase();
     IconData icon = FontAwesomeIcons.fileLines;
-    Color color = appTheme.indigo_A700;
+    Color color = appTheme.indigoA700;
 
     if (ext == 'pdf') {
       icon = FontAwesomeIcons.filePdf;
@@ -710,6 +710,8 @@ class _FileSharingSection extends StatelessWidget {
     try {
       final result = await FilePicker.platform.pickFiles();
       if (result == null || result.files.single.path == null) return;
+      if (!context.mounted) return;
+      
       final file = File(result.files.single.path!);
       final currentUser = context.read<AuthProvider>().userModel;
       if (currentUser == null) return;
@@ -756,7 +758,7 @@ class _RatingSection extends StatelessWidget {
                 Text("Performance Review",
                     style: TextStyleHelper.instance.body18Bold),
                 SizedBox(width: 12.w),
-                Expanded(child: Divider(color: appTheme.gray_100)),
+                Expanded(child: Divider(color: appTheme.gray100)),
               ],
             ),
             SizedBox(height: 16.h),
@@ -776,9 +778,9 @@ class _RatingSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(20.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,7 +790,7 @@ class _RatingSection extends StatelessWidget {
             children: [
               Text("Your Feedback",
                   style: TextStyleHelper.instance.body12Bold
-                      .copyWith(color: appTheme.gray_500)),
+                      .copyWith(color: appTheme.gray500)),
               _buildStarRating(rating.score),
             ],
           ),
@@ -816,14 +818,14 @@ class _RatingSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(24.h),
       decoration: BoxDecoration(
-        color: appTheme.indigo_A700.withOpacity(0.05),
+        color: appTheme.indigoA700.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.indigo_A700.withOpacity(0.1)),
+        border: Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
           Icon(FontAwesomeIcons.starHalfStroke,
-              color: appTheme.indigo_A700, size: 32.h),
+              color: appTheme.indigoA700, size: 32.h),
           SizedBox(height: 16.h),
           Text("Project Finalized!",
               style: TextStyleHelper.instance.body18Bold),
@@ -831,7 +833,7 @@ class _RatingSection extends StatelessWidget {
           Text("Share your experience to help the community grow.",
               textAlign: TextAlign.center,
               style: TextStyleHelper.instance.body12Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
           SizedBox(height: 24.h),
           SizedBox(
             width: double.infinity,
@@ -839,7 +841,7 @@ class _RatingSection extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {}, // Trigger rating dialog logic
               style: ElevatedButton.styleFrom(
-                  backgroundColor: appTheme.indigo_A700,
+                  backgroundColor: appTheme.indigoA700,
                   foregroundColor: Colors.white),
               child: const Text("Submit Review"),
             ),
@@ -853,14 +855,15 @@ class _RatingSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(20.h),
       decoration: BoxDecoration(
-          color: appTheme.gray_50, borderRadius: BorderRadius.circular(20.h)),
+          color: appTheme.indigoA700.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20.h)),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: appTheme.gray_400, size: 20.h),
+          Icon(Icons.info_outline, color: appTheme.gray400, size: 20.h),
           SizedBox(width: 12.w),
           Text("Reviews open after project completion.",
               style: TextStyleHelper.instance.body12Medium
-                  .copyWith(color: appTheme.gray_500)),
+                  .copyWith(color: appTheme.gray500)),
         ],
       ),
     );
@@ -890,16 +893,16 @@ class _TimeTrackingSection extends StatelessWidget {
                 padding: EdgeInsets.all(24.h),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                    color: appTheme.gray_50,
+                    color: appTheme.gray50,
                     borderRadius: BorderRadius.circular(24.h)),
                 child: Column(
                   children: [
                     Icon(Icons.timer_outlined,
-                        color: appTheme.gray_300, size: 32.h),
+                        color: appTheme.gray300, size: 32.h),
                     SizedBox(height: 12.h),
                     Text("No time entries logged yet",
                         style: TextStyleHelper.instance.body14Medium
-                            .copyWith(color: appTheme.gray_500)),
+                            .copyWith(color: appTheme.gray500)),
                   ],
                 ),
               )
@@ -916,9 +919,9 @@ class _TimeTrackingSection extends StatelessWidget {
                   icon: const Icon(Icons.add_alarm_outlined),
                   label: const Text("Log Hours"),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: appTheme.indigo_A700,
+                    foregroundColor: appTheme.indigoA700,
                     side: BorderSide(
-                        color: appTheme.indigo_A700.withValues(alpha: 0.2)),
+                        color: appTheme.indigoA700.withValues(alpha: 0.2)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14.h)),
                   ),
@@ -936,9 +939,9 @@ class _TimeTrackingSection extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -954,7 +957,7 @@ class _TimeTrackingSection extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(entry.description,
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_600)),
+                  .copyWith(color: appTheme.gray600)),
         ],
       ),
     );
@@ -968,7 +971,7 @@ class _TimeTrackingSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6.h)),
       child: Text(status.name.toUpperCase(),
           style: TextStyleHelper.instance.body10Bold.copyWith(color: color)),

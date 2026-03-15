@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/services/toast_service.dart';
 import '../logic/resume_parse_provider.dart';
 import 'resume_preview_screen.dart';
 
@@ -105,7 +104,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -131,7 +130,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
                             child: Text(
                               'Improve Your Profile with AI',
                               style: TextStyleHelper.instance.headline22Bold.copyWith(
-                                color: appTheme.gray_900,
+                                color: appTheme.gray900,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -142,7 +141,7 @@ class _ResumeUploadScreenState extends State<ResumeUploadScreen> {
                             child: Text(
                               'Upload your resume (PDF) and let our AI extract your skills, experience, and score your profile.',
                               style: TextStyleHelper.instance.body16Regular.copyWith(
-                                color: appTheme.gray_500,
+                                color: appTheme.gray500,
                               ),
                               textAlign: TextAlign.center,
                             ),

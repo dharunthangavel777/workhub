@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/theme/theme_helper.dart';
-import 'package:work_hub/core/theme/text_style_helper.dart';
+import 'package:qwok/core/theme/theme_helper.dart';
+import 'package:qwok/core/theme/text_style_helper.dart';
 
 class MatchScoreRing extends StatelessWidget {
   final double score; // 0.0 to 100.0
@@ -35,14 +35,14 @@ class MatchScoreRing extends StatelessWidget {
           CircularProgressIndicator(
             value: score / 100,
             strokeWidth: strokeWidth,
-            backgroundColor: appTheme.gray_200,
+            backgroundColor: appTheme.gray200,
             valueColor: AlwaysStoppedAnimation<Color>(ringColor),
           ),
           Center(
             child: Text(
               '${score.toInt()}%',
               style: TextStyleHelper.instance.body12Bold.copyWith(
-                color: appTheme.gray_900,
+                color: appTheme.gray900,
                 fontSize: size * 0.25,
               ),
             ),

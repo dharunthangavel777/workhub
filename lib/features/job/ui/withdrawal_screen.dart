@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/wallet/models/withdrawal_request.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -84,7 +83,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -102,7 +101,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                       Text(
                         "Recent Withdrawals",
                         style: TextStyleHelper.instance.body18Bold.copyWith(
-                          color: appTheme.gray_900,
+                          color: appTheme.gray900,
                         ),
                       ),
                       SizedBox(height: 16.h),
@@ -127,7 +126,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         gradient: LinearGradient(
           colors: [
             CustomColors.primaryBlue,
-            CustomColors.primaryBlue.withOpacity(0.8)
+            CustomColors.primaryBlue.withValues(alpha: 0.8)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -135,7 +134,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         borderRadius: BorderRadius.circular(24.h),
         boxShadow: [
           BoxShadow(
-            color: CustomColors.primaryBlue.withOpacity(0.3),
+            color: CustomColors.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -167,7 +166,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         Text(
           "Withdrawal Details",
           style: TextStyleHelper.instance.body18Bold.copyWith(
-            color: appTheme.gray_900,
+            color: appTheme.gray900,
           ),
         ),
         SizedBox(height: 16.h),
@@ -185,7 +184,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         Text(
           "Payment Method",
           style: TextStyleHelper.instance.body12Medium.copyWith(
-            color: appTheme.gray_500,
+            color: appTheme.gray500,
           ),
         ),
         SizedBox(height: 12.h),
@@ -219,7 +218,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
           child: ElevatedButton(
             onPressed: _isProcessing ? null : () => _handleWithdrawal(uid),
             style: ElevatedButton.styleFrom(
-              backgroundColor: appTheme.indigo_A700,
+              backgroundColor: appTheme.indigoA700,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.h)),
             ),
@@ -252,13 +251,13 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
           color: isSelected
-              ? appTheme.indigo_A700.withOpacity(0.1)
+              ? appTheme.indigoA700.withValues(alpha: 0.1)
               : Colors.white,
           borderRadius: BorderRadius.circular(16.h),
           border: Border.all(
             color: isSelected
-                ? appTheme.indigo_A700
-                : appTheme.gray_200,
+                ? appTheme.indigoA700
+                : appTheme.gray200,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -267,8 +266,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
             Icon(
               icon,
               color: isSelected
-                  ? appTheme.indigo_A700
-                  : appTheme.gray_400,
+                  ? appTheme.indigoA700
+                  : appTheme.gray400,
               size: 32.h,
             ),
             SizedBox(height: 8.h),
@@ -276,8 +275,8 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
               label,
               style: TextStyleHelper.instance.body14Medium.copyWith(
                 color: isSelected
-                    ? appTheme.indigo_A700
-                    : appTheme.gray_500,
+                    ? appTheme.indigoA700
+                    : appTheme.gray500,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -329,18 +328,18 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         width: double.infinity,
         padding: EdgeInsets.all(32.h),
         decoration: BoxDecoration(
-          color: appTheme.gray_50,
+          color: appTheme.gray50,
           borderRadius: BorderRadius.circular(24.h),
-          border: Border.all(color: appTheme.gray_100),
+          border: Border.all(color: appTheme.gray100),
         ),
         child: Column(
           children: [
             Icon(Icons.history,
-                size: 48.h, color: appTheme.gray_300),
+                size: 48.h, color: appTheme.gray300),
             SizedBox(height: 16.h),
             Text(
               "No recent withdrawals found.",
-              style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400),
+              style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400),
             ),
           ],
         ),
@@ -391,14 +390,14 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(12.h),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(statusIcon, color: statusColor, size: 24.h),
@@ -415,7 +414,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
                 Text(
                   "To: ${request.bankAccountName ?? 'Wallet'}",
                   style: TextStyleHelper.instance.body12Medium.copyWith(
-                    color: appTheme.gray_500,
+                    color: appTheme.gray500,
                   ),
                 ),
               ],
@@ -424,7 +423,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.h),
             ),
             child: Text(
@@ -453,7 +452,7 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
         Text(
           label,
           style: TextStyleHelper.instance.body14Bold.copyWith(
-            color: appTheme.gray_900,
+            color: appTheme.gray900,
           ),
         ),
         SizedBox(height: 8.h),
@@ -465,12 +464,12 @@ class _WithdrawalScreenState extends State<WithdrawalScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle:
-                TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400),
+                TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400),
             prefixIcon: prefix != null
                 ? Padding(padding: EdgeInsets.only(left: 16.w, right: 8.w), child: prefix)
                 : null,
             filled: true,
-            fillColor: appTheme.gray_50,
+            fillColor: appTheme.gray50,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16.h),
               borderSide: BorderSide.none,
@@ -570,9 +569,9 @@ class _InfoNote extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Colors.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: Colors.amber.withOpacity(0.2)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

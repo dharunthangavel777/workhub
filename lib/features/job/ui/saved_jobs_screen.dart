@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/job/ui/job_details_screen.dart';
-import 'package:work_hub/features/job/ui/widgets/job_card.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/job/ui/job_details_screen.dart';
+import 'package:qwok/features/job/ui/widgets/job_card.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
 
 class SavedJobsScreen extends StatelessWidget {
   const SavedJobsScreen({super.key});
@@ -27,7 +26,7 @@ class SavedJobsScreen extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: appTheme.white_A700_01,
+                    color: appTheme.whiteA70001,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(32.h),
                       topRight: Radius.circular(32.h),
@@ -69,7 +68,7 @@ class SavedJobsScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -146,13 +145,13 @@ class SavedJobsScreen extends StatelessWidget {
           Icon(
             Icons.bookmark_outline,
             size: 64.h,
-            color: appTheme.gray_300,
+            color: appTheme.gray300,
           ),
           SizedBox(height: 16.h),
           Text(
             "No saved items yet",
             style: TextStyleHelper.instance.body14Medium
-                .copyWith(color: appTheme.gray_500),
+                .copyWith(color: appTheme.gray500),
           ),
         ],
       ),

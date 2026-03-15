@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
+import 'package:qwok/core/constants/api_constants.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();

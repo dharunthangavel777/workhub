@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/services/connectivity_service.dart';
+import 'package:qwok/core/services/connectivity_service.dart';
 
 class OfflineOverlay extends StatelessWidget {
   final Widget child;

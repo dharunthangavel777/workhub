@@ -1,5 +1,5 @@
 import 'package:google_fonts/google_fonts.dart';
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class RecommendationChipsWidget extends StatelessWidget {
   const RecommendationChipsWidget({super.key});

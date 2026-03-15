@@ -1,7 +1,7 @@
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class PrivacySecurityScreen extends StatelessWidget {
   const PrivacySecurityScreen({super.key});
@@ -47,7 +47,7 @@ class PrivacySecurityScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -85,7 +85,7 @@ class PrivacySecurityScreen extends StatelessWidget {
                       child: Text(
                         "Verification helps us maintain a safe community. Verified users get a badge on their profile and higher trust from clients/workers.",
                         style: TextStyleHelper.instance.body12Medium
-                            .copyWith(color: appTheme.gray_600),
+                            .copyWith(color: appTheme.gray600),
                       ),
                     ),
                     SizedBox(height: 32.h),
@@ -107,8 +107,8 @@ class PrivacySecurityScreen extends StatelessWidget {
                       trailing: Switch(
                         value: false,
                         onChanged: (v) {},
-                        activeTrackColor: appTheme.indigo_A700.withValues(alpha: 0.5),
-                        activeColor: appTheme.indigo_A700,
+                        activeTrackColor: appTheme.indigoA700.withValues(alpha: 0.5),
+                        activeThumbColor: appTheme.indigoA700,
                       ),
                     ),
                     SizedBox(height: 40.h),
@@ -126,7 +126,7 @@ class PrivacySecurityScreen extends StatelessWidget {
     return Text(
       title,
       style: TextStyleHelper.instance.body14Bold
-          .copyWith(color: appTheme.indigo_A700),
+          .copyWith(color: appTheme.indigoA700),
     );
   }
 
@@ -139,24 +139,24 @@ class PrivacySecurityScreen extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
         leading: Container(
           padding: EdgeInsets.all(8.h),
           decoration: BoxDecoration(
-            color: appTheme.gray_50,
+            color: appTheme.gray50,
             borderRadius: BorderRadius.circular(10.h),
           ),
-          child: Icon(icon, color: appTheme.gray_900, size: 20.h),
+          child: Icon(icon, color: appTheme.gray900, size: 20.h),
         ),
         title: Text(
           title,
           style: TextStyleHelper.instance.body14Bold
-              .copyWith(color: appTheme.gray_900),
+              .copyWith(color: appTheme.gray900),
         ),
         trailing: trailing,
       ),
@@ -173,27 +173,27 @@ class PrivacySecurityScreen extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
         leading: Container(
           padding: EdgeInsets.all(8.h),
           decoration: BoxDecoration(
-            color: appTheme.gray_50,
+            color: appTheme.gray50,
             borderRadius: BorderRadius.circular(10.h),
           ),
-          child: Icon(icon, color: appTheme.gray_900, size: 20.h),
+          child: Icon(icon, color: appTheme.gray900, size: 20.h),
         ),
         title: Text(
           title,
           style: TextStyleHelper.instance.body14Bold
-              .copyWith(color: appTheme.gray_900),
+              .copyWith(color: appTheme.gray900),
         ),
         trailing: trailing ??
-            Icon(Icons.chevron_right, color: appTheme.gray_400, size: 20.h),
+            Icon(Icons.chevron_right, color: appTheme.gray400, size: 20.h),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.h)),
       ),

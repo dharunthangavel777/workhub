@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/features/common/contract/models/contract.dart';
+import 'package:qwok/features/common/contract/models/contract.dart';
 
 class ContractRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

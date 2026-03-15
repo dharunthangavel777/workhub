@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/chat/logic/chat_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/chat/logic/chat_controller.dart';
 
 import 'animated_typing_search_view.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:work_hub/features/chat/ui/chat_list_screen.dart';
+import 'package:qwok/features/chat/ui/chat_list_screen.dart';
+import 'package:qwok/features/notifications/logic/notification_provider.dart';
 
 class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final String userName;
@@ -20,6 +21,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double profileCompletion;
   final TextEditingController? searchController;
   final VoidCallback? onSearchTap;
+  final List<String>? searchPhrases;
 
   AnimatedProfileHeaderDelegate({
     required this.userName,
@@ -34,13 +36,14 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
     this.profileCompletion = 0,
     this.searchController,
     this.onSearchTap,
+    this.searchPhrases,
   });
 
   @override
-  double get maxExtent => 310.h;
+  double get maxExtent => 340.h;
 
   @override
-  double get minExtent => 120.h;
+  double get minExtent => 130.h;
 
   @override
   bool shouldRebuild(covariant AnimatedProfileHeaderDelegate oldDelegate) {
@@ -50,6 +53,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
         oldDelegate.switchValue != switchValue ||
         oldDelegate.profileCompletion != profileCompletion ||
         oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.searchPhrases != searchPhrases ||
         oldDelegate.searchController != searchController;
   }
 
@@ -195,6 +199,68 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                                     ),
                                   ),
                                 ),
+                              // Notification Icon
+                              Selector<NotificationProvider, int>(
+                                selector: (_, p) => p.unreadCount,
+                                builder: (context, unreadCount, _) =>
+                                    Transform.scale(
+                                  scale: lerpDouble(1.0, 0.9, easeProgress)!,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushNamed(context, '/notifications');
+                                    },
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        Icon(
+                                          Icons.notifications_none_outlined,
+                                          size: 28.h,
+                                          color: backgroundColor ==
+                                                  CustomColors.primaryBlue
+                                              ? Colors.white
+                                              : (Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white
+                                                  : CustomColors.darkText),
+                                        ),
+                                        if (unreadCount > 0)
+                                          Positioned(
+                                            right: -2.w,
+                                            top: -2.h,
+                                            child: Container(
+                                              padding: EdgeInsets.all(4.h),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFEF4444),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: backgroundColor ==
+                                                          CustomColors
+                                                              .primaryBlue
+                                                      ? CustomColors.primaryBlue
+                                                      : CustomColors.lightBg,
+                                                  width: 1.5,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                unreadCount > 9
+                                                    ? '9+'
+                                                    : unreadCount.toString(),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 8.fSize,
+                                                  fontWeight: FontWeight.bold,
+                                                  height: 1,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
                               // Messenger Icon (Persistent/Anchors)
                               Selector<ChatProvider, int>(
                                 selector: (_, p) => p.totalUnreadCount,
@@ -326,7 +392,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 40.h),
+                              SizedBox(height: 56.h),
                               // Search Bar - Professional Morph target
                               RepaintBoundary(
                                 child: Row(
@@ -334,6 +400,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                                     Expanded(
                                       child: AnimatedTypingSearchView(
                                         controller: searchController,
+                                        phrases: searchPhrases,
                                         onChanged: (value) {
                                           // Handle search
                                         },
@@ -349,7 +416,7 @@ class AnimatedProfileHeaderDelegate extends SliverPersistentHeaderDelegate {
                                         borderRadius:
                                             BorderRadius.circular(16.h),
                                         border: Border.all(
-                                          color: appTheme.indigo_A700
+                                          color: appTheme.indigoA700
                                               .withValues(alpha: 0.1),
                                           width: 1,
                                         ),
@@ -515,10 +582,10 @@ class _ProfileGradientRingState extends State<ProfileGradientRing>
               shape: BoxShape.circle,
               gradient: SweepGradient(
                 colors: [
-                  appTheme.indigo_A700.withValues(alpha: 0.0),
-                  appTheme.indigo_A700.withValues(alpha: 0.8),
+                  appTheme.indigoA700.withValues(alpha: 0.0),
+                  appTheme.indigoA700.withValues(alpha: 0.8),
                   Colors.blueAccent,
-                  appTheme.indigo_A700.withValues(alpha: 0.0),
+                  appTheme.indigoA700.withValues(alpha: 0.0),
                 ],
                 stops: const [0.0, 0.5, 0.8, 1.0],
               ),

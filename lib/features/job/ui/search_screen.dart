@@ -1,12 +1,12 @@
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/job/ui/widgets/job_card.dart';
-import 'package:work_hub/features/job/ui/job_details_screen.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/widgets/animated_typing_search_view.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/job/ui/widgets/job_card.dart';
+import 'package:qwok/features/job/ui/job_details_screen.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/widgets/animated_typing_search_view.dart';
 
 class SearchScreen extends StatefulWidget {
   final String initialQuery;
@@ -50,13 +50,13 @@ class _SearchScreenState extends State<SearchScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new,
-              color: appTheme.indigo_A700, size: 20.h),
+              color: appTheme.indigoA700, size: 20.h),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           "Search",
           style: GoogleFonts.poppins(
-            color: appTheme.indigo_A700,
+            color: appTheme.indigoA700,
             fontSize: 18.fSize,
             fontWeight: FontWeight.w600,
           ),
@@ -100,10 +100,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   style: GoogleFonts.poppins(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? Colors.white : appTheme.gray_600)),
+                      color: isSelected ? Colors.white : appTheme.gray600)),
               selected: isSelected,
-              selectedColor: appTheme.indigo_A700,
-              backgroundColor: appTheme.gray_100,
+              selectedColor: appTheme.indigoA700,
+              backgroundColor: appTheme.gray100,
               onSelected: (selected) {
                 if (selected) {
                   setState(() {
@@ -155,20 +155,20 @@ class _SearchScreenState extends State<SearchScreen> {
                 CustomImageView(
                   imagePath: ImageConstant.imgSearch,
                   height: 100.h,
-                  color: appTheme.gray_300,
+                  color: appTheme.gray300,
                 ),
                 SizedBox(height: 24.h),
                 Text(
                   "No Results Found",
                   style: TextStyleHelper.instance.body18Bold
-                      .copyWith(color: appTheme.gray_900),
+                      .copyWith(color: appTheme.gray900),
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   "Try adjusting your search or filters.",
                   textAlign: TextAlign.center,
                   style: TextStyleHelper.instance.body14Medium
-                      .copyWith(color: appTheme.gray_500),
+                      .copyWith(color: appTheme.gray500),
                 ),
               ],
             ),

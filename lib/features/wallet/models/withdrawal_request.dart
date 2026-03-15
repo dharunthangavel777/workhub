@@ -24,6 +24,7 @@ class WithdrawalRequest {
   final String? adminId; // Admin who processed
   final String? failureReason;
   final String? transactionId; // Bank transaction ID
+  final Map<String, dynamic>? metadata;
 
   WithdrawalRequest({
     required this.id,
@@ -41,6 +42,7 @@ class WithdrawalRequest {
     this.adminId,
     this.failureReason,
     this.transactionId,
+    this.metadata,
   }) : requestedAt = requestedAt ?? DateTime.now();
 
   factory WithdrawalRequest.fromMap(String id, Map<String, dynamic> map) {
@@ -67,6 +69,9 @@ class WithdrawalRequest {
       adminId: map['adminId'],
       failureReason: map['failureReason'],
       transactionId: map['transactionId'],
+      metadata: map['metadata'] != null
+          ? Map<String, dynamic>.from(map['metadata'])
+          : null,
     );
   }
 
@@ -96,6 +101,7 @@ class WithdrawalRequest {
       'adminId': adminId,
       'failureReason': failureReason,
       'transactionId': transactionId,
+      'metadata': metadata,
     };
   }
 
@@ -108,6 +114,7 @@ class WithdrawalRequest {
     String? adminId,
     String? failureReason,
     String? transactionId,
+    Map<String, dynamic>? metadata,
   }) {
     return WithdrawalRequest(
       id: id ?? this.id,
@@ -125,6 +132,7 @@ class WithdrawalRequest {
       adminId: adminId ?? this.adminId,
       failureReason: failureReason ?? this.failureReason,
       transactionId: transactionId ?? this.transactionId,
+      metadata: metadata ?? this.metadata,
     );
   }
 }

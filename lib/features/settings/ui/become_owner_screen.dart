@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/theme/text_style_helper.dart';
-import 'package:work_hub/core/theme/theme_helper.dart';
-import 'package:work_hub/core/extensions/context_extensions.dart';
-import 'package:work_hub/constants/app_strings.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/theme/text_style_helper.dart';
+import 'package:qwok/core/theme/theme_helper.dart';
+import 'package:qwok/core/extensions/context_extensions.dart';
+import 'package:qwok/constants/app_strings.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 
 class BecomeOwnerScreen extends StatefulWidget {
   const BecomeOwnerScreen({super.key});
@@ -64,7 +64,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: appTheme.white_A700_01,
+        backgroundColor: appTheme.whiteA70001,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.h)),
         title: Text(AppStrings.requestSubmitted,
@@ -79,7 +79,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
             },
             child: Text(AppStrings.ok,
                 style: TextStyle(
-                    color: appTheme.indigo_A700, fontWeight: FontWeight.bold)),
+                    color: appTheme.indigoA700, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -140,13 +140,13 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                         Text(
                           "Scale Your Business",
                           style: TextStyleHelper.instance.headline22Bold
-                              .copyWith(color: appTheme.indigo_A700),
+                              .copyWith(color: appTheme.indigoA700),
                         ),
                         SizedBox(height: 8.h),
                         Text(
                           "Join our elite network of verified business owners and hire the best talent.",
                           style: TextStyleHelper.instance.body14Medium
-                              .copyWith(color: appTheme.gray_500),
+                              .copyWith(color: appTheme.gray500),
                         ),
 
                         SizedBox(height: 32.h),
@@ -167,13 +167,13 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                         ),
 
                         SizedBox(height: 40.h),
-                        Divider(color: appTheme.gray_100, thickness: 1.5.h),
+                        Divider(color: appTheme.gray100, thickness: 1.5.h),
                         SizedBox(height: 32.h),
 
                         Text(
                           "Company Details",
                           style: TextStyleHelper.instance.body16Bold
-                              .copyWith(color: appTheme.gray_900),
+                              .copyWith(color: appTheme.gray900),
                         ),
                         SizedBox(height: 24.h),
 
@@ -233,7 +233,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _submitRequest,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: appTheme.indigo_A700,
+                              backgroundColor: appTheme.indigoA700,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
@@ -243,7 +243,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                                 ? const SizedBox(
                                     height: 24,
                                     width: 24,
-                                    child: const CircularProgressIndicator(
+                                    child: CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 3),
                                   )
                                 : Text(
@@ -271,19 +271,19 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
     return Container(
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(12.h),
             decoration: BoxDecoration(
-              color: appTheme.indigo_A700.withValues(alpha: 0.1),
+              color: appTheme.indigoA700.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: appTheme.indigo_A700, size: 24.h),
+            child: Icon(icon, color: appTheme.indigoA700, size: 24.h),
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -294,7 +294,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                 SizedBox(height: 4.h),
                 Text(desc,
                     style: TextStyleHelper.instance.body10Medium
-                        .copyWith(color: appTheme.gray_500)),
+                        .copyWith(color: appTheme.gray500)),
               ],
             ),
           ),
@@ -315,7 +315,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
       children: [
         Text(label,
             style: TextStyleHelper.instance.body12Bold
-                .copyWith(color: appTheme.gray_700)),
+                .copyWith(color: appTheme.gray700)),
         SizedBox(height: 10.h),
         TextFormField(
           controller: controller,
@@ -324,9 +324,9 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyleHelper.instance.body14Regular
-                .copyWith(color: appTheme.gray_400),
-            prefixIcon: Icon(icon, color: appTheme.gray_400, size: 20.h),
-            fillColor: appTheme.gray_50,
+                .copyWith(color: appTheme.gray400),
+            prefixIcon: Icon(icon, color: appTheme.gray400, size: 20.h),
+            fillColor: appTheme.gray50,
             filled: true,
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14.h),
@@ -336,7 +336,7 @@ class _BecomeOwnerScreenState extends State<BecomeOwnerScreen> {
                 borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14.h),
-              borderSide: BorderSide(color: appTheme.indigo_A700, width: 1.5),
+              borderSide: BorderSide(color: appTheme.indigoA700, width: 1.5),
             ),
             contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w, vertical: maxLines > 1 ? 16.h : 0),

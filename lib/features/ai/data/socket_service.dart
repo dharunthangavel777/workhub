@@ -1,6 +1,6 @@
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
+import 'package:qwok/core/constants/api_constants.dart';
 
 class SocketService {
   io.Socket? _socket;

@@ -1,9 +1,9 @@
 import 'package:provider/provider.dart';
 
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/job/domain/models/ad_model.dart';
-import 'package:work_hub/features/job/logic/ad_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/job/domain/models/ad_model.dart';
+import 'package:qwok/features/job/logic/ad_controller.dart';
 import 'reel_player.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -186,7 +186,7 @@ class _AdReelItemState extends State<AdReelItem> {
                 child: ElevatedButton(
                   onPressed: _handleCtaClick,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: appTheme.indigo_A700,
+                    backgroundColor: appTheme.indigoA700,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
                     shape: RoundedRectangleBorder(

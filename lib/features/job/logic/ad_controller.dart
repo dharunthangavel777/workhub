@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/features/job/domain/models/ad_model.dart';
-import 'package:work_hub/features/common/services/ad_service.dart';
+import 'package:qwok/features/job/domain/models/ad_model.dart';
+import 'package:qwok/features/common/services/ad_service.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
-import 'package:work_hub/core/services/storage_service.dart';
+import 'package:qwok/core/services/storage_service.dart';
 
 class AdProvider with ChangeNotifier {
   final AdService _adService = AdService();
@@ -50,7 +50,7 @@ class AdProvider with ChangeNotifier {
       _activeAds = await _adService.getActiveAds();
       notifyListeners();
     } catch (e) {
-      print("Error fetching active ads: $e");
+      debugPrint("Error fetching active ads: $e");
     }
   }
 

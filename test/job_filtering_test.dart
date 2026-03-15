@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/job/logic/job_filter_helper.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/job/logic/job_filter_helper.dart';
 
 void main() {
   group('JobFilterHelper.filterJobsTask', () {

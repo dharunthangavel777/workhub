@@ -1,11 +1,11 @@
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/models/user.dart';
-import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/models/user.dart';
+import 'package:qwok/core/shared_widgets/universal_skeleton.dart';
 import 'add_experience_screen.dart';
 import 'add_portfolio_screen.dart';
 import 'edit_profile_screen.dart';
@@ -116,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             user.bio ?? "No bio added yet.",
                             style:
                                 TextStyleHelper.instance.body14Medium.copyWith(
-                              color: appTheme.gray_600,
+                              color: appTheme.gray600,
                               height: 1.6,
                             ),
                           ),
@@ -135,13 +135,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             runSpacing: 8.h,
                             children: (user.skills ?? [])
                                 .map((skill) => Chip(
-                                      label: Text(skill),
-                                      backgroundColor: appTheme.indigo_A700
+                                      avatar: skill.isVerified
+                                          ? Icon(Icons.verified,
+                                              size: 14.h, color: appTheme.indigoA700)
+                                          : null,
+                                      label: Text(skill.name),
+                                      backgroundColor: appTheme.indigoA700
                                           .withValues(alpha: 0.05),
                                       labelStyle: TextStyleHelper
                                           .instance.body12Bold
                                           .copyWith(
-                                        color: appTheme.indigo_A700,
+                                        color: appTheme.indigoA700,
                                       ),
                                       side: BorderSide.none,
                                       shape: RoundedRectangleBorder(
@@ -162,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 icon: FontAwesomeIcons.shieldHalved,
                                 color: user.isVerified
                                     ? Colors.blue
-                                    : appTheme.gray_300,
+                                    : appTheme.gray300,
                                 label: user.isVerified ? "Verified" : "Pending",
                               ),
                               SizedBox(width: 24.w),
@@ -197,21 +201,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: EdgeInsets.all(16.h),
       margin: EdgeInsets.only(bottom: 24.h),
       decoration: BoxDecoration(
-        color: appTheme.indigo_A700.withValues(alpha: 0.05),
+        color: appTheme.indigoA700.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.indigo_A700.withValues(alpha: 0.1)),
+        border: Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.bolt, color: appTheme.indigo_A700, size: 20.h),
+              Icon(Icons.bolt, color: appTheme.indigoA700, size: 20.h),
               SizedBox(width: 8.w),
               Text(
                 "Profile ${user.profileCompletion}% Complete",
                 style: TextStyleHelper.instance.body14Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               ),
             ],
           ),
@@ -219,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             "Add ${user.missingProfileFields.take(2).join(', ')} to stand out to employers.",
             style: TextStyleHelper.instance.body12Medium
-                .copyWith(color: appTheme.gray_600),
+                .copyWith(color: appTheme.gray600),
           ),
         ],
       ),
@@ -227,52 +231,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildWalletCard(BuildContext context, UserModel user) {
-    return Container(
-      padding: EdgeInsets.all(24.h),
-      decoration: BoxDecoration(
-        color: appTheme.indigo_A700,
-        borderRadius: BorderRadius.circular(24.h),
-        boxShadow: [
-          BoxShadow(
-            color: appTheme.indigo_A700.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Available Balance",
-                  style: TextStyleHelper.instance.body12Medium
-                      .copyWith(color: Colors.white70),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  "₹${user.walletBalance.toStringAsFixed(2)}",
-                  style: TextStyleHelper.instance.headline30Bold
-                      .copyWith(color: Colors.white),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/wallet'),
+      child: Container(
+        padding: EdgeInsets.all(24.h),
+        decoration: BoxDecoration(
+          color: appTheme.indigoA700,
+          borderRadius: BorderRadius.circular(24.h),
+          boxShadow: [
+            BoxShadow(
+              color: appTheme.indigoA700.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Available Balance",
+                    style: TextStyleHelper.instance.body12Medium
+                        .copyWith(color: Colors.white70),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    "₹${user.walletBalance.toStringAsFixed(2)}",
+                    style: TextStyleHelper.instance.headline30Bold
+                        .copyWith(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pushNamed(context, '/withdrawal'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: appTheme.indigo_A700,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.h)),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+            ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/wallet'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: appTheme.indigoA700,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.h)),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+              ),
+              child:
+                  Text("Details", style: TextStyleHelper.instance.body14Bold),
             ),
-            child: Text("Withdraw", style: TextStyleHelper.instance.body14Bold),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -281,9 +289,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20.h),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
+        color: appTheme.whiteA70001,
         borderRadius: BorderRadius.circular(24.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -294,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 "${user.completedProjects}",
                 style: TextStyleHelper.instance.body18Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               )),
           _buildVerticalDivider(),
           Column(
@@ -304,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     user.rating.toStringAsFixed(1),
                     style: TextStyleHelper.instance.body18Bold
-                        .copyWith(color: appTheme.indigo_A700),
+                        .copyWith(color: appTheme.indigoA700),
                   ),
                   SizedBox(width: 4.w),
                   CustomImageView(
@@ -319,7 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 "Rating",
                 style: TextStyleHelper.instance.body12Medium
-                    .copyWith(color: appTheme.gray_500),
+                    .copyWith(color: appTheme.gray500),
               ),
             ],
           ),
@@ -330,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 "₹${(user.totalEarnings).toStringAsFixed(0)}",
                 style: TextStyleHelper.instance.body18Bold
-                    .copyWith(color: appTheme.indigo_A700),
+                    .copyWith(color: appTheme.indigoA700),
               )),
         ],
       ),
@@ -352,7 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (_) => const AddExperienceScreen())),
-                icon: Icon(Icons.add_circle, color: appTheme.indigo_A700),
+                icon: Icon(Icons.add_circle, color: appTheme.indigoA700),
               ),
           ],
         ),
@@ -364,7 +372,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 margin: EdgeInsets.only(bottom: 16.h),
                 padding: EdgeInsets.all(16.h),
                 decoration: BoxDecoration(
-                  color: appTheme.gray_50,
+                  color: appTheme.gray50,
                   borderRadius: BorderRadius.circular(16.h),
                 ),
                 child: Row(
@@ -376,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12.h)),
                       child: Icon(Icons.business_center_outlined,
-                          color: appTheme.indigo_A700),
+                          color: appTheme.indigoA700),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
@@ -387,11 +395,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: TextStyleHelper.instance.body16Bold),
                           Text(exp.company,
                               style: TextStyleHelper.instance.body14Medium
-                                  .copyWith(color: appTheme.indigo_A700)),
+                                  .copyWith(color: appTheme.indigoA700)),
                           SizedBox(height: 4.h),
                           Text(exp.duration,
                               style: TextStyleHelper.instance.body12Medium
-                                  .copyWith(color: appTheme.gray_500)),
+                                  .copyWith(color: appTheme.gray500)),
                         ],
                       ),
                     ),
@@ -417,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (_) => const AddPortfolioScreen())),
-                icon: Icon(Icons.add_circle, color: appTheme.indigo_A700),
+                icon: Icon(Icons.add_circle, color: appTheme.indigoA700),
               ),
           ],
         ),
@@ -483,7 +491,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildEmptyPlaceholder(String message) {
     return Text(message,
         style: TextStyleHelper.instance.body14Medium
-            .copyWith(color: appTheme.gray_400));
+            .copyWith(color: appTheme.gray400));
   }
 
   Widget _buildStatItem(
@@ -494,13 +502,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SizedBox(height: 4.h),
         Text(label,
             style: TextStyleHelper.instance.body12Medium
-                .copyWith(color: appTheme.gray_500)),
+                .copyWith(color: appTheme.gray500)),
       ],
     );
   }
 
   Widget _buildVerticalDivider() {
-    return Container(height: 30.h, width: 1, color: appTheme.gray_200);
+    return Container(height: 30.h, width: 1, color: appTheme.gray200);
   }
 
   Widget _buildReviewsSection(BuildContext context, String userId) {
@@ -519,17 +527,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Container(
             padding: EdgeInsets.all(24.h),
             decoration: BoxDecoration(
-              color: appTheme.gray_50,
+              color: appTheme.gray50,
               borderRadius: BorderRadius.circular(16.h),
             ),
             child: Row(
               children: [
-                Icon(Icons.rate_review_outlined, color: appTheme.gray_400),
+                Icon(Icons.rate_review_outlined, color: appTheme.gray400),
                 SizedBox(width: 12.w),
                 Text(
                   "No reviews yet",
                   style: TextStyleHelper.instance.body14Medium
-                      .copyWith(color: appTheme.gray_500),
+                      .copyWith(color: appTheme.gray500),
                 ),
               ],
             ),
@@ -555,14 +563,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Container(
           padding: EdgeInsets.all(20.h),
           decoration: BoxDecoration(
-            color: appTheme.white_A700_01,
+            color: appTheme.whiteA70001,
             borderRadius: BorderRadius.circular(20.h),
-            border: Border.all(color: appTheme.gray_100),
+            border: Border.all(color: appTheme.gray100),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -575,14 +583,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: hasResume
                           ? Colors.green.withValues(alpha: 0.1)
-                          : appTheme.gray_100,
+                          : appTheme.gray100,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       hasResume
                           ? Icons.description
                           : Icons.description_outlined,
-                      color: hasResume ? Colors.green : appTheme.gray_400,
+                      color: hasResume ? Colors.green : appTheme.gray400,
                       size: 24.h,
                     ),
                   ),
@@ -600,7 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? "Last analyzed: ${user.createdAt?.day ?? 'N/A'}/${user.createdAt?.month ?? 'N/A'}/${user.createdAt?.year ?? 'N/A'}"
                               : "Upload your resume to get AI insights",
                           style: TextStyleHelper.instance.body12Medium
-                              .copyWith(color: appTheme.gray_500),
+                              .copyWith(color: appTheme.gray500),
                         ),
                       ],
                     ),
@@ -609,7 +617,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     IconButton(
                       onPressed: () => _launchURL(user.resumeUrl!),
                       icon: Icon(Icons.visibility_outlined,
-                          color: appTheme.indigo_A700),
+                          color: appTheme.indigoA700),
                     ),
                 ],
               ),
@@ -628,8 +636,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? "Update & Re-analyze"
                         : "Upload Resume (AI)"),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: appTheme.indigo_A700,
-                      side: BorderSide(color: appTheme.indigo_A700),
+                      foregroundColor: appTheme.indigoA700,
+                      side: BorderSide(color: appTheme.indigoA700),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.h)),
                       padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -664,9 +672,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               margin: EdgeInsets.only(bottom: 12.h),
               padding: EdgeInsets.all(16.h),
               decoration: BoxDecoration(
-                color: appTheme.white_A700_01,
+                color: appTheme.whiteA70001,
                 borderRadius: BorderRadius.circular(16.h),
-                border: Border.all(color: appTheme.gray_100),
+                border: Border.all(color: appTheme.gray100),
               ),
               child: Row(
                 children: [
@@ -688,7 +696,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: TextStyleHelper.instance.body14Bold),
                         Text("${cert['issuer'] ?? ''} • ${cert['date'] ?? ''}",
                             style: TextStyleHelper.instance.body12Medium
-                                .copyWith(color: appTheme.gray_500)),
+                                .copyWith(color: appTheme.gray500)),
                       ],
                     ),
                   ),
@@ -704,16 +712,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (tag.toLowerCase().contains('quality')) return Colors.green;
       if (tag.toLowerCase().contains('communication')) return Colors.blue;
       if (tag.toLowerCase().contains('time')) return Colors.orange;
-      return appTheme.indigo_A700;
+      return appTheme.indigoA700;
     }
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(16.h),
-        border: Border.all(color: appTheme.gray_200),
+        border: Border.all(color: appTheme.gray200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,7 +739,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: 16.h,
                       color: index < review.score
                           ? Colors.amber
-                          : appTheme.gray_300,
+                          : appTheme.gray300,
                     ),
                   );
                 }),
@@ -739,7 +747,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 "${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}",
                 style: TextStyleHelper.instance.body12Medium
-                    .copyWith(color: appTheme.gray_500),
+                    .copyWith(color: appTheme.gray500),
               ),
             ],
           ),
@@ -747,7 +755,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(
             review.review,
             style: TextStyleHelper.instance.body14Medium
-                .copyWith(color: appTheme.gray_900, height: 1.5),
+                .copyWith(color: appTheme.gray900, height: 1.5),
           ),
           if (review.tags.isNotEmpty) ...[
             SizedBox(height: 12.h),
@@ -789,7 +797,7 @@ class _ProfileSectionTitle extends StatelessWidget {
     return Text(
       title,
       style: TextStyleHelper.instance.body18Bold.copyWith(
-        color: appTheme.gray_900,
+        color: appTheme.gray900,
       ),
     );
   }
@@ -813,7 +821,7 @@ class _BadgeIcon extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(12.h),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24.h),
@@ -822,7 +830,7 @@ class _BadgeIcon extends StatelessWidget {
         Text(
           label,
           style: TextStyleHelper.instance.body10Bold.copyWith(
-            color: appTheme.gray_600,
+            color: appTheme.gray600,
           ),
         ),
       ],

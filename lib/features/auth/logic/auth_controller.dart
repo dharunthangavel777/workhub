@@ -8,11 +8,12 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:work_hub/features/auth/models/user.dart';
-import 'package:work_hub/features/profile/domain/models/experience.dart';
-import 'package:work_hub/core/services/storage_service.dart';
-import 'package:work_hub/core/services/notification_service.dart';
-import 'package:work_hub/core/services/widget_service.dart';
+import 'package:qwok/features/auth/models/user.dart';
+import 'package:qwok/features/profile/domain/models/experience.dart';
+import 'package:qwok/features/profile/domain/models/skill.dart';
+import 'package:qwok/core/services/storage_service.dart';
+import 'package:qwok/core/services/notification_service.dart';
+import 'package:qwok/core/services/widget_service.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -175,7 +176,7 @@ class AuthProvider extends ChangeNotifier {
         // New User
         await NotificationService().sendNotification(
           recipientId: user.uid,
-          title: "Welcome to Work Hub! 🚀",
+          title: "Welcome to Qwok! 🚀",
           body:
               "We're excited to have you on board. Start exploring jobs or projects now!",
         );
@@ -320,7 +321,7 @@ class AuthProvider extends ChangeNotifier {
         bio: bio,
         location: location,
         jobCategory: jobCategory,
-        skills: skills,
+        skills: skills.map((s) => SkillModel.fromString(s)).toList(),
         resumeUrl: resumeUrl,
         isFirstLogin: false,
         experiences: experiences,
@@ -335,7 +336,7 @@ class AuthProvider extends ChangeNotifier {
         'bio': bio,
         'location': location,
         'jobCategory': jobCategory,
-        'skills': skills,
+        'skills': skills.map((s) => SkillModel.fromString(s).toMap()).toList(),
         'resumeUrl': resumeUrl,
         'isFirstLogin': false,
         'experiences': experiences?.map((e) => e.toMap()).toList(),
@@ -568,6 +569,16 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> updateUserFields(Map<String, dynamic> updates) async {
     if (_userModel == null) return false;
     try {
+      // Convert skills strings to maps if present
+      if (updates.containsKey('skills') && updates['skills'] is List) {
+        final List<dynamic> skillList = updates['skills'];
+        updates['skills'] = skillList.map((s) {
+          if (s is String) return SkillModel.fromString(s).toMap();
+          if (s is SkillModel) return s.toMap();
+          return s;
+        }).toList();
+      }
+
       await _firestore.collection('users').doc(_userModel!.uid).update(updates);
       await _fetchUserModel(_userModel!.uid);
       return true;

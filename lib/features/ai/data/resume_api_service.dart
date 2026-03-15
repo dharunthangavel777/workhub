@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
+import 'package:qwok/core/constants/api_constants.dart';
 
 class ResumeApiService {
   static String get baseUrl => ApiConstants.apiBaseUrl;

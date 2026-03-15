@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/features/chat/models/message.dart';
-import 'package:work_hub/features/chat/data/chat_repository.dart';
+import 'package:qwok/features/chat/models/message.dart';
+import 'package:qwok/features/chat/data/chat_repository.dart';
 
 class ChatProvider extends ChangeNotifier {
   final ChatRepository _repository = ChatRepository();

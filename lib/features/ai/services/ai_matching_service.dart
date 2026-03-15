@@ -36,11 +36,22 @@ class AIMatchingService {
 
       if (jobSkills.isNotEmpty) {
         int matchCount = 0;
-        for (var skill in workerSkills) {
-          // Check for exact match or substring match (e.g. "ui" matches "ui design")
-          // IMPROVED: Check both ways and handle partials better
-          if (jobSkills.any((js) => js.contains(skill) || skill.contains(js))) {
+        double verificationBonus = 0;
+
+        for (var rawSkill in (workerProfile['skills'] as List<dynamic>? ?? [])) {
+          final String skillName = rawSkill is Map 
+              ? (rawSkill['name'] ?? '').toString().toLowerCase().trim()
+              : rawSkill.toString().toLowerCase().trim();
+          
+          final bool isVerified = rawSkill is Map 
+              ? (rawSkill['isVerified'] == true)
+              : false;
+
+          if (jobSkills.any((js) => js.contains(skillName) || skillName.contains(js))) {
             matchCount++;
+            if (isVerified) {
+              verificationBonus += 5; // +5 points for each matched verified skill
+            }
           }
         }
 
@@ -48,10 +59,13 @@ class AIMatchingService {
           // Formula: (matched / required) * 40
           double skillScore = (matchCount / jobSkills.length) * 40;
           if (skillScore > 40) skillScore = 40; // Cap at 40
-          score += skillScore;
+          score += (skillScore + verificationBonus);
 
-          matchReasons
-              .add('$matchCount matching skill${matchCount > 1 ? 's' : ''}');
+          String reason = '$matchCount matching skill${matchCount > 1 ? 's' : ''}';
+          if (verificationBonus > 0) {
+            reason += ' (Verified ✨)';
+          }
+          matchReasons.add(reason);
         }
       }
 

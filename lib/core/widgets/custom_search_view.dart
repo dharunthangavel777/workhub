@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CustomSearchView extends StatelessWidget {
   const CustomSearchView({
@@ -67,12 +67,12 @@ class CustomSearchView extends StatelessWidget {
           color: backgroundColor ?? Colors.white,
           borderRadius: BorderRadius.circular(16.h),
           border: Border.all(
-            color: borderColor ?? appTheme.gray_100.withValues(alpha: 0.5),
+            color: borderColor ?? appTheme.gray100.withValues(alpha: 0.5),
             width: 1.2.h,
           ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.03),
+              color: appTheme.black900.withValues(alpha: 0.03),
               spreadRadius: 2,
               blurRadius: 10,
               offset: const Offset(0, 4),
@@ -107,7 +107,7 @@ class CustomSearchView extends StatelessWidget {
         hintText: hintText ?? "Search jobs, titles",
         hintStyle: hintStyle ??
             TextStyleHelper.instance.body14RegularPoppins.copyWith(
-              color: appTheme.gray_400.withValues(alpha: 0.8),
+              color: appTheme.gray400.withValues(alpha: 0.8),
             ),
         prefixIcon: prefix ??
             (prefixIcon != null
@@ -117,7 +117,7 @@ class CustomSearchView extends StatelessWidget {
                       imagePath: prefixIcon!,
                       height: 20.h,
                       width: 20.h,
-                      color: appTheme.gray_400,
+                      color: appTheme.gray400,
                     ),
                   )
                 : Padding(

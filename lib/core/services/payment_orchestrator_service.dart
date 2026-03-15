@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
+import 'package:qwok/core/constants/api_constants.dart';
 
 class PaymentOrchestratorService {
   String get _baseUrl => ApiConstants.baseUrl;
@@ -39,7 +39,7 @@ class PaymentOrchestratorService {
           'bene_${user.uid}_${DateTime.now().millisecondsSinceEpoch}';
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/payouts/beneficiaries'),
+        Uri.parse('$_baseUrl/v3/payouts/beneficiaries'),
         headers: {
           ...(await _getHeaders()),
           'Idempotency-Key': idempotencyKey,
@@ -84,7 +84,7 @@ class PaymentOrchestratorService {
           'withdraw_${user.uid}_${DateTime.now().millisecondsSinceEpoch}';
 
       final response = await http.post(
-        Uri.parse('$_baseUrl/payouts/withdraw'),
+        Uri.parse('$_baseUrl/v3/payouts/withdraw'),
         headers: {
           ...(await _getHeaders()),
           'Idempotency-Key': idempotencyKey,

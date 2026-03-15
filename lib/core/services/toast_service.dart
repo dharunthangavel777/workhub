@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:work_hub/features/common/widgets/custom_toast.dart';
-import 'package:work_hub/main.dart';
+import 'package:qwok/features/common/widgets/custom_toast.dart';
+import 'package:qwok/main.dart';
 
 class ToastService {
   static final ToastService _instance = ToastService._internal();

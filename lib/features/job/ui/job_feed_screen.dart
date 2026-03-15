@@ -1,19 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animations/animations.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/constants/app_strings.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/constants/app_strings.dart';
 
-import 'package:work_hub/features/job/ui/job_details_screen.dart';
-import 'package:work_hub/features/job/ui/widgets/job_card.dart';
-import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
-import 'package:work_hub/features/auth/ui/unified_login_screen.dart';
-import 'package:work_hub/features/freelance/ui/worker_projects_screen.dart';
+import 'package:qwok/features/job/ui/job_details_screen.dart';
+import 'package:qwok/features/job/ui/widgets/job_card.dart';
+import 'package:qwok/core/shared_widgets/universal_skeleton.dart';
+import 'package:qwok/features/auth/ui/unified_login_screen.dart';
+import 'package:qwok/features/freelance/ui/worker_projects_screen.dart';
 
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/orchestration/enterprise_state.dart';
-import 'package:work_hub/core/widgets/animated_typing_search_view.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/orchestration/enterprise_state.dart';
+import 'package:qwok/core/widgets/animated_typing_search_view.dart';
 
 class JobFeedScreen extends StatelessWidget {
   const JobFeedScreen({super.key});
@@ -48,7 +47,7 @@ class JobFeedScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -72,7 +71,7 @@ class JobFeedScreen extends StatelessWidget {
                           child: Text(
                             AppStrings.noOpportunities,
                             style: TextStyleHelper.instance.body14Regular
-                                .copyWith(color: appTheme.gray_500),
+                                .copyWith(color: appTheme.gray500),
                           ),
                         ),
                       )
@@ -155,18 +154,16 @@ class JobFeedScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Container(
-                  child: AnimatedTypingSearchView(
-                    backgroundColor: Colors.white,
-                    borderColor: Colors.white.withValues(alpha: 0.2),
-                    iconColor: CustomColors.primaryBlue,
-                    textColor: CustomColors.darkText,
-                    hintColor: appTheme.gray_500,
-                    showShadow: true,
-                    onChanged: (value) {
-                      // Handle search
-                    },
-                  ),
+                child: AnimatedTypingSearchView(
+                  backgroundColor: Colors.white,
+                  borderColor: Colors.white.withValues(alpha: 0.2),
+                  iconColor: CustomColors.primaryBlue,
+                  textColor: CustomColors.darkText,
+                  hintColor: appTheme.gray500,
+                  showShadow: true,
+                  onChanged: (value) {
+                    // Handle search
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
@@ -186,7 +183,7 @@ class JobFeedScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16.h),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

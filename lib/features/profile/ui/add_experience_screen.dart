@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:qwok/core/config/app_export.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/profile/domain/models/experience.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/profile/domain/models/experience.dart';
 
 class AddExperienceScreen extends StatefulWidget {
   const AddExperienceScreen({super.key});
@@ -64,7 +63,7 @@ class _AddExperienceScreenState extends State<AddExperienceScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -128,7 +127,7 @@ class _AddExperienceScreenState extends State<AddExperienceScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: appTheme.indigo_A700,
+                            backgroundColor: appTheme.indigoA700,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.h),
                             ),
@@ -164,7 +163,7 @@ class _AddExperienceScreenState extends State<AddExperienceScreen> {
         Text(
           label,
           style: TextStyleHelper.instance.body14Bold.copyWith(
-            color: appTheme.gray_900,
+            color: appTheme.gray900,
           ),
         ),
         SizedBox(height: 8.h),
@@ -174,16 +173,16 @@ class _AddExperienceScreenState extends State<AddExperienceScreen> {
           style: TextStyleHelper.instance.body14Medium,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400),
+            hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400),
             filled: true,
-            fillColor: appTheme.gray_50,
+            fillColor: appTheme.gray50,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.h),
-              borderSide: BorderSide(color: appTheme.gray_200),
+              borderSide: BorderSide(color: appTheme.gray200),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.h),
-              borderSide: BorderSide(color: appTheme.gray_200),
+              borderSide: BorderSide(color: appTheme.gray200),
             ),
           ),
         ),

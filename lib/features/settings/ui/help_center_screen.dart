@@ -1,5 +1,5 @@
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -75,7 +75,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -91,14 +91,14 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                       Text(
                         "Still need help?",
                         style: TextStyleHelper.instance.body18Bold.copyWith(
-                          color: appTheme.gray_900,
+                          color: appTheme.gray900,
                         ),
                       ),
                       SizedBox(height: 8.h),
                       Text(
                         "Describe your issue below and our team will assist you.",
                         style: TextStyleHelper.instance.body14Medium.copyWith(
-                          color: appTheme.gray_600,
+                          color: appTheme.gray600,
                         ),
                       ),
                       SizedBox(height: 24.h),
@@ -112,24 +112,24 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             Text(
                               "Issue Category",
                               style: TextStyleHelper.instance.body14Bold.copyWith(
-                                color: appTheme.gray_900,
+                                color: appTheme.gray900,
                               ),
                             ),
                             SizedBox(height: 8.h),
                             DropdownButtonFormField<String>(
-                              value: _selectedIssueType,
-                              hint: Text("Select issue type", style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400)),
+                              initialValue: _selectedIssueType,
+                              hint: Text("Select issue type", style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400)),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: appTheme.gray_50,
+                                fillColor: appTheme.gray50,
                                 contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.h),
-                                  borderSide: BorderSide(color: appTheme.gray_200),
+                                  borderSide: BorderSide(color: appTheme.gray200),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.h),
-                                  borderSide: BorderSide(color: appTheme.gray_200),
+                                  borderSide: BorderSide(color: appTheme.gray200),
                                 ),
                               ),
                               items: _issueTypes.map((type) {
@@ -145,7 +145,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                             Text(
                               "Describe your problem",
                               style: TextStyleHelper.instance.body14Bold.copyWith(
-                                color: appTheme.gray_900,
+                                color: appTheme.gray900,
                               ),
                             ),
                             SizedBox(height: 8.h),
@@ -155,16 +155,16 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               style: TextStyleHelper.instance.body14Medium,
                               decoration: InputDecoration(
                                 hintText: "Tell us what happened...",
-                                hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400),
+                                hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400),
                                 filled: true,
-                                fillColor: appTheme.gray_50,
+                                fillColor: appTheme.gray50,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.h),
-                                  borderSide: BorderSide(color: appTheme.gray_200),
+                                  borderSide: BorderSide(color: appTheme.gray200),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.h),
-                                  borderSide: BorderSide(color: appTheme.gray_200),
+                                  borderSide: BorderSide(color: appTheme.gray200),
                                 ),
                               ),
                               validator: (val) => (val == null || val.isEmpty) ? "Description is required" : null,
@@ -175,7 +175,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                               height: 56.h,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: appTheme.indigo_A700,
+                                  backgroundColor: appTheme.indigoA700,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16.h),
                                   ),
@@ -200,25 +200,6 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildIssueTile(String question) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
-        borderRadius: BorderRadius.circular(12.h),
-        border: Border.all(color: appTheme.gray_100),
-      ),
-      child: ListTile(
-        title: Text(
-          question,
-          style: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_800),
-        ),
-        trailing: Icon(Icons.add, color: appTheme.gray_400, size: 20.h),
-        onTap: () {},
       ),
     );
   }

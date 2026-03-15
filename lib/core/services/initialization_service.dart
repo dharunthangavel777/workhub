@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/services/notification_service.dart';
+import 'package:qwok/core/services/notification_service.dart';
 
 class AppInitializationService extends ChangeNotifier {
   bool _isInitialized = false;

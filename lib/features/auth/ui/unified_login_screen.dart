@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:work_hub/constants/app_strings.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/theme/text_style_helper.dart';
+import 'package:qwok/constants/app_strings.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/text_style_helper.dart';
 
 class UnifiedLoginScreen extends StatefulWidget {
   const UnifiedLoginScreen({super.key});
@@ -40,7 +40,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _handleClose();
       },

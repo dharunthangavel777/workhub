@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 import '../../auth/ui/unified_login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {

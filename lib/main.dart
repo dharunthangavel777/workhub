@@ -4,16 +4,18 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 import 'features/job/logic/job_controller.dart';
 import 'features/chat/logic/chat_controller.dart';
 import 'features/reel/logic/reel_controller.dart';
 import 'features/job/logic/ad_controller.dart';
 import 'features/common/services/ad_service.dart';
-import 'package:work_hub/core/services/connectivity_service.dart';
-import 'package:work_hub/core/widgets/offline_overlay.dart';
-import 'package:work_hub/firebase_options.dart';
+import 'package:qwok/core/services/connectivity_service.dart';
+import 'package:qwok/features/notifications/logic/notification_provider.dart';
+import 'package:qwok/features/notifications/ui/notification_list_screen.dart';
+import 'package:qwok/core/widgets/offline_overlay.dart';
+import 'package:qwok/firebase_options.dart';
 import 'features/ai/logic/resume_parse_provider.dart';
 import 'core/services/initialization_service.dart';
 import 'features/common/ui/splash_screen.dart';
@@ -24,6 +26,7 @@ import 'features/common/navigation/worker_navigation.dart';
 import 'features/auth/ui/worker_profile_completion_screen.dart';
 import 'features/settings/ui/settings_screen.dart';
 import 'features/job/ui/withdrawal_screen.dart';
+import 'features/wallet/ui/wallet_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -68,6 +71,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AdService()),
         ChangeNotifierProvider(create: (_) => ConnectivityService()),
         ChangeNotifierProvider(create: (_) => ResumeParseProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: const WorkHubApp(),
     ),
@@ -81,7 +85,7 @@ class WorkHubApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Work Hub',
+      title: 'Qwok',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -94,6 +98,8 @@ class WorkHubApp extends StatelessWidget {
         '/main': (context) => const RootWrapper(),
         '/settings': (context) => const SettingsScreen(),
         '/withdrawal': (context) => const WithdrawalScreen(),
+        '/wallet': (context) => const WalletScreen(),
+        '/notifications': (context) => const NotificationListScreen(),
       },
     );
   }

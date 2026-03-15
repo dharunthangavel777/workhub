@@ -1,11 +1,11 @@
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/reel/logic/reel_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/utils/image_utils.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/reel/logic/reel_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/utils/image_utils.dart';
 import 'reel_player.dart';
-import 'package:work_hub/features/job/logic/ad_controller.dart';
+import 'package:qwok/features/job/logic/ad_controller.dart';
 import 'ad_reel_item.dart';
 
 class ReelsFeedView extends StatefulWidget {
@@ -48,7 +48,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
       builder: (context, data, child) {
         if (data.isLoading) {
           return Center(
-            child: CircularProgressIndicator(color: appTheme.indigo_A700),
+            child: CircularProgressIndicator(color: appTheme.indigoA700),
           );
         }
 
@@ -60,13 +60,13 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                 CustomImageView(
                   imagePath: ImageConstant.imgSearch,
                   height: 64.h,
-                  color: appTheme.gray_300,
+                  color: appTheme.gray300,
                 ),
                 SizedBox(height: 16.h),
                 Text(
                   "No reels yet. Be the first to upload!",
                   style: TextStyleHelper.instance.body14Medium
-                      .copyWith(color: appTheme.gray_500),
+                      .copyWith(color: appTheme.gray500),
                 ),
               ],
             ),
@@ -85,6 +85,13 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
         return PageView.builder(
           scrollDirection: Axis.vertical,
           itemCount: totalItems,
+          onPageChanged: (index) {
+            final int reelIndex =
+                index - (activeAds.isEmpty ? 0 : (index ~/ (adFrequency + 1)));
+            if (reelIndex >= 0 && reelIndex < reels.length) {
+              context.read<ReelProvider>().precacheVideos(reelIndex);
+            }
+          },
           itemBuilder: (context, index) {
             final bool isAdSlot =
                 activeAds.isNotEmpty && (index + 1) % (adFrequency + 1) == 0;
@@ -155,7 +162,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                                         backgroundImage:
                                             ImageUtils.getImageProvider(
                                                 reel.userPhotoUrl),
-                                        backgroundColor: appTheme.white_A700_01,
+                                        backgroundColor: appTheme.whiteA70001,
                                       ),
                                       SizedBox(width: 10.w),
                                       Text(
@@ -197,7 +204,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                                         : FontAwesomeIcons.heart,
                                     color: interactionData.isLiked
                                         ? Colors.red
-                                        : appTheme.gray_900,
+                                        : appTheme.gray900,
                                     label: "${interactionData.likesCount}",
                                     onTap: () {
                                       if (data.userId != null) {
@@ -212,7 +219,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                                   SizedBox(height: 16.h),
                                   _buildActionItem(
                                     icon: FontAwesomeIcons.comment,
-                                    color: appTheme.gray_900,
+                                    color: appTheme.gray900,
                                     label: "Chat",
                                     onTap: () => _showCommentsBottomSheet(
                                         context, reel.id),
@@ -220,7 +227,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                                   SizedBox(height: 16.h),
                                   _buildActionItem(
                                     icon: FontAwesomeIcons.ellipsisVertical,
-                                    color: appTheme.gray_900,
+                                    color: appTheme.gray900,
                                     label: "More",
                                     onTap: () =>
                                         _showReelOptions(context, reel),
@@ -256,7 +263,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
             height: 44.h,
             width: 44.h,
             decoration: BoxDecoration(
-              color: appTheme.white_A700_01.withValues(alpha: 0.9),
+              color: appTheme.whiteA70001.withValues(alpha: 0.9),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -287,7 +294,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: appTheme.white_A700_01,
+      backgroundColor: appTheme.whiteA70001,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.h)),
       ),
@@ -308,13 +315,13 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                   },
                 ),
               ListTile(
-                leading: Icon(Icons.share_outlined, color: appTheme.gray_900),
+                leading: Icon(Icons.share_outlined, color: appTheme.gray900),
                 title:
                     Text("Share", style: TextStyleHelper.instance.body14Medium),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: Icon(Icons.info_outline, color: appTheme.gray_900),
+                leading: Icon(Icons.info_outline, color: appTheme.gray900),
                 title:
                     Text("Info", style: TextStyleHelper.instance.body14Medium),
                 onTap: () => Navigator.pop(context),
@@ -330,7 +337,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: appTheme.white_A700_01,
+        backgroundColor: appTheme.whiteA70001,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.h)),
         title: Text("Delete Reel?", style: TextStyleHelper.instance.body16Bold),
@@ -339,7 +346,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel", style: TextStyle(color: appTheme.gray_500)),
+            child: Text("Cancel", style: TextStyle(color: appTheme.gray500)),
           ),
           TextButton(
             onPressed: () {
@@ -361,7 +368,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: BoxDecoration(
-          color: appTheme.white_A700_01,
+          color: appTheme.whiteA70001,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24.h)),
         ),
         child: Column(
@@ -371,12 +378,12 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
               height: 4.h,
               width: 40.w,
               decoration: BoxDecoration(
-                color: appTheme.gray_200,
+                color: appTheme.gray200,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             Text("Comments", style: TextStyleHelper.instance.body16Bold),
-            Divider(color: appTheme.gray_100),
+            Divider(color: appTheme.gray100),
             Expanded(
               child: StreamBuilder(
                 stream: context.read<ReelProvider>().getComments(reelId),
@@ -388,7 +395,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                   if (comments.isEmpty) {
                     return Center(
                         child: Text("No comments yet.",
-                            style: TextStyle(color: appTheme.gray_400)));
+                            style: TextStyle(color: appTheme.gray400)));
                   }
                   return ListView.builder(
                     padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -404,7 +411,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
                             style: TextStyleHelper.instance.body14Bold),
                         subtitle: Text(comment.text,
                             style: TextStyleHelper.instance.body12Medium
-                                .copyWith(color: appTheme.gray_600)),
+                                .copyWith(color: appTheme.gray600)),
                       );
                     },
                   );
@@ -428,8 +435,8 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
         top: 12.h,
       ),
       decoration: BoxDecoration(
-        color: appTheme.white_A700_01,
-        border: Border(top: BorderSide(color: appTheme.gray_100)),
+        color: appTheme.whiteA70001,
+        border: Border(top: BorderSide(color: appTheme.gray100)),
       ),
       child: Row(
         children: [
@@ -437,7 +444,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               decoration: BoxDecoration(
-                color: appTheme.gray_50,
+                color: appTheme.gray50,
                 borderRadius: BorderRadius.circular(24.h),
               ),
               child: TextField(
@@ -451,7 +458,7 @@ class _ReelsFeedViewState extends State<ReelsFeedView> {
           ),
           SizedBox(width: 8.w),
           IconButton(
-            icon: Icon(Icons.send, color: appTheme.indigo_A700),
+            icon: Icon(Icons.send, color: appTheme.indigoA700),
             onPressed: () {
               if (controller.text.isNotEmpty) {
                 final auth = context.read<AuthProvider>();

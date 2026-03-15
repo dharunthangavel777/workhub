@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
-import 'package:work_hub/features/reel/logic/reel_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/features/reel/logic/reel_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class ReelsUploadView extends StatefulWidget {
   final VoidCallback onUploadComplete;

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class AnimatedTypingSearchView extends StatefulWidget {
   final Function(String)? onChanged;
@@ -10,6 +10,7 @@ class AnimatedTypingSearchView extends StatefulWidget {
   final Color? iconColor;
   final Color? textColor;
   final Color? hintColor;
+  final List<String>? phrases;
   final bool showShadow;
 
   const AnimatedTypingSearchView({
@@ -22,6 +23,7 @@ class AnimatedTypingSearchView extends StatefulWidget {
     this.iconColor,
     this.textColor,
     this.hintColor,
+    this.phrases,
     this.showShadow = true,
   });
 
@@ -31,19 +33,33 @@ class AnimatedTypingSearchView extends StatefulWidget {
 }
 
 class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
-  final List<String> _phrases = [
-    'Search "App Developer"',
-    'Search "Graphic Designer"',
-    'Search "Digital Marketer"',
-    'Search "Web Developer"',
-    'Search "UI/UX Designer"',
-  ];
+  List<String> get _phrases =>
+      widget.phrases ??
+      [
+        'Search "App Developer"',
+        'Search "Graphic Designer"',
+        'Search "Digital Marketer"',
+        'Search "Web Developer"',
+        'Search "UI/UX Designer"',
+      ];
 
   late String _currentHint;
   int _phraseIndex = 0;
   int _charIndex = 0;
   bool _isDeleting = false;
   Timer? _timer;
+
+  @override
+  void didUpdateWidget(covariant AnimatedTypingSearchView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.phrases != widget.phrases) {
+      _timer?.cancel();
+      _phraseIndex = 0;
+      _charIndex = 0;
+      _isDeleting = false;
+      _startTyping();
+    }
+  }
 
   @override
   void initState() {
@@ -105,7 +121,7 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
         color: widget.backgroundColor ?? CustomColors.lightCard,
         borderRadius: BorderRadius.circular(16.h),
         border: Border.all(
-          color: widget.borderColor ?? appTheme.indigo_A700.withValues(alpha: 0.1),
+          color: widget.borderColor ?? appTheme.indigoA700.withValues(alpha: 0.1),
           width: 1,
         ),
         boxShadow: widget.showShadow
@@ -131,16 +147,16 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
               controller: widget.controller,
               onChanged: widget.onChanged,
               onTap: widget.onTap,
-              cursorColor: widget.textColor ?? appTheme.indigo_A700,
+              cursorColor: widget.textColor ?? appTheme.indigoA700,
               style: TextStyle(
-                color: widget.textColor ?? appTheme.black_900,
+                color: widget.textColor ?? appTheme.black900,
                 fontSize: 16.fSize,
                 fontFamily: 'Poppins',
               ),
               decoration: InputDecoration(
                 hintText: _currentHint,
                 hintStyle: TextStyle(
-                  color: widget.hintColor ?? appTheme.gray_400,
+                  color: widget.hintColor ?? appTheme.gray400,
                   fontSize: 14.fSize,
                   fontFamily: 'Poppins',
                 ),
@@ -161,7 +177,7 @@ class _AnimatedTypingSearchViewState extends State<AnimatedTypingSearchView> {
                           }
                           return IconButton(
                             icon: Icon(Icons.close,
-                                size: 20.h, color: widget.hintColor ?? appTheme.gray_400),
+                                size: 20.h, color: widget.hintColor ?? appTheme.gray400),
                             onPressed: () {
                               widget.controller!.clear();
                               widget.onChanged?.call("");

@@ -1,8 +1,8 @@
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 
 import 'package:intl/intl.dart';
 
@@ -61,7 +61,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -150,7 +150,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                       ? Colors.green
                       : (lowerStatus == 'waitlisted'
                           ? Colors.orange
-                          : appTheme.indigo_A700)),
+                          : appTheme.indigoA700)),
             ),
           ),
           SizedBox(height: 24.h),
@@ -166,7 +166,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                     margin: EdgeInsets.only(top: 14.h),
                     height: 2.h,
                     color:
-                        isCompleted ? appTheme.indigo_A700 : appTheme.gray_300,
+                        isCompleted ? appTheme.indigoA700 : appTheme.gray300,
                   ),
                 );
               }
@@ -179,8 +179,8 @@ class JobApplicationDetailsScreen extends StatelessWidget {
               final isShortlisted =
                   lowerStatus == 'shortlisted' && stepIndex == 2;
 
-              Color circleColor = appTheme.gray_300;
-              if (isActive || isCompleted) circleColor = appTheme.indigo_A700;
+              Color circleColor = appTheme.gray300;
+              if (isActive || isCompleted) circleColor = appTheme.indigoA700;
               if (isRejected) circleColor = Colors.red;
               if (isShortlisted) circleColor = Colors.green;
 
@@ -201,7 +201,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                                 isRejected ||
                                 isShortlisted
                             ? circleColor
-                            : appTheme.gray_400,
+                            : appTheme.gray400,
                         width: 2,
                       ),
                     ),
@@ -232,7 +232,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                         fontWeight:
                             isActive ? FontWeight.w600 : FontWeight.w400,
                         color:
-                            isActive ? appTheme.black_900 : appTheme.gray_500,
+                            isActive ? appTheme.black900 : appTheme.gray500,
                       ),
                     ),
                   ),
@@ -253,10 +253,10 @@ class JobApplicationDetailsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: appTheme.indigo_A700.withOpacity(0.1)),
+        border: Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: appTheme.indigo_A700.withOpacity(0.05),
+            color: appTheme.indigoA700.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -265,7 +265,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
       child: Column(
         children: [
           Icon(Icons.description_outlined,
-              color: appTheme.indigo_A700, size: 32),
+              color: appTheme.indigoA700, size: 32),
           const SizedBox(height: 20),
           const Text(
             "Shortlist Invitation",
@@ -282,7 +282,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               height: 1.6,
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.black.withValues(alpha: 0.8),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -290,14 +290,14 @@ class JobApplicationDetailsScreen extends StatelessWidget {
           Container(
             height: 1,
             width: 60,
-            color: appTheme.indigo_A700.withOpacity(0.2),
+            color: appTheme.indigoA700.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 16),
           Text(
             post.companyName ?? "The Team",
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: appTheme.indigo_A700,
+              color: appTheme.indigoA700,
             ),
           ),
         ],
@@ -359,14 +359,14 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                     Text(
                       companyName,
                       style: TextStyleHelper.instance.body14Medium.copyWith(
-                        color: appTheme.indigo_A700,
+                        color: appTheme.indigoA700,
                       ),
                     ),
                     SizedBox(height: 4.h),
                     Text(
                       post.location,
                       style: TextStyleHelper.instance.body14Medium.copyWith(
-                        color: appTheme.gray_500,
+                        color: appTheme.gray500,
                       ),
                     ),
                   ],
@@ -375,7 +375,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
             ],
           ),
           SizedBox(height: 16.h),
-          Divider(color: appTheme.gray_300),
+          Divider(color: appTheme.gray300),
           SizedBox(height: 16.h),
           _buildDetailRow(
               Icons.calendar_today_outlined, "Applied On", appliedDate),
@@ -390,9 +390,9 @@ class JobApplicationDetailsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
+                color: Colors.red.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.red.withOpacity(0.1)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,7 +407,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red.withOpacity(0.8),
+                          color: Colors.red.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -417,7 +417,7 @@ class JobApplicationDetailsScreen extends StatelessWidget {
                     rejectionDescription,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.black.withOpacity(0.8),
+                      color: Colors.black.withValues(alpha: 0.8),
                       height: 1.5,
                     ),
                   ),
@@ -433,12 +433,12 @@ class JobApplicationDetailsScreen extends StatelessWidget {
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: appTheme.gray_500, size: 20.h),
+        Icon(icon, color: appTheme.gray500, size: 20.h),
         SizedBox(width: 12.w),
         Text(
           label,
           style: TextStyleHelper.instance.body14Medium.copyWith(
-            color: appTheme.gray_500,
+            color: appTheme.gray500,
           ),
         ),
         const Spacer(),

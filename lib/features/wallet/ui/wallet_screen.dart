@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/shared_widgets/predictive_shimmer.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/shared_widgets/predictive_shimmer.dart';
 
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/job/ui/withdrawal_screen.dart';
-import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/job/ui/withdrawal_screen.dart';
+import 'package:qwok/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/features/wallet/models/transaction.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -24,6 +25,7 @@ class _WalletScreenState extends State<WalletScreen> {
       final user = context.read<AuthProvider>().userModel;
       if (user != null) {
         context.read<JobProvider>().listenToWithdrawals(user.uid);
+        context.read<JobProvider>().listenToTransactions(user.uid);
       }
     });
   }
@@ -34,7 +36,16 @@ class _WalletScreenState extends State<WalletScreen> {
     final double availableBalance = user?.walletBalance ?? 0.0;
 
     final withdrawals = context.watch<JobProvider>().withdrawals;
+    final transactions = context.watch<JobProvider>().transactions;
     final isLoading = context.watch<JobProvider>().isLoading;
+
+    // Combine and sort by date
+    final List<dynamic> allActivities = [...withdrawals, ...transactions];
+    allActivities.sort((a, b) {
+      final dateA = a is WithdrawalRequest ? a.requestedAt : (a as Transaction).createdAt;
+      final dateB = b is WithdrawalRequest ? b.requestedAt : (b as Transaction).createdAt;
+      return dateB.compareTo(dateA);
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -46,15 +57,24 @@ class _WalletScreenState extends State<WalletScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: CustomColors.darkText),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildBalanceCard(availableBalance),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final user = context.read<AuthProvider>().userModel;
+          if (user != null) {
+            await context.read<JobProvider>().fetchTransactions(user.uid);
+            // Withdrawals are streamed, but we can refresh other things if needed
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildBalanceCard(availableBalance),
             const SizedBox(height: 32),
             const Text(
-              "Recent Transactions",
+              "Recent Activity",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -62,57 +82,63 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            isLoading && withdrawals.isEmpty
+            isLoading && allActivities.isEmpty
                 ? Column(
                     children: List.generate(
                       3,
-                      (index) => Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: Colors.black.withValues(alpha: 0.05)),
-                        ),
-                        child: const Row(
-                          children: [
-                            PredictiveShimmer(
-                                width: 40,
-                                height: 40,
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(20))),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  PredictiveShimmer(
-                                      width: 100, height: 14),
-                                  SizedBox(height: 8),
-                                  PredictiveShimmer(
-                                      width: 80, height: 10),
-                                ],
-                              ),
-                            ),
-                            PredictiveShimmer(width: 60, height: 16),
-                          ],
-                        ),
-                      ),
+                      (index) => _buildShimmerItem(),
                     ),
                   )
-                : withdrawals.isEmpty
+                : allActivities.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: withdrawals.length,
+                        itemCount: allActivities.length,
                         itemBuilder: (context, index) {
-                          return _buildWithdrawalItem(withdrawals[index]);
+                          final activity = allActivities[index];
+                          if (activity is WithdrawalRequest) {
+                            return _buildWithdrawalItem(activity);
+                          } else {
+                            return _buildTransactionItem(activity as Transaction);
+                          }
                         },
                       ),
           ],
         ),
+      ),
+    ),
+  );
+}
+
+  Widget _buildShimmerItem() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: const Row(
+        children: [
+          PredictiveShimmer(
+              width: 40,
+              height: 40,
+              borderRadius: BorderRadius.all(Radius.circular(20))),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PredictiveShimmer(width: 100, height: 14),
+                SizedBox(height: 8),
+                PredictiveShimmer(width: 80, height: 10),
+              ],
+            ),
+          ),
+          PredictiveShimmer(width: 60, height: 16),
+        ],
       ),
     );
   }
@@ -199,6 +225,48 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  Widget _buildTransactionItem(Transaction transaction) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child:
+              const Icon(Icons.arrow_downward, color: Colors.green, size: 20),
+        ),
+        title: Text(
+          transaction.description.isEmpty ? "Payment Received" : transaction.description,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: CustomColors.darkText,
+          ),
+        ),
+        subtitle: Text(
+          _formatDate(transaction.createdAt),
+          style: const TextStyle(color: CustomColors.textMuted),
+        ),
+        trailing: Text(
+          "+₹${transaction.amount.toStringAsFixed(2)}",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildWithdrawalItem(WithdrawalRequest request) {
     Color statusColor;
     IconData statusIcon;
@@ -264,7 +332,22 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return "${date.day}/${date.month}/${date.year}";
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateToCheck = DateTime(date.year, date.month, date.day);
+
+    if (dateToCheck == today) {
+      return "Today";
+    } else if (dateToCheck == yesterday) {
+      return "Yesterday";
+    }
+
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return "${months[date.month - 1]} ${date.day}, ${date.year}";
   }
 }
 

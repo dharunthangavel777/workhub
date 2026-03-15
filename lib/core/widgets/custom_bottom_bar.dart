@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CustomBottomBar extends StatelessWidget {
   final List<CustomBottomBarItem> bottomBarItemList;
@@ -25,7 +25,7 @@ class CustomBottomBar extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: appTheme.black_900.withValues(alpha: 0.05),
+              color: appTheme.black900.withValues(alpha: 0.05),
               blurRadius: 10.h,
               offset: Offset(0, -5.h),
             ),
@@ -54,11 +54,11 @@ class CustomBottomBar extends StatelessWidget {
                             width: 50.h,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: appTheme.indigo_A700,
+                              color: appTheme.indigoA700,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: appTheme.indigo_A700
+                                  color: appTheme.indigoA700
                                       .withValues(alpha: 0.4),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
@@ -79,8 +79,8 @@ class CustomBottomBar extends StatelessWidget {
                             item.title, // "Reels"
                             style: TextStyle(
                               color: isSelected
-                                  ? appTheme.indigo_A700
-                                  : appTheme.gray_400,
+                                  ? appTheme.indigoA700
+                                  : appTheme.gray400,
                               fontSize: 12.fSize,
                               fontWeight: FontWeight.w600,
                             ),
@@ -109,16 +109,16 @@ class CustomBottomBar extends StatelessWidget {
                           height: 24.h,
                           width: 24.h,
                           color: isSelected
-                              ? appTheme.indigo_A700
-                              : appTheme.gray_400,
+                              ? appTheme.indigoA700
+                              : appTheme.gray400,
                         ),
                         SizedBox(height: 4.h),
                         Text(
                           item.title,
                           style: TextStyle(
                             color: isSelected
-                                ? appTheme.indigo_A700
-                                : appTheme.gray_400,
+                                ? appTheme.indigoA700
+                                : appTheme.gray400,
                             fontSize: 12.fSize,
                             fontWeight:
                                 isSelected ? FontWeight.w600 : FontWeight.w400,

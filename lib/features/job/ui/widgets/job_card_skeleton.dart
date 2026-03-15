@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_hub/core/shared_widgets/predictive_shimmer.dart';
+import 'package:qwok/core/shared_widgets/predictive_shimmer.dart';
 
 class JobCardSkeleton extends StatelessWidget {
   const JobCardSkeleton({super.key});

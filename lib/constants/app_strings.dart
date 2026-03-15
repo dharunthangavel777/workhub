@@ -1,5 +1,5 @@
 class AppStrings {
-  static const String appName = "Work Hub";
+  static const String appName = "Qwok";
   static const String slogan = "Connect, Collaborate, Conquer";
 
   // General

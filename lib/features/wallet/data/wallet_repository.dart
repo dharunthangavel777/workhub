@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/features/wallet/models/transaction.dart';
-import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
-import 'package:work_hub/core/services/payment_orchestrator_service.dart';
+import 'package:qwok/features/wallet/models/transaction.dart';
+import 'package:qwok/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/core/services/payment_orchestrator_service.dart';
 
 class WalletRepository {
   final firestore.FirebaseFirestore _firestore =
@@ -34,11 +34,36 @@ class WalletRepository {
     });
   }
 
+  Stream<List<Transaction>> getTransactionsStreamForUser(String userId) {
+    return _firestore
+        .collection('transactions')
+        .where('userId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => Transaction.fromMap(doc.id, doc.data()))
+          .toList();
+    });
+  }
+
   Future<List<Transaction>> getTransactionHistoryFuture(
       String projectId) async {
     final snapshot = await _firestore
         .collection('transactions')
         .where('projectId', isEqualTo: projectId)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return snapshot.docs
+        .map((doc) => Transaction.fromMap(doc.id, doc.data()))
+        .toList();
+  }
+
+  Future<List<Transaction>> getTransactionsFutureForUser(String userId) async {
+    final snapshot = await _firestore
+        .collection('transactions')
+        .where('userId', isEqualTo: userId)
         .orderBy('timestamp', descending: true)
         .get();
 
@@ -75,11 +100,28 @@ class WalletRepository {
       final beneficiaryId = beneficiaryData['beneficiaryId'];
 
       // 2. Initiate Withdrawal via Orchestrator
-      await _paymentOrchestrator.initiateWithdrawal(
+      final response = await _paymentOrchestrator.initiateWithdrawal(
         userId: user.uid,
         amount: request.amount,
         beneficiaryId: beneficiaryId,
       );
+
+      // 3. Save Record to Firestore
+      // We use the ID from the orchestrator if possible, or keep the client-side ID
+      final payoutId = response['payoutId'] ?? request.id;
+      final enrichedRequest = request.copyWith(
+        id: payoutId,
+        metadata: {
+          ...(request.metadata ?? {}),
+          'beneficiaryId': beneficiaryId,
+          'orchestratorResponse': response,
+        },
+      );
+
+      await _firestore
+          .collection('withdrawals')
+          .doc(payoutId)
+          .set(enrichedRequest.toMap());
     } catch (e) {
       debugPrint("Request Withdrawal Error: $e");
       throw Exception("Failed to submit withdrawal request: $e");

@@ -1,12 +1,14 @@
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/freelance/ui/project_dashboard_screen.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/freelance/ui/project_dashboard_screen.dart';
 
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/job/ui/widgets/job_card_skeleton.dart';
-import 'package:work_hub/features/job/ui/job_application_details_screen.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/job/ui/widgets/job_card_skeleton.dart';
+import 'package:qwok/features/job/ui/job_application_details_screen.dart';
+import 'package:qwok/features/freelance/ui/freelance_bid_details_screen.dart';
+
 
 class WorkerProjectsScreen extends StatefulWidget {
   const WorkerProjectsScreen({super.key});
@@ -102,7 +104,7 @@ class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -117,9 +119,9 @@ class _WorkerProjectsScreenState extends State<WorkerProjectsScreen>
                         padding: EdgeInsets.symmetric(horizontal: 24.w),
                         child: TabBar(
                           controller: _tabController,
-                          indicatorColor: appTheme.indigo_A700,
-                          labelColor: appTheme.indigo_A700,
-                          unselectedLabelColor: appTheme.gray_500,
+                          indicatorColor: appTheme.indigoA700,
+                          labelColor: appTheme.indigoA700,
+                          unselectedLabelColor: appTheme.gray500,
                           indicatorWeight: 3,
                           labelStyle: TextStyleHelper.instance.body14Bold,
                           unselectedLabelStyle:
@@ -188,7 +190,7 @@ class _ApplicationsSection extends StatelessWidget {
             CustomImageView(
               imagePath: ImageConstant.imgSearch,
               height: 80.h,
-              color: appTheme.gray_300,
+              color: appTheme.gray300,
             ),
             SizedBox(height: 16.h),
             Text(
@@ -197,7 +199,7 @@ class _ApplicationsSection extends StatelessWidget {
                   : "No job applications yet.\nStart looking for gigs!",
               textAlign: TextAlign.center,
               style: TextStyleHelper.instance.body14Medium
-                  .copyWith(color: appTheme.gray_500),
+                  .copyWith(color: appTheme.gray500),
             ),
           ],
         ),
@@ -210,6 +212,9 @@ class _ApplicationsSection extends StatelessWidget {
       itemCount: applications.length,
       itemBuilder: (context, index) {
         final job = applications[index];
+        if (job.postType == 'project') {
+          return _BidCard(project: job);
+        }
         return _ApplicationCard(job: job);
       },
     );
@@ -234,13 +239,13 @@ class _ApplicationCard extends StatelessWidget {
         statusColor = Colors.green;
         break;
       case 'waitlisted':
-        statusColor = appTheme.orange_600;
+        statusColor = appTheme.orange600;
         break;
       case 'rejected':
         statusColor = Colors.red;
         break;
       default:
-        statusColor = appTheme.indigo_A700;
+        statusColor = appTheme.indigoA700;
     }
 
     final isJob = post.postType == 'job';
@@ -271,19 +276,27 @@ class _ApplicationCard extends StatelessWidget {
           }
         }
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => JobApplicationDetailsScreen(post: post)),
-        );
+        if (post.postType == 'project') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => FreelanceBidDetailsScreen(post: post)),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => JobApplicationDetailsScreen(post: post)),
+          );
+        }
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
-          color: appTheme.white_A700_01,
+          color: appTheme.whiteA70001,
           borderRadius: BorderRadius.circular(20.h),
-          border: Border.all(color: appTheme.gray_200),
+          border: Border.all(color: appTheme.gray200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +307,7 @@ class _ApplicationCard extends StatelessWidget {
                   height: 48.h,
                   width: 48.h,
                   decoration: BoxDecoration(
-                    color: appTheme.gray_50,
+                    color: appTheme.gray50,
                     borderRadius: BorderRadius.circular(12.h),
                   ),
                   child: ClipRRect(
@@ -321,7 +334,7 @@ class _ApplicationCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: TextStyleHelper.instance.body12Medium
-                            .copyWith(color: appTheme.indigo_A700),
+                            .copyWith(color: appTheme.indigoA700),
                       ),
                     ],
                   ),
@@ -348,21 +361,179 @@ class _ApplicationCard extends StatelessWidget {
                 Row(
                   children: [
                     Icon(Icons.location_on_outlined,
-                        size: 14.h, color: appTheme.gray_400),
+                        size: 14.h, color: appTheme.gray400),
                     SizedBox(width: 4.w),
                     Text(
                       location,
                       style: TextStyleHelper.instance.body12Medium
-                          .copyWith(color: appTheme.gray_500),
+                          .copyWith(color: appTheme.gray500),
                     ),
                   ],
                 ),
                 Text(
                   budget,
                   style: TextStyleHelper.instance.body14Bold
-                      .copyWith(color: appTheme.gray_900),
+                      .copyWith(color: appTheme.gray900),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BidCard extends StatelessWidget {
+  final Job project;
+  const _BidCard({required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = context.read<AuthProvider>().userModel?.uid;
+    final bidData = project.applicants?[userId];
+    final status = bidData?['status'] ?? 'Pending';
+    final bidAmount = bidData?['bidAmount'] ?? project.budgetMin;
+
+    Color statusColor;
+    switch (status.toString().toLowerCase()) {
+      case 'approved':
+      case 'hired':
+        statusColor = Colors.green;
+        break;
+      case 'shortlisted':
+        statusColor = appTheme.indigoA700;
+        break;
+      case 'rejected':
+        statusColor = Colors.red;
+        break;
+      default:
+        statusColor = Colors.orange;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (status.toString().toLowerCase() == 'approved' ||
+            status.toString().toLowerCase() == 'hired') {
+          final jobProvider = context.read<JobProvider>();
+          final liveProject = jobProvider.projects
+              .where((p) => p.jobId == project.id)
+              .firstOrNull;
+
+          if (liveProject != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      ProjectDashboardScreen(project: liveProject)),
+            );
+            return;
+          }
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => FreelanceBidDetailsScreen(post: project)),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.h),
+        decoration: BoxDecoration(
+          color: appTheme.indigoA700.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(24.h),
+          border: Border.all(color: appTheme.indigoA700.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.h),
+                  decoration: BoxDecoration(
+                    color: appTheme.whiteA70001,
+                    borderRadius: BorderRadius.circular(12.h),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Icon(Icons.gavel_rounded,
+                      color: appTheme.indigoA700, size: 24.h),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        project.title,
+                        style: TextStyleHelper.instance.body16Bold,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        "Freelance Project • ${project.companyName ?? 'Private Client'}",
+                        style: TextStyleHelper.instance.body12Medium
+                            .copyWith(color: appTheme.gray600),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20.h),
+                  ),
+                  child: Text(
+                    status.toString().toUpperCase(),
+                    style: TextStyleHelper.instance.body10Bold
+                        .copyWith(color: statusColor),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.h),
+              decoration: BoxDecoration(
+                color: appTheme.whiteA70001,
+                borderRadius: BorderRadius.circular(16.h),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("YOUR BID",
+                          style: TextStyleHelper.instance.body10Medium
+                              .copyWith(color: appTheme.gray500)),
+                      Text("₹$bidAmount",
+                          style: TextStyleHelper.instance.body16Bold
+                              .copyWith(color: appTheme.indigoA700)),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text("COMPETITION",
+                          style: TextStyleHelper.instance.body10Medium
+                              .copyWith(color: appTheme.gray500)),
+                      Text("${project.applicants?.length ?? 0} Bidders",
+                          style: TextStyleHelper.instance.body14Bold
+                              .copyWith(color: appTheme.gray900)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -389,7 +560,7 @@ class _OngoingProjectsSection extends StatelessWidget {
               : "No ongoing projects yet.\nOnce hired, your projects will appear here.",
           textAlign: TextAlign.center,
           style: TextStyleHelper.instance.body14Medium
-              .copyWith(color: appTheme.gray_500),
+              .copyWith(color: appTheme.gray500),
         ),
       );
     }
@@ -422,9 +593,9 @@ class _ProjectCard extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 16.h),
         padding: EdgeInsets.all(16.h),
         decoration: BoxDecoration(
-          color: appTheme.white_A700_01,
+          color: appTheme.whiteA70001,
           borderRadius: BorderRadius.circular(20.h),
-          border: Border.all(color: appTheme.gray_200),
+          border: Border.all(color: appTheme.gray200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -443,7 +614,7 @@ class _ProjectCard extends StatelessWidget {
                 Text(
                   "${(project.progress * 100).toInt()}%",
                   style: TextStyleHelper.instance.body14Bold
-                      .copyWith(color: appTheme.indigo_A700),
+                      .copyWith(color: appTheme.indigoA700),
                 ),
               ],
             ),
@@ -453,7 +624,7 @@ class _ProjectCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyleHelper.instance.body12Medium
-                  .copyWith(color: appTheme.gray_500),
+                  .copyWith(color: appTheme.gray500),
             ),
             if (project.progress < 1.0) ...[
               SizedBox(height: 16.h),
@@ -462,9 +633,9 @@ class _ProjectCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: project.progress,
                   minHeight: 8.h,
-                  backgroundColor: appTheme.gray_100,
+                  backgroundColor: appTheme.gray100,
                   valueColor:
-                      AlwaysStoppedAnimation<Color>(appTheme.indigo_A700),
+                      AlwaysStoppedAnimation<Color>(appTheme.indigoA700),
                 ),
               ),
             ],

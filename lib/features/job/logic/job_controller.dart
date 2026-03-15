@@ -1,26 +1,26 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/job/logic/job_filter_helper.dart';
-import 'package:work_hub/features/freelance/models/project.dart';
-import 'package:work_hub/features/common/contract/models/contract.dart';
-import 'package:work_hub/features/common/dispute/models/dispute.dart';
-import 'package:work_hub/features/freelance/models/milestone.dart';
-import 'package:work_hub/features/wallet/models/transaction.dart'
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/job/logic/job_filter_helper.dart';
+import 'package:qwok/features/freelance/models/project.dart';
+import 'package:qwok/features/common/contract/models/contract.dart';
+import 'package:qwok/features/common/dispute/models/dispute.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
+import 'package:qwok/features/wallet/models/transaction.dart'
     as transaction_model;
-import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
-import 'package:work_hub/features/profile/domain/models/rating.dart';
-import 'package:work_hub/features/freelance/models/time_entry.dart';
-import 'package:work_hub/features/job/data/job_repository.dart';
-import 'package:work_hub/features/freelance/data/project_repository.dart';
-import 'package:work_hub/features/common/contract/data/contract_repository.dart';
-import 'package:work_hub/features/job/data/milestone_repository.dart';
-import 'package:work_hub/features/wallet/data/wallet_repository.dart';
-import 'package:work_hub/features/profile/data/rating_repository.dart';
-import 'package:work_hub/core/services/widget_service.dart';
-import 'package:work_hub/core/storage/draft_repository.dart';
-import 'package:work_hub/core/orchestration/enterprise_state.dart';
+import 'package:qwok/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/features/profile/domain/models/rating.dart';
+import 'package:qwok/features/freelance/models/time_entry.dart';
+import 'package:qwok/features/job/data/job_repository.dart';
+import 'package:qwok/features/freelance/data/project_repository.dart';
+import 'package:qwok/features/common/contract/data/contract_repository.dart';
+import 'package:qwok/features/job/data/milestone_repository.dart';
+import 'package:qwok/features/wallet/data/wallet_repository.dart';
+import 'package:qwok/features/profile/data/rating_repository.dart';
+import 'package:qwok/core/services/widget_service.dart';
+import 'package:qwok/core/storage/draft_repository.dart';
+import 'package:qwok/core/orchestration/enterprise_state.dart';
 
 class JobProvider extends ChangeNotifier
     with EnterpriseLogicMixin<List<dynamic>> {
@@ -129,6 +129,7 @@ class JobProvider extends ChangeNotifier
     _applicationsSubscription?.cancel();
     _milestoneSubscription?.cancel();
     _withdrawalSubscription?.cancel();
+    _transactionsSubscription?.cancel();
     super.dispose();
   }
 
@@ -261,15 +262,19 @@ class JobProvider extends ChangeNotifier
           post.id, userId, applicationData, submissionMode);
 
       // Refresh the list from server to ensure sync
-      final updatedList = await _jobRepository.getWorkerApplications(userId);
-
-      // Only overwrite if the new application is actually present in the fetched list
-      if (updatedList.any((p) => p is Job && p.id == post.id)) {
-        _appliedPosts = updatedList;
-      } else {
-        // Keep the optimistic update but update isApplying to false
-        debugPrint(
-            "Application not yet in Firestore, keeping optimistic entry for ${post.id}");
+      try {
+        final updatedList = await _jobRepository.getWorkerApplications(userId);
+        // Only overwrite if the new application is actually present in the fetched list
+        if (updatedList.any((p) => p is Job && p.id == post.id)) {
+          _appliedPosts = updatedList;
+        } else {
+          // Keep the optimistic update
+          debugPrint(
+              "Application not yet in Firestore search, keeping optimistic entry for ${post.id}");
+        }
+      } catch (refreshError) {
+        debugPrint("Background refresh failed after success: $refreshError");
+        // We don't rollback here because the main action was successful
       }
 
       // Clear draft on success
@@ -277,7 +282,7 @@ class JobProvider extends ChangeNotifier
       _isApplying = false;
       notifyListeners();
     } catch (e) {
-      // Rollback on failure
+      // Rollback on failure of the main action
       _appliedPosts =
           _appliedPosts.where((p) => p is Job && p.id != post.id).toList();
       _isApplying = false;
@@ -370,6 +375,7 @@ class JobProvider extends ChangeNotifier
       'deliveryTime': deliveryTime,
       'suggestedMilestones': suggestedMilestones,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'ownerId': jobPost.ownerId, // Pass ownerId so notifications work
     };
 
     // Optimistic UI Update for bid
@@ -392,14 +398,19 @@ class JobProvider extends ChangeNotifier
       await _jobRepository.submitBid(jobPost.id, userId, bidData);
 
       // Refresh applications list after successful bid
-      final updatedList = await _jobRepository.getWorkerApplications(userId);
+      try {
+        final updatedList = await _jobRepository.getWorkerApplications(userId);
 
-      if (updatedList.any((p) => p is Job && p.id == jobPost.id) ||
-          _applicationsSubscription != null) {
-        _appliedPosts = updatedList;
-      } else {
-        debugPrint(
-            "Bid not yet in Firestore, keeping optimistic entry for ${jobPost.id}");
+        if (updatedList.any((p) => p is Job && p.id == jobPost.id) ||
+            _applicationsSubscription != null) {
+          _appliedPosts = updatedList;
+        } else {
+          debugPrint(
+              "Bid not yet in Firestore search, keeping optimistic entry for ${jobPost.id}");
+        }
+      } catch (refreshError) {
+        debugPrint("Background refresh failed after success: $refreshError");
+        // No rollback here
       }
 
       // Clear draft on success
@@ -407,7 +418,7 @@ class JobProvider extends ChangeNotifier
       _isApplying = false;
       notifyListeners();
     } catch (e) {
-      // Rollback on bid failure
+      // Rollback on main action failure
       _appliedPosts =
           _appliedPosts.where((p) => p is Job && p.id != jobPost.id).toList();
       _isApplying = false;
@@ -535,6 +546,24 @@ class JobProvider extends ChangeNotifier
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  StreamSubscription? _transactionsSubscription;
+  void listenToTransactions(String userId) {
+    _transactionsSubscription?.cancel();
+    _isLoading = true;
+    notifyListeners();
+
+    _transactionsSubscription =
+        _walletRepository.getTransactionsStreamForUser(userId).listen((data) {
+      _transactions = data;
+      _isLoading = false;
+      notifyListeners();
+    }, onError: (error) {
+      debugPrint("Error listening to transactions: $error");
+      _isLoading = false;
+      notifyListeners();
+    });
   }
 
   /// Record a transaction

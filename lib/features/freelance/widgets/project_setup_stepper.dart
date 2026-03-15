@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/freelance/models/project.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/auth/models/user.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/freelance/models/project.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/auth/models/user.dart';
 import '../../common/contract/ui/contract_details_screen.dart';
 import '../ui/milestone_list_screen.dart';
 

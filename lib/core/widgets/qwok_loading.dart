@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 
-class WorkHubLoading extends StatelessWidget {
+class QwokLoading extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const WorkHubLoading({
+  const QwokLoading({
     super.key,
     this.size = 50.0,
     this.color,
@@ -23,10 +23,10 @@ class WorkHubLoading extends StatelessWidget {
   }
 }
 
-class WorkHubLoadingOverlay extends StatelessWidget {
+class QwokLoadingOverlay extends StatelessWidget {
   final String? message;
 
-  const WorkHubLoadingOverlay({super.key, this.message});
+  const QwokLoadingOverlay({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class WorkHubLoadingOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const WorkHubLoading(color: Colors.white),
+            const QwokLoading(color: Colors.white),
             if (message != null) ...[
               const SizedBox(height: 16),
               Text(

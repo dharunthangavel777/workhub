@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
-import 'package:work_hub/features/freelance/models/milestone.dart';
+import 'package:qwok/core/constants/api_constants.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
 
 class MilestoneRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

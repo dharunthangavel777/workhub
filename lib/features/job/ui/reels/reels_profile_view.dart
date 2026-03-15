@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/features/reel/models/reel.dart';
-import 'package:work_hub/features/reel/logic/reel_controller.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/features/reel/models/reel.dart';
+import 'package:qwok/features/reel/logic/reel_controller.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class ReelsProfileView extends StatefulWidget {
   final VoidCallback onUploadRequested;

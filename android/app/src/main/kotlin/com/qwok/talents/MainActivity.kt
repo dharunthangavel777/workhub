@@ -1,4 +1,4 @@
-package com.workhub.work_hub
+package com.qwok.talents
 
 import io.flutter.embedding.android.FlutterActivity
 

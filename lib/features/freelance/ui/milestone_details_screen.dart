@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
 
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/freelance/models/milestone.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class MilestoneDetailsScreen extends StatefulWidget {
   final Milestone milestone;
@@ -366,7 +366,7 @@ class _MilestoneDetailsScreenState extends State<MilestoneDetailsScreen> {
                         links,
                       );
                   // Optionally refresh or pop
-                  if (mounted) Navigator.pop(context); // Go back to list
+                  if (context.mounted) Navigator.pop(context); // Go back to list
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: CustomColors.primaryBlue,

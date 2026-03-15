@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CustomIconButton extends StatelessWidget {
   final String iconPath;
@@ -27,13 +27,13 @@ class CustomIconButton extends StatelessWidget {
           ),
           fixedSize: Size(52.h, 52.h),
           elevation: 2,
-          shadowColor: appTheme.black_900.withValues(alpha: 0.1),
+          shadowColor: appTheme.black900.withValues(alpha: 0.1),
         ),
         icon: CustomImageView(
           imagePath: iconPath,
           height: 24.h,
           width: 24.h,
-          color: appTheme.indigo_A700,
+          color: appTheme.indigoA700,
         ),
       ),
     );

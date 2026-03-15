@@ -1,15 +1,15 @@
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/widgets/animated_profile_header_delegate.dart';
-import 'package:work_hub/features/job/ui/job_details_screen.dart';
-import 'package:work_hub/features/job/ui/widgets/job_card.dart';
-import 'package:work_hub/core/shared_widgets/universal_skeleton.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/core/widgets/animated_profile_header_delegate.dart';
+import 'package:qwok/features/job/ui/job_details_screen.dart';
+import 'package:qwok/features/job/ui/widgets/job_card.dart';
+import 'package:qwok/core/shared_widgets/universal_skeleton.dart';
 import './widgets/company_recommendation_widget.dart';
 import 'saved_jobs_screen.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 
 class JobSearchDashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJobs;
@@ -153,6 +153,22 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                   mode: auth.userModel?.activeMode ?? 'job'
                 ),
                 builder: (context, data, child) {
+                  final searchPhrases = data.mode == 'job'
+                      ? [
+                          'Search "App Developer"',
+                          'Search "UI/UX Designer"',
+                          'Search "Full Stack Engineer"',
+                          'Search "Product Manager"',
+                          'Search "Marketing Lead"',
+                        ]
+                      : [
+                          'Search "Logo Design Project"',
+                          'Search "Mobile App Development"',
+                          'Search "Content Writing Gig"',
+                          'Search "Video Editing Task"',
+                          'Search "SEO Optimization"',
+                        ];
+
                   return SliverPersistentHeader(
                     pinned: true,
                     delegate: AnimatedProfileHeaderDelegate(
@@ -164,6 +180,7 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                       secondLabel: "Freelancer",
                       backgroundColor: CustomColors.primaryBlue,
                       profileCompletion: data.completion,
+                      searchPhrases: searchPhrases,
                       onSwitchChanged: (value) async {
                         final newMode = value ? 'freelancer' : 'job';
                         await context
@@ -339,7 +356,7 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                     child: Center(
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: appTheme.indigo_A700,
+                        color: appTheme.indigoA700,
                       ),
                     ),
                   ),
@@ -358,20 +375,20 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                           CustomImageView(
                             imagePath: ImageConstant.imgSearch,
                             height: 100.h,
-                            color: appTheme.gray_300,
+                            color: appTheme.gray300,
                           ),
                           SizedBox(height: 24.h),
                           Text(
                             "Not Found",
                             style: TextStyleHelper.instance.body18Bold
-                                .copyWith(color: appTheme.gray_900),
+                                .copyWith(color: appTheme.gray900),
                           ),
                           SizedBox(height: 8.h),
                           Text(
                             "No ${activeMode == 'job' ? 'jobs' : 'freelance posts'} available right now.",
                             textAlign: TextAlign.center,
                             style: TextStyleHelper.instance.body14Medium
-                                .copyWith(color: appTheme.gray_500),
+                                .copyWith(color: appTheme.gray500),
                           ),
                           SizedBox(height: 24.h),
                           TextButton(
@@ -386,7 +403,7 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                               }
                             },
                             style: TextButton.styleFrom(
-                              backgroundColor: appTheme.indigo_A700,
+                              backgroundColor: appTheme.indigoA700,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(
                                   horizontal: 24.w, vertical: 12.h),
@@ -462,13 +479,13 @@ class _JobSearchDashboardScreenState extends State<JobSearchDashboardScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: appTheme.indigo_A700,
+                    color: appTheme.indigoA700,
                   ),
                 ),
                 const SizedBox(width: 4),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: appTheme.indigo_A700,
+                  color: appTheme.indigoA700,
                   size: 14,
                 ),
               ],

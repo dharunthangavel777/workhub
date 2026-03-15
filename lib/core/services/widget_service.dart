@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:work_hub/features/auth/models/user.dart';
+import 'package:qwok/features/auth/models/user.dart';
 
 class WidgetService {
-  static const String appGroupId = 'group.work_hub';
+  static const String appGroupId = 'group.qwok';
   static const String androidWidgetName = 'DashboardWidgetProvider';
 
   static Future<void> updateDashboardWidget([UserModel? user]) async {
@@ -43,11 +44,11 @@ class WidgetService {
       // 4. Update the widget
       await HomeWidget.updateWidget(
         name: androidWidgetName,
-        qualifiedAndroidName: 'com.workhub.work_hub.DashboardWidgetProvider',
+        qualifiedAndroidName: 'com.workhub.qwok.DashboardWidgetProvider',
       );
-      print("Widget Updated with New Layout Successfully");
+      debugPrint("Widget Updated with New Layout Successfully");
     } catch (e) {
-      print("Error updating widget: $e");
+      debugPrint("Error updating widget: $e");
     }
   }
 }

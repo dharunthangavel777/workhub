@@ -1,4 +1,4 @@
-import 'package:work_hub/core/config/app_export.dart';
+import 'package:qwok/core/config/app_export.dart';
 
 class CustomProfileAppBar extends StatelessWidget {
   final String userName;
@@ -81,9 +81,9 @@ class CustomProfileAppBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(4.h),
       decoration: BoxDecoration(
-        color: appTheme.gray_50,
+        color: appTheme.gray50,
         borderRadius: BorderRadius.circular(20.h),
-        border: Border.all(color: appTheme.gray_100),
+        border: Border.all(color: appTheme.gray100),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -105,13 +105,13 @@ class CustomProfileAppBar extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected ? appTheme.indigo_A700 : Colors.transparent,
+          color: isSelected ? appTheme.indigoA700 : Colors.transparent,
           borderRadius: BorderRadius.circular(16.h),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : appTheme.gray_400,
+            color: isSelected ? Colors.white : appTheme.gray400,
             fontSize: 12.fSize,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           ),

@@ -1,7 +1,7 @@
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/chat/logic/chat_controller.dart';
+import 'package:qwok/core/config/app_export.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/chat/logic/chat_controller.dart';
 
 import 'chat_room_screen.dart';
 
@@ -65,7 +65,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -79,7 +79,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         child: Text(
                           "No conversations yet",
                           style: TextStyleHelper.instance.body14Medium
-                              .copyWith(color: appTheme.gray_500),
+                              .copyWith(color: appTheme.gray500),
                         ),
                       );
                     }
@@ -98,7 +98,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                               height: 48.h,
                               width: 48.h,
                               radius: BorderRadius.circular(24.h),
-                              color: appTheme.indigo_A700,
+                              color: appTheme.indigoA700,
                               imagePath: null,
                             ),
                             title: Text(
@@ -119,7 +119,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                             0) >
                                         0
                                     ? CustomColors.darkText
-                                    : appTheme.gray_500,
+                                    : appTheme.gray500,
                                 fontWeight: (chat.unreadCounts[
                                                 currentUser?.uid ?? ''] ??
                                             0) >
@@ -142,7 +142,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                                 0) >
                                             0
                                         ? CustomColors.primaryBlue
-                                        : appTheme.gray_400,
+                                        : appTheme.gray400,
                                   ),
                                 ),
                                 if ((chat.unreadCounts[

@@ -4,7 +4,7 @@ class ResumeData {
   final String? phone;
   final String? location;
   final String? bio;
-  final List<String> skills;
+  final ResumeSkills skills;
   final List<WorkExperience> workExperience;
   final List<Education> education;
   final List<Project> projects;
@@ -18,7 +18,7 @@ class ResumeData {
     this.phone,
     this.location,
     this.bio,
-    this.skills = const [],
+    this.skills = const ResumeSkills(),
     this.workExperience = const [],
     this.education = const [],
     this.projects = const [],
@@ -37,10 +37,7 @@ class ResumeData {
       location: parsedData['location'] as String?,
       bio: parsedData['bio'] as String?,
       category: parsedData['category'] as String?,
-      skills: (parsedData['skills'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
+      skills: ResumeSkills.fromJson(parsedData['skills'] as Map<String, dynamic>? ?? {}),
       workExperience: (parsedData['workExperience'] as List<dynamic>?)
               ?.map((e) => WorkExperience.fromJson(e))
               .toList() ??
@@ -69,11 +66,72 @@ class ResumeData {
       'location': location,
       'bio': bio,
       'category': category,
-      'skills': skills,
+      'skills': skills.toJson(),
       'workExperience': workExperience.map((e) => e.toJson()).toList(),
       'education': education.map((e) => e.toJson()).toList(),
       'projects': projects.map((e) => e.toJson()).toList(),
       'certifications': certifications.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+class ResumeSkills {
+  final List<SkillWithConfidence> technical;
+  final List<SkillWithConfidence> tools;
+  final List<SkillWithConfidence> soft;
+
+  const ResumeSkills({
+    this.technical = const [],
+    this.tools = const [],
+    this.soft = const [],
+  });
+
+  factory ResumeSkills.fromJson(Map<String, dynamic> json) {
+    return ResumeSkills(
+      technical: (json['technical'] as List<dynamic>?)
+              ?.map((e) => SkillWithConfidence.fromJson(e))
+              .toList() ??
+          [],
+      tools: (json['tools'] as List<dynamic>?)
+              ?.map((e) => SkillWithConfidence.fromJson(e))
+              .toList() ??
+          [],
+      soft: (json['soft'] as List<dynamic>?)
+              ?.map((e) => SkillWithConfidence.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+
+  List<SkillWithConfidence> get allSkills => [...technical, ...tools, ...soft];
+  bool get isNotEmpty => allSkills.isNotEmpty;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'technical': technical.map((e) => e.toJson()).toList(),
+      'tools': tools.map((e) => e.toJson()).toList(),
+      'soft': soft.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+class SkillWithConfidence {
+  final String name;
+  final double confidence;
+
+  SkillWithConfidence({required this.name, required this.confidence});
+
+  factory SkillWithConfidence.fromJson(Map<String, dynamic> json) {
+    return SkillWithConfidence(
+      name: json['name'] as String? ?? 'Unknown',
+      confidence: (json['confidence'] as num? ?? 0.0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'confidence': confidence,
     };
   }
 }

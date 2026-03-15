@@ -4,12 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/freelance/models/time_entry.dart';
-import 'package:work_hub/features/common/dispute/models/dispute.dart';
-import 'package:work_hub/core/services/storage_service.dart';
-import 'package:work_hub/core/services/notification_service.dart';
+import 'package:qwok/core/constants/api_constants.dart';
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/freelance/models/time_entry.dart';
+import 'package:qwok/features/common/dispute/models/dispute.dart';
+import 'package:qwok/core/services/storage_service.dart';
+import 'package:qwok/core/services/notification_service.dart';
 
 class ProjectRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

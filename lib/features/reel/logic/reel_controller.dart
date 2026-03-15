@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:work_hub/core/services/storage_service.dart';
-import 'package:work_hub/features/reel/models/comment.dart';
-import 'package:work_hub/features/reel/models/reel.dart';
-
-import 'package:work_hub/features/reel/data/reel_repository.dart';
-import 'package:work_hub/features/auth/models/user.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:qwok/core/services/storage_service.dart';
+import 'package:qwok/features/reel/models/comment.dart';
+import 'package:qwok/features/reel/models/reel.dart';
+import 'package:qwok/features/reel/data/reel_repository.dart';
+import 'package:qwok/features/auth/models/user.dart';
 
 class ReelProvider extends ChangeNotifier {
   final ReelRepository _repository = ReelRepository();
@@ -20,6 +20,9 @@ class ReelProvider extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  // Pre-fetching configuration
+  static const int _precacheCount = 3;
+
   // Fetch all reels
   Future<void> fetchReels() async {
     _isLoading = true;
@@ -28,11 +31,30 @@ class ReelProvider extends ChangeNotifier {
 
     try {
       _reels = await _repository.getReels();
+      // Start precaching first few reels immediately
+      precacheVideos(0);
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Pre-cache videos around the current index
+  Future<void> precacheVideos(int currentIndex) async {
+    if (_reels.isEmpty) return;
+
+    final cacheManager = DefaultCacheManager();
+    final int start = currentIndex + 1;
+    final int end = (currentIndex + _precacheCount).clamp(0, _reels.length - 1);
+
+    for (int i = start; i <= end; i++) {
+        if (i >= _reels.length) break;
+      final url = _reels[i].videoUrl;
+      debugPrint("[ReelProvider] Precaching video index $i: $url");
+      // ignore: unawaited_futures
+      cacheManager.downloadFile(url);
     }
   }
 

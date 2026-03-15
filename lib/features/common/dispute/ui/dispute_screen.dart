@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/features/common/dispute/models/dispute.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
-import 'package:work_hub/features/job/logic/job_controller.dart';
-import 'package:work_hub/core/services/toast_service.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/features/common/dispute/models/dispute.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
+import 'package:qwok/features/job/logic/job_controller.dart';
+import 'package:qwok/core/services/toast_service.dart';
 
 class DisputeScreen extends StatefulWidget {
   final String projectId;
@@ -219,7 +219,7 @@ class _DisputeScreenState extends State<DisputeScreen> {
         status: DisputeStatus.open,
       );
 
-      await context.read<JobProvider>().raiseDispute(dispute);
+      await jobProvider.raiseDispute(dispute);
 
       if (!mounted) return;
       ToastService().showSuccess("Dispute submitted", 

@@ -4,19 +4,19 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:work_hub/features/job/domain/models/job.dart';
-import 'package:work_hub/features/freelance/models/project.dart';
-import 'package:work_hub/features/common/contract/models/contract.dart';
-import 'package:work_hub/features/freelance/models/milestone.dart';
-import 'package:work_hub/features/wallet/models/transaction.dart'
+import 'package:qwok/features/job/domain/models/job.dart';
+import 'package:qwok/features/freelance/models/project.dart';
+import 'package:qwok/features/common/contract/models/contract.dart';
+import 'package:qwok/features/freelance/models/milestone.dart';
+import 'package:qwok/features/wallet/models/transaction.dart'
     as transaction_model;
-import 'package:work_hub/features/common/dispute/models/dispute.dart';
-import 'package:work_hub/features/wallet/models/withdrawal_request.dart';
-import 'package:work_hub/features/profile/domain/models/rating.dart';
-import 'package:work_hub/features/freelance/models/time_entry.dart';
-import 'package:work_hub/core/services/storage_service.dart';
-import 'package:work_hub/core/services/notification_service.dart';
-import 'package:work_hub/core/constants/api_constants.dart';
+import 'package:qwok/features/common/dispute/models/dispute.dart';
+import 'package:qwok/features/wallet/models/withdrawal_request.dart';
+import 'package:qwok/features/profile/domain/models/rating.dart';
+import 'package:qwok/features/freelance/models/time_entry.dart';
+import 'package:qwok/core/services/storage_service.dart';
+import 'package:qwok/core/services/notification_service.dart';
+import 'package:qwok/core/constants/api_constants.dart';
 
 class JobRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

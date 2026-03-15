@@ -1,10 +1,9 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:qwok/core/config/app_export.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:work_hub/core/config/app_export.dart';
-import 'package:work_hub/core/services/toast_service.dart';
-import 'package:work_hub/features/auth/logic/auth_controller.dart';
+import 'package:qwok/core/services/toast_service.dart';
+import 'package:qwok/features/auth/logic/auth_controller.dart';
 
 class AddPortfolioScreen extends StatefulWidget {
   const AddPortfolioScreen({super.key});
@@ -70,7 +69,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: appTheme.white_A700_01,
+                  color: appTheme.whiteA70001,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(32.h),
                     topRight: Radius.circular(32.h),
@@ -84,7 +83,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                       Text(
                         "Project Preview",
                         style: TextStyleHelper.instance.body14Bold.copyWith(
-                          color: appTheme.gray_900,
+                          color: appTheme.gray900,
                         ),
                       ),
                       SizedBox(height: 12.h),
@@ -96,7 +95,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                           height: 200.h,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: appTheme.gray_50,
+                            color: appTheme.gray50,
                             borderRadius: BorderRadius.circular(20.h),
                             image: _imageFile != null
                                 ? DecorationImage(
@@ -105,7 +104,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                                   )
                                 : null,
                             border: Border.all(
-                              color: _imageFile != null ? Colors.transparent : appTheme.gray_200,
+                              color: _imageFile != null ? Colors.transparent : appTheme.gray200,
                               width: 1,
                             ),
                           ),
@@ -116,13 +115,13 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                                     Icon(
                                       Icons.add_photo_alternate_outlined,
                                       size: 48.h,
-                                      color: appTheme.gray_400,
+                                      color: appTheme.gray400,
                                     ),
                                     SizedBox(height: 8.h),
                                     Text(
                                       "Tap to upload project image",
                                       style: TextStyleHelper.instance.body14Medium.copyWith(
-                                        color: appTheme.gray_500,
+                                        color: appTheme.gray500,
                                       ),
                                     ),
                                   ],
@@ -167,7 +166,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: appTheme.indigo_A700,
+                            backgroundColor: appTheme.indigoA700,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.h),
                             ),
@@ -205,7 +204,7 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
         Text(
           label,
           style: TextStyleHelper.instance.body14Bold.copyWith(
-            color: appTheme.gray_900,
+            color: appTheme.gray900,
           ),
         ),
         SizedBox(height: 8.h),
@@ -214,16 +213,16 @@ class _AddPortfolioScreenState extends State<AddPortfolioScreen> {
           style: TextStyleHelper.instance.body14Medium,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray_400),
+            hintStyle: TextStyleHelper.instance.body14Medium.copyWith(color: appTheme.gray400),
             filled: true,
-            fillColor: appTheme.gray_50,
+            fillColor: appTheme.gray50,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.h),
-              borderSide: BorderSide(color: appTheme.gray_200),
+              borderSide: BorderSide(color: appTheme.gray200),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.h),
-              borderSide: BorderSide(color: appTheme.gray_200),
+              borderSide: BorderSide(color: appTheme.gray200),
             ),
           ),
         ),

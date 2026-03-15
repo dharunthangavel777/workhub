@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_hub/features/reel/models/comment.dart';
-import 'package:work_hub/features/reel/models/reel.dart';
+import 'package:qwok/features/reel/models/comment.dart';
+import 'package:qwok/features/reel/models/reel.dart';
 
 
 class ReelRepository {

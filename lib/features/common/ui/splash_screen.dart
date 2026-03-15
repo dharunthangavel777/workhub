@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:work_hub/core/theme/custom_colors.dart';
-import 'package:work_hub/core/services/initialization_service.dart';
-import 'package:work_hub/core/widgets/work_hub_loading.dart';
+import 'package:qwok/core/theme/custom_colors.dart';
+import 'package:qwok/core/services/initialization_service.dart';
+import 'package:qwok/core/widgets/qwok_loading.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   // If not, we might need a color filter or a different asset.
                 ),
                 const SizedBox(height: 60),
-                const WorkHubLoading(
+                const QwokLoading(
                   color: Colors.white,
                   size: 40,
                 ),
